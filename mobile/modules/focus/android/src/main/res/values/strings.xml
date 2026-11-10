@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="focus_launcher_label">Focus</string>
+  <string name="focus_channel_name">Focus mode</string>
+  <string name="focus_notification_title">Focus mode is on</string>
+  <string name="focus_notification_text">Only the apps you allowed are available.</string>
+  <string name="focus_blocked_message">This app is turned off during focus mode</string>
+  <string name="focus_blocked_back">Back</string>
+  <string name="focus_active">Focus mode is on</string>
+  <string name="focus_inactive">All apps</string>
+  <string name="focus_until">Focus mode until %1$s</string>
+  <string name="focus_a11y_description">Optional. Lets Focus notice which app has just opened so it can be blocked more reliably during focus mode. It does not read or store anything shown on screen.</string>
+</resources>

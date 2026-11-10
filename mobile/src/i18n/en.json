@@ -103,6 +103,10 @@
         "title": "Default home app",
         "why": "During focus mode we show only a grid of allowed apps."
       },
+      "exactAlarm": {
+        "title": "Exact alarms",
+        "why": "So scheduled sessions start exactly on time, even when the app is closed."
+      },
       "accessibility": {
         "title": "Accessibility",
         "why": "Optional. Detects the open app more reliably. We do not read or store anything else on screen."

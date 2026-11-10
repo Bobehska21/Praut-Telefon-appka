@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { AppState, View } from 'react-native';
 
 import { AppText, Button, Card, Screen } from '@/components/ui';
 import { FocusModule, type PermissionName, type PermissionMap } from '@/modules/focus';
@@ -13,6 +13,7 @@ const ANDROID_STEPS: PermissionName[] = [
   'notifications',
   'batteryOptimization',
   'defaultLauncher',
+  'exactAlarm',
 ];
 const IOS_STEPS: PermissionName[] = ['screenTime'];
 
@@ -25,8 +26,15 @@ export default function OnboardingScreen() {
   const [index, setIndex] = useState(-1); // -1 = welcome
   const [perms, setPerms] = useState<PermissionMap>({});
 
+  // Most permissions are granted on a system settings screen, so the answer is only
+  // known when the user comes back to the app.
   useEffect(() => {
-    void FocusModule.getPermissions().then(setPerms);
+    const refresh = () => void FocusModule.getPermissions().then(setPerms);
+    refresh();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refresh();
+    });
+    return () => sub.remove();
   }, []);
 
   const step = index >= 0 ? steps[index] : null;

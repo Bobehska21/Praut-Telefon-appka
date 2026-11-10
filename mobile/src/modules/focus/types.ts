@@ -23,6 +23,7 @@ export type PermissionName =
   | 'batteryOptimization' // Android: ignore battery optimizations
   | 'defaultLauncher' // Android: act as HOME app
   | 'accessibility' // Android: optional AccessibilityService
+  | 'exactAlarm' // Android 12+: SCHEDULE_EXACT_ALARM, needed to start schedules on time
   | 'screenTime'; // iOS: FamilyControls authorization
 
 export type PermissionState = 'granted' | 'denied' | 'unknown';

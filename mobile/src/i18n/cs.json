@@ -103,6 +103,10 @@
         "title": "Výchozí domovská obrazovka",
         "why": "V režimu ukážeme jen mřížku povolených aplikací."
       },
+      "exactAlarm": {
+        "title": "Přesné časovače",
+        "why": "Aby se plánované režimy spustily přesně ve zvolený čas, i když je aplikace zavřená."
+      },
       "accessibility": {
         "title": "Přístupnost",
         "why": "Volitelné. Spolehlivěji pozná otevřenou aplikaci. Nic jiného z obrazovky nečteme ani neukládáme."

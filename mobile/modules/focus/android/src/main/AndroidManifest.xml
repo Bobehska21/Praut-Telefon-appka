@@ -1,0 +1,92 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools">
+
+  <!-- Which app is in the foreground (user grants in Settings > Usage access). -->
+  <uses-permission
+    android:name="android.permission.PACKAGE_USAGE_STATS"
+    tools:ignore="ProtectedPermissions" />
+  <!-- Block screen drawn over non-allowed apps. -->
+  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  <!-- Resume focus mode after a reboot. -->
+  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+  <!-- Start scheduled sessions on time; on Android 14+ the user must allow it. -->
+  <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+  <!--
+    Package visibility (Android 11+). Deliberately NOT QUERY_ALL_PACKAGES, which Google Play
+    restricts: launcher apps, home apps, dialers and keyboards are enough for this app.
+  -->
+  <queries>
+    <intent>
+      <action android:name="android.intent.action.MAIN" />
+      <category android:name="android.intent.category.LAUNCHER" />
+    </intent>
+    <intent>
+      <action android:name="android.intent.action.MAIN" />
+      <category android:name="android.intent.category.HOME" />
+    </intent>
+    <intent>
+      <action android:name="android.intent.action.DIAL" />
+    </intent>
+  </queries>
+
+  <application>
+    <!-- Home screen shown instead of the regular launcher while focus mode is on. -->
+    <activity
+      android:name="expo.modules.focus.LauncherActivity"
+      android:exported="true"
+      android:label="@string/focus_launcher_label"
+      android:launchMode="singleTask"
+      android:excludeFromRecents="true"
+      android:stateNotNeeded="true"
+      android:theme="@style/FocusLauncherTheme">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.HOME" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
+    </activity>
+
+    <service
+      android:name="expo.modules.focus.FocusService"
+      android:exported="false"
+      android:foregroundServiceType="specialUse">
+      <property
+        android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+        android:value="Keeps focus mode running and watches which app is in the foreground so apps outside the user's allowed list can be blocked" />
+    </service>
+
+    <receiver
+      android:name="expo.modules.focus.BootReceiver"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED" />
+        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+      </intent-filter>
+    </receiver>
+
+    <receiver
+      android:name="expo.modules.focus.ScheduleReceiver"
+      android:exported="false" />
+
+    <!--
+      OPTIONAL extended blocking. Inert until the user enables it in Accessibility settings.
+      Remove this element (see README) for a Google Play build that must avoid AccessibilityService.
+    -->
+    <service
+      android:name="expo.modules.focus.FocusAccessibilityService"
+      android:exported="true"
+      android:label="@string/focus_launcher_label"
+      android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+      <intent-filter>
+        <action android:name="android.accessibilityservice.AccessibilityService" />
+      </intent-filter>
+      <meta-data
+        android:name="android.accessibilityservice"
+        android:resource="@xml/focus_accessibility_service" />
+    </service>
+  </application>
+</manifest>

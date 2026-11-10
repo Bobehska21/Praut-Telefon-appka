@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <color name="focus_bg">#F6F5F1</color>
+  <color name="focus_text">#1D2420</color>
+  <style name="FocusLauncherTheme" parent="@android:style/Theme.DeviceDefault.Light.NoActionBar">
+    <item name="android:windowBackground">@color/focus_bg</item>
+    <item name="android:statusBarColor">@color/focus_bg</item>
+    <item name="android:navigationBarColor">@color/focus_bg</item>
+  </style>
+</resources>

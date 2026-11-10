@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="focus_launcher_label">Soustředění</string>
+  <string name="focus_channel_name">Režim soustředění</string>
+  <string name="focus_notification_title">Režim soustředění běží</string>
+  <string name="focus_notification_text">Dostupné jsou jen aplikace, které sis povolil(a).</string>
+  <string name="focus_blocked_message">Tato aplikace je v režimu soustředění vypnutá</string>
+  <string name="focus_blocked_back">Zpět</string>
+  <string name="focus_active">Režim soustředění běží</string>
+  <string name="focus_inactive">Všechny aplikace</string>
+  <string name="focus_until">Režim soustředění do %1$s</string>
+  <string name="focus_a11y_description">Volitelné. Umožní aplikaci Soustředění poznat, která aplikace se právě otevřela, aby ji v režimu soustředění mohla spolehlivěji zablokovat. Nečte ani neukládá nic, co je na obrazovce.</string>
+</resources>
