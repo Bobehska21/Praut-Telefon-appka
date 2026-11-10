@@ -1,0 +1,12 @@
+# SOPS creation rules. Replace the placeholder recipients with real age PUBLIC keys (age1...).
+# Only the values under data/stringData are encrypted, so diffs stay readable.
+creation_rules:
+  - path_regex: deploy/secrets/prod\.enc\.yaml$
+    encrypted_regex: ^(data|stringData)$
+    age: age1REPLACE_WITH_PRODUCTION_PUBLIC_KEY
+  - path_regex: deploy/secrets/staging\.enc\.yaml$
+    encrypted_regex: ^(data|stringData)$
+    age: age1REPLACE_WITH_STAGING_PUBLIC_KEY
+  - path_regex: deploy/secrets/.*\.enc\.yaml$
+    encrypted_regex: ^(data|stringData)$
+    age: age1REPLACE_WITH_DEV_PUBLIC_KEY

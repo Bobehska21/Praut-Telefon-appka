@@ -1,0 +1,43 @@
+# dependencies / build output
+node_modules/
+/dist/
+/out/
+/build/
+/release/
+/coverage/
+*.tsbuildinfo
+
+# test artefacts
+test-results/
+playwright-report/
+blob-report/
+
+# secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.p8
+*.dec.yaml
+*.dec.json
+*.dec.env
+kubeconfig*
+*.kubeconfig
+
+# Claude Code: personal, per-machine files
+.claude/settings.local.json
+.claude/worktrees/
+CLAUDE.local.md
+
+# Helm
+deploy/helm/*/charts/*.tgz
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.log

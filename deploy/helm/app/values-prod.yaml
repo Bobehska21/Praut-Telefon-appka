@@ -1,0 +1,49 @@
+# Production. image.tag is set by CI. Deployed only through the pipeline with manual approval.
+replicaCount: 3
+
+env:
+  LOG_LEVEL: info
+  NODE_ENV: production
+
+ingress:
+  enabled: true
+  host: app.example.com # TODO
+  tlsSecretName: app-prod-tls
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    memory: 512Mi
+
+terminationGracePeriodSeconds: 60
+
+database:
+  instances: 3
+  storage:
+    size: 50Gi
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      memory: 2Gi
+  parameters:
+    max_connections: "200"
+  # TODO REQUIRED before go-live: object-store backups + WAL archiving, and a tested restore.
+  backup: {}
+  backupSchedule: "0 0 2 * * *"
+
+migrations:
+  enabled: true

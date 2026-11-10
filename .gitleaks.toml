@@ -1,0 +1,18 @@
+# gitleaks configuration: the default rule set, plus allowances for files that
+# legitimately contain secret-looking placeholders.
+title = "project gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "placeholders and encrypted material"
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''(^|/)package-lock\.json$''',
+  '''deploy/secrets/.*\.enc\.yaml$''',
+  '''(^|/)\.sops\.yaml$''',
+]
+regexes = [
+  '''age1REPLACE_WITH_[A-Z_]+''',
+]

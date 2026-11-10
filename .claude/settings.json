@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(npm run build *)",
+      "Bash(npm run dev *)",
+      "Bash(npm run lint *)",
+      "Bash(npm run typecheck *)",
+      "Bash(npm run test *)",
+      "Bash(npm run test:unit *)",
+      "Bash(npm run test:e2e *)",
+      "Bash(npm run format *)",
+      "Bash(npx prettier *)",
+      "Bash(npx eslint *)",
+      "Bash(npx vitest *)",
+      "Bash(npx playwright test *)",
+      "Bash(helm dependency build *)",
+      "Bash(helm dependency update *)",
+      "Bash(kind create cluster *)",
+      "Bash(kind load docker-image *)",
+      "Bash(docker build *)",
+      "Bash(docker compose ps *)",
+      "Bash(docker compose logs *)",
+      "mcp__kubernetes",
+      "mcp__postgres",
+      "mcp__context7"
+    ],
+    "ask": [
+      "Bash(kind delete cluster *)",
+      "Bash(npm run release *)",
+      "Bash(npm run publish *)",
+      "Bash(npx electron-builder *)"
+    ],
+    "deny": [
+      "Read(./deploy/secrets/**/*.dec.*)",
+      "Read(./build/certs/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-files.mjs\"", "timeout": 10 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/format.mjs\"", "timeout": 90 },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/validate-k8s.mjs\"",
+            "timeout": 180,
+            "statusMessage": "Validating Kubernetes manifests..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/typecheck-on-stop.mjs\"",
+            "timeout": 200,
+            "statusMessage": "Type-checking..."
+          }
+        ]
+      }
+    ]
+  }
+}

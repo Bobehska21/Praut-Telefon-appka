@@ -1,0 +1,21 @@
+# Local development cluster.  Create: kind create cluster --name dev --config deploy/kind/cluster.yaml
+# The kube context is "kind-dev" — classified as local (safe to change) by the guard hooks.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: dev
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      # ingress controller -> http://app.localtest.me:8080 (localtest.me resolves to 127.0.0.1)
+      - containerPort: 80
+        hostPort: 8080
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 8443
+        protocol: TCP

@@ -1,0 +1,12 @@
+{
+  "_comment": "Project-specific environment names. Case-insensitive regexes, ADDED to the global defaults (anything containing prod/production/live is already production). List the real kube context names and DB hostnames of this project here, especially production ones whose names do not contain 'prod'.",
+  "prod": {
+    "kubeContexts": [],
+    "dbHosts": [],
+    "exclude": []
+  },
+  "local": {
+    "kubeContexts": ["^kind-dev$"],
+    "dbHosts": []
+  }
+}

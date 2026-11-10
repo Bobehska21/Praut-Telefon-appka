@@ -1,0 +1,9 @@
+# Configuration for kubernetes-mcp-server (https://github.com/containers/kubernetes-mcp-server).
+# The MCP server is for LOOKING at clusters. All changes go through kubectl/helm
+# in the shell, where the permission rules and the guard-k8s hook apply.
+read_only = true
+toolsets = ["core", "config", "helm"]
+
+# Recommended for clusters you do not own: point the server at a kubeconfig whose
+# user is bound to the built-in `view` ClusterRole (see docs/prod-readonly.md).
+# kubeconfig = "/Users/you/.kube/claude-readonly.yaml"

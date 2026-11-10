@@ -1,0 +1,29 @@
+# Staging. image.tag is set by CI.
+replicaCount: 2
+
+env:
+  LOG_LEVEL: info
+  NODE_ENV: production
+
+ingress:
+  enabled: true
+  host: app.staging.example.com # TODO
+  tlsSecretName: app-staging-tls
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 192Mi
+  limits:
+    memory: 384Mi
+
+database:
+  instances: 2
+  storage:
+    size: 10Gi
+  # TODO: configure backups for staging (see docs/workflow.md)
+  backup: {}

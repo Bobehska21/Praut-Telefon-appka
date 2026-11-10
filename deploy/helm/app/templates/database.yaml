@@ -1,0 +1,52 @@
+{{- if and .Values.database.enabled (not .Values.database.existingSecret) }}
+# PostgreSQL cluster managed by the CloudNativePG operator.
+# Creates Services <name>-rw / -ro / -r and the credentials Secret <name>-app.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ include "app.dbClusterName" . }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+  annotations:
+    # never delete the database together with the Helm release
+    helm.sh/resource-policy: keep
+spec:
+  instances: {{ .Values.database.instances }}
+  {{- with .Values.database.imageName }}
+  imageName: {{ . | quote }}
+  {{- end }}
+  bootstrap:
+    initdb:
+      database: {{ .Values.database.name }}
+      owner: {{ .Values.database.owner }}
+  storage:
+    size: {{ .Values.database.storage.size }}
+    {{- with .Values.database.storage.storageClass }}
+    storageClass: {{ . }}
+    {{- end }}
+  resources:
+    {{- toYaml .Values.database.resources | nindent 4 }}
+  {{- with .Values.database.parameters }}
+  postgresql:
+    parameters:
+      {{- toYaml . | nindent 6 }}
+  {{- end }}
+  {{- with .Values.database.backup }}
+  backup:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- if .Values.database.backupSchedule }}
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: {{ include "app.dbClusterName" . }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.database.backupSchedule | quote }}
+  backupOwnerReference: self
+  cluster:
+    name: {{ include "app.dbClusterName" . }}
+{{- end }}
+{{- end }}

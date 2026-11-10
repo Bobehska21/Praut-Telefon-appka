@@ -1,0 +1,124 @@
+# Defaults. Override per environment in values-<env>.yaml only where it differs.
+# NEVER put secret values in any values file — reference a Secret instead.
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: app
+  # Set by CI / the deploy command (--set image.tag=...). Never "latest".
+  tag: ""
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+replicaCount: 1
+
+# Port the container listens on.
+containerPort: 3000
+
+# Non-secret environment variables.
+env: {}
+#  LOG_LEVEL: info
+
+# Environment variables read from existing Secrets (created outside this chart,
+# e.g. from a SOPS-encrypted file in deploy/secrets/).
+envFromSecrets: []
+#  - name: SESSION_SECRET
+#    secretName: app-secrets
+#    key: session-secret
+
+probes:
+  liveness:
+    path: /healthz
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    path: /readyz
+    periodSeconds: 5
+    failureThreshold: 3
+  startup:
+    path: /healthz
+    periodSeconds: 2
+    failureThreshold: 30
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 256Mi
+
+# Must be longer than the application's graceful shutdown.
+terminationGracePeriodSeconds: 30
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: nginx
+  host: ""
+  annotations: {}
+  # Name of an existing TLS Secret (e.g. issued by cert-manager). Empty = no TLS.
+  tlsSecretName: ""
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+  # Namespace of the ingress controller that may reach the pods.
+  ingressNamespace: ingress-nginx
+  # Extra egress rules (raw NetworkPolicy egress entries), e.g. to an external API.
+  extraEgress: []
+
+serviceAccount:
+  create: true
+  annotations: {}
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+
+# PostgreSQL managed by the CloudNativePG operator (must be installed in the cluster).
+# The operator creates the Secret "<release>-db-app"; the app gets DATABASE_URL from its "uri" key.
+database:
+  enabled: true
+  instances: 1
+  # Empty = operator default image.
+  imageName: ""
+  name: app
+  owner: app
+  storage:
+    size: 1Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+  # PostgreSQL parameters (strings), e.g. max_connections: "100"
+  parameters: {}
+  # Raw CloudNativePG ".spec.backup" block. Empty = no backups (local only!).
+  backup: {}
+  # Cron (6 fields, with seconds) for a ScheduledBackup. Empty = none.
+  backupSchedule: ""
+  # Use instead of the managed cluster: name of an existing Secret with key "uri".
+  existingSecret: ""
+
+# Runs migrations as a Helm hook Job (after install, before upgrade) with the app image.
+# Migrations must be backwards compatible: old pods keep serving during the rollout.
+migrations:
+  enabled: false
+  command: ["npm", "run", "db:migrate"]
+  backoffLimit: 1
+  activeDeadlineSeconds: 600

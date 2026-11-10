@@ -1,0 +1,41 @@
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "DATABASE_URI",
+        "crystaldba/postgres-mcp",
+        "--access-mode=restricted"
+      ],
+      "env": {
+        "DATABASE_URI": "${DATABASE_URL_RO:-postgresql://claude_ro@localhost:5432/app}"
+      }
+    },
+    "kubernetes": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "kubernetes-mcp-server@latest",
+        "--config",
+        ".claude/mcp/kubernetes.toml"
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest",
+        "--cdp-endpoint",
+        "http://localhost:9222"
+      ]
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+# Local kind cluster (context: kind-dev). Image is built locally and loaded with `kind load docker-image`.
+image:
+  tag: dev
+
+env:
+  LOG_LEVEL: debug
+  NODE_ENV: development
+
+ingress:
+  enabled: true
+  host: app.localtest.me
+
+database:
+  instances: 1
+  storage:
+    size: 1Gi
