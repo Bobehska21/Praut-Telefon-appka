@@ -1,0 +1,120 @@
+{
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "continue": "Continue",
+    "search": "Search"
+  },
+  "home": {
+    "title": "Focus",
+    "start": "Start",
+    "stop": "Stop",
+    "active": "Focus mode is on",
+    "inactive": "Focus mode is off",
+    "until": "until {{time}}",
+    "duration": "Duration",
+    "untilStopped": "Until I stop it",
+    "custom": "Custom",
+    "minutes": "{{count}} min",
+    "profile": "Profile",
+    "noAppsWarning": "This profile has no allowed apps. Phone, messages and emergency calls always stay available."
+  },
+  "unlock": {
+    "title": "Really stop?",
+    "countdown": "Wait {{seconds}} s and think about whether you really need to.",
+    "sentence": "To stop, type this sentence:",
+    "sentenceText": "I want to interrupt my focus now.",
+    "confirm": "Stop focus mode",
+    "keepGoing": "Keep focusing"
+  },
+  "blocked": {
+    "message": "This app is turned off during focus mode",
+    "back": "Back"
+  },
+  "profiles": {
+    "title": "Profiles",
+    "new": "New profile",
+    "name": "Name",
+    "apps": "Allowed apps",
+    "appsCount": "{{count}} allowed",
+    "pickIos": "Choose apps in system picker",
+    "iosHint": "iOS does not expose a list of apps. You choose in the system picker and we never see app names.",
+    "alwaysAllowed": "Phone, messages and emergency calls are always allowed."
+  },
+  "schedule": {
+    "title": "Schedule",
+    "add": "Add schedule",
+    "empty": "No schedule yet. Focus mode will start by itself on the days and hours you choose.",
+    "from": "From",
+    "to": "To",
+    "days": "Days",
+    "enabled": "Enabled"
+  },
+  "stats": {
+    "title": "Statistics",
+    "week": "Last 7 days",
+    "today": "Today",
+    "focusTime": "Time in focus mode",
+    "blocked": "Blocked attempts"
+  },
+  "settings": {
+    "title": "Settings",
+    "guard": "Stop protection",
+    "guardNone": "None",
+    "guardCountdown": "30 s countdown",
+    "guardSentence": "Type a sentence",
+    "accessibility": "Extended blocking (Accessibility)",
+    "accessibilityHint": "Optional. More reliable blocking, but requires the Accessibility permission.",
+    "language": "Language",
+    "languageSystem": "System default"
+  },
+  "days": {
+    "0": "Sun",
+    "1": "Mon",
+    "2": "Tue",
+    "3": "Wed",
+    "4": "Thu",
+    "5": "Fri",
+    "6": "Sat"
+  },
+  "onboarding": {
+    "welcomeTitle": "Focus on what matters",
+    "welcomeBody": "When focus mode is on, only the apps you allowed in advance stay available. Everything else is hidden or blocked. Your data stays on this phone: no account, no ads.",
+    "permissions": {
+      "usageAccess": {
+        "title": "Usage access",
+        "why": "We need to know which app is in the foreground so a non-allowed one can be blocked."
+      },
+      "overlay": {
+        "title": "Display over other apps",
+        "why": "This lets us show the blocking screen on top of a non-allowed app."
+      },
+      "notifications": {
+        "title": "Notifications",
+        "why": "Android requires a persistent notification while focus mode runs. We send no other notifications."
+      },
+      "batteryOptimization": {
+        "title": "Battery optimization exemption",
+        "why": "So the system does not stop focus mode while you are focusing."
+      },
+      "defaultLauncher": {
+        "title": "Default home app",
+        "why": "During focus mode we show only a grid of allowed apps."
+      },
+      "accessibility": {
+        "title": "Accessibility",
+        "why": "Optional. Detects the open app more reliably. We do not read or store anything else on screen."
+      },
+      "screenTime": {
+        "title": "Screen Time",
+        "why": "Apple requires your consent before we can restrict apps. Your selection stays on the device."
+      }
+    },
+    "grant": "Allow",
+    "granted": "Allowed",
+    "skip": "Skip",
+    "finish": "Done"
+  }
+}

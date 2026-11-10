@@ -1,0 +1,120 @@
+{
+  "common": {
+    "back": "Zpět",
+    "cancel": "Zrušit",
+    "save": "Uložit",
+    "delete": "Smazat",
+    "continue": "Pokračovat",
+    "search": "Hledat"
+  },
+  "home": {
+    "title": "Soustředění",
+    "start": "Zapnout",
+    "stop": "Vypnout",
+    "active": "Režim soustředění běží",
+    "inactive": "Režim je vypnutý",
+    "until": "do {{time}}",
+    "duration": "Doba",
+    "untilStopped": "Dokud nevypnu",
+    "custom": "Vlastní",
+    "minutes": "{{count}} min",
+    "profile": "Profil",
+    "noAppsWarning": "Tento profil nemá žádné povolené aplikace. Telefon, SMS a nouzová volání zůstanou dostupné vždy."
+  },
+  "unlock": {
+    "title": "Opravdu vypnout?",
+    "countdown": "Počkej {{seconds}} s a zvaž, jestli to opravdu potřebuješ.",
+    "sentence": "Pro vypnutí opiš větu:",
+    "sentenceText": "Chci teď přerušit soustředění.",
+    "confirm": "Vypnout režim",
+    "keepGoing": "Pokračovat v soustředění"
+  },
+  "blocked": {
+    "message": "Tato aplikace je v režimu soustředění vypnutá",
+    "back": "Zpět"
+  },
+  "profiles": {
+    "title": "Profily",
+    "new": "Nový profil",
+    "name": "Název",
+    "apps": "Povolené aplikace",
+    "appsCount": "{{count}} povolených",
+    "pickIos": "Vybrat aplikace v systému",
+    "iosHint": "iOS neposkytuje seznam aplikací. Výběr probíhá v systémovém okně a názvy aplikací zde nevidíme.",
+    "alwaysAllowed": "Telefon, SMS a nouzová volání jsou povolené vždy."
+  },
+  "schedule": {
+    "title": "Plán",
+    "add": "Přidat plán",
+    "empty": "Zatím žádný plán. Režim se bude zapínat sám ve zvolené dny a hodiny.",
+    "from": "Od",
+    "to": "Do",
+    "days": "Dny",
+    "enabled": "Zapnuto"
+  },
+  "stats": {
+    "title": "Statistiky",
+    "week": "Posledních 7 dní",
+    "today": "Dnes",
+    "focusTime": "Čas v režimu",
+    "blocked": "Zablokované pokusy"
+  },
+  "settings": {
+    "title": "Nastavení",
+    "guard": "Ochrana proti vypnutí",
+    "guardNone": "Žádná",
+    "guardCountdown": "Odpočítávání 30 s",
+    "guardSentence": "Opsání věty",
+    "accessibility": "Rozšířené blokování (Přístupnost)",
+    "accessibilityHint": "Volitelné. Spolehlivější blokování, ale vyžaduje oprávnění Přístupnost.",
+    "language": "Jazyk",
+    "languageSystem": "Podle systému"
+  },
+  "days": {
+    "0": "Ne",
+    "1": "Po",
+    "2": "Út",
+    "3": "St",
+    "4": "Čt",
+    "5": "Pá",
+    "6": "So"
+  },
+  "onboarding": {
+    "welcomeTitle": "Soustřeď se na to, co je důležité",
+    "welcomeBody": "Po zapnutí režimu zůstanou dostupné jen aplikace, které si předem povolíš. Vše ostatní je skryté nebo zablokované. Data zůstávají jen v tvém telefonu, bez účtu a bez reklam.",
+    "permissions": {
+      "usageAccess": {
+        "title": "Přístup k využití aplikací",
+        "why": "Potřebujeme vědět, která aplikace je právě v popředí, abychom nepovolenou mohli zablokovat."
+      },
+      "overlay": {
+        "title": "Zobrazení přes jiné aplikace",
+        "why": "Díky tomu můžeme přes nepovolenou aplikaci ukázat blokovací obrazovku."
+      },
+      "notifications": {
+        "title": "Oznámení",
+        "why": "Android vyžaduje trvalou notifikaci, dokud režim běží. Jiná oznámení neposíláme."
+      },
+      "batteryOptimization": {
+        "title": "Výjimka z úspory baterie",
+        "why": "Aby systém režim během soustředění neukončil."
+      },
+      "defaultLauncher": {
+        "title": "Výchozí domovská obrazovka",
+        "why": "V režimu ukážeme jen mřížku povolených aplikací."
+      },
+      "accessibility": {
+        "title": "Přístupnost",
+        "why": "Volitelné. Spolehlivěji pozná otevřenou aplikaci. Nic jiného z obrazovky nečteme ani neukládáme."
+      },
+      "screenTime": {
+        "title": "Čas u obrazovky",
+        "why": "Apple vyžaduje tvůj souhlas, abychom mohli omezit aplikace. Výběr zůstává v zařízení."
+      }
+    },
+    "grant": "Povolit",
+    "granted": "Povoleno",
+    "skip": "Přeskočit",
+    "finish": "Hotovo"
+  }
+}
