@@ -39,6 +39,8 @@ class BlockOverlay(context: Context) {
     }
     val back = Button(context).apply {
       text = context.getString(R.string.focus_blocked_back)
+      setTextColor(context.getColor(R.color.focus_text))
+      setBackgroundColor(context.getColor(R.color.focus_accent))
       setOnClickListener { goHome(context) }
     }
     val root = LinearLayout(context).apply {

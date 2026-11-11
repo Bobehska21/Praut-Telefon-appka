@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
-import { AppText, Button, Card, Screen } from '@/components/ui';
+import { AppText, Button, Card, Screen, Heading } from '@/components/ui';
 import { FocusModule } from '@/modules/focus';
 import { useAppStore } from '@/store';
 import { radius, spacing, useTheme } from '@/theme';
@@ -26,9 +26,7 @@ export default function ProfilesScreen() {
 
   return (
     <Screen>
-      <AppText size={24} weight="700">
-        {t('profiles.title')}
-      </AppText>
+      <Heading>{t('profiles.title')}</Heading>
       {profiles.map((p) => {
         const count = FocusModule.platform === 'ios' ? p.selectionCount : p.allowedAppIds.length;
         return (

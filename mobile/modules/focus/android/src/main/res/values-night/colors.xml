@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <color name="focus_bg">#141816</color>
-  <color name="focus_text">#ECEFEC</color>
+  <!-- Dark red-and-black, same palette as src/theme/index.ts. One variant: no light mode. -->
+  <color name="focus_bg">#0B0809</color>
+  <color name="focus_text">#F2E9E9</color>
+  <color name="focus_accent">#E5202A</color>
+  <color name="focus_accent_text">#FF4D54</color>
   <style name="FocusLauncherTheme" parent="@android:style/Theme.DeviceDefault.NoActionBar">
     <item name="android:windowBackground">@color/focus_bg</item>
     <item name="android:statusBarColor">@color/focus_bg</item>

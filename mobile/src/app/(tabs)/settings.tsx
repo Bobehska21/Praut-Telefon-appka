@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { AppText, Card, Chip, Screen } from '@/components/ui';
+import { AppText, Card, Chip, Screen, Heading, ThemedSwitch } from '@/components/ui';
 import { FocusModule } from '@/modules/focus';
 import { useAppStore, type Settings, type UnlockGuard } from '@/store';
 import { spacing } from '@/theme';
@@ -31,9 +31,7 @@ export default function SettingsScreen() {
 
   return (
     <Screen>
-      <AppText size={24} weight="700">
-        {t('settings.title')}
-      </AppText>
+      <Heading>{t('settings.title')}</Heading>
 
       <Card>
         <AppText weight="600">{t('settings.guard')}</AppText>
@@ -50,7 +48,7 @@ export default function SettingsScreen() {
             <AppText weight="600" style={styles.flex}>
               {t('settings.accessibility')}
             </AppText>
-            <Switch
+            <ThemedSwitch
               accessibilityLabel={t('settings.accessibility')}
               value={settings.accessibilityMode}
               onValueChange={toggleAccessibility}

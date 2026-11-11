@@ -59,10 +59,13 @@ class LauncherActivity : Activity() {
     header = TextView(this).apply {
       setTextColor(getColor(R.color.focus_text))
       textSize = 18f
+      setTypeface(typeface, android.graphics.Typeface.BOLD)
     }
     // The way out of focus mode must always be right here, next to the allowed apps.
     stopButton = Button(this).apply {
       text = getString(R.string.focus_stop)
+      setTextColor(getColor(R.color.focus_text))
+      setBackgroundColor(getColor(R.color.focus_accent))
       setOnClickListener { requestStop() }
     }
     val headerRow = LinearLayout(this).apply {
@@ -74,7 +77,7 @@ class LauncherActivity : Activity() {
     }
     banner = TextView(this).apply {
       text = getString(R.string.focus_blocked_message)
-      setTextColor(getColor(R.color.focus_text))
+      setTextColor(getColor(R.color.focus_accent_text))
       textSize = 14f
       gravity = Gravity.CENTER
       setPadding(dp(16), dp(8), dp(16), dp(8))

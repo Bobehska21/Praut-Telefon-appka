@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -82,22 +83,26 @@ export default function HomeScreen() {
             })}
           </AppText>
         )}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={active ? t('home.stop') : t('home.start')}
-          onPress={onToggle}
-          style={[
-            styles.bigButton,
-            {
-              backgroundColor: active ? theme.surface : theme.primary,
-              borderColor: active ? theme.primary : 'transparent',
-              opacity: busy || (!active && missing.length > 0) ? 0.45 : 1,
-            },
-          ]}>
-          <AppText size={28} weight="700" style={{ color: active ? theme.primary : theme.onPrimary }}>
-            {active ? t('home.stop') : t('home.start')}
-          </AppText>
-        </Pressable>
+        <View style={[styles.ring, { borderColor: active ? theme.primary : theme.border }]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={active ? t('home.stop') : t('home.start')}
+            onPress={onToggle}
+            style={[
+              styles.bigButton,
+              {
+                backgroundColor: active ? theme.background : theme.primary,
+                borderColor: theme.primary,
+                shadowColor: theme.primary,
+                opacity: busy || (!active && missing.length > 0) ? 0.45 : 1,
+              },
+            ]}>
+            <Ionicons name={active ? 'stop-circle-outline' : 'power'} size={54} color={active ? theme.accent : theme.onPrimary} />
+            <AppText weight="700" size={18} style={[styles.bigLabel, { color: active ? theme.accent : theme.onPrimary }]}>
+              {(active ? t('home.stop') : t('home.start')).toLocaleUpperCase()}
+            </AppText>
+          </Pressable>
+        </View>
       </View>
 
       {active && FocusModule.platform === 'android' && loaded && perms.accessibility !== 'granted' && (
@@ -183,15 +188,30 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   center: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.lg },
-  bigButton: {
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    borderWidth: 2,
+  // Thin outer ring, then the button itself with a soft red glow (iOS shadow / Android elevation).
+  ring: {
+    width: 248,
+    height: 248,
+    borderRadius: 124,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: spacing.md,
   },
+  bigButton: {
+    width: 204,
+    height: 204,
+    borderRadius: 102,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    shadowOpacity: 0.7,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 14,
+  },
+  bigLabel: { letterSpacing: 4 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   flex: { flex: 1 },
   missingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { AppText, Button, Card, Chip, Screen } from '@/components/ui';
+import { AppText, Button, Card, Chip, Screen, Heading, ThemedSwitch } from '@/components/ui';
 import { formatMinute } from '@/features/scheduler';
 import { useAppStore, type Schedule } from '@/store';
 import { spacing } from '@/theme';
@@ -22,9 +22,7 @@ export default function ScheduleScreen() {
 
   return (
     <Screen>
-      <AppText size={24} weight="700">
-        {t('schedule.title')}
-      </AppText>
+      <Heading>{t('schedule.title')}</Heading>
       {schedules.length === 0 && <AppText muted>{t('schedule.empty')}</AppText>}
       {schedules.map((s) => (
         <ScheduleCard key={s.id} schedule={s} profileName={profiles.find((p) => p.id === s.profileId)?.name ?? ''} />
@@ -55,7 +53,7 @@ function ScheduleCard({ schedule, profileName }: { schedule: Schedule; profileNa
     <Card>
       <View style={styles.between}>
         <AppText weight="600">{profileName}</AppText>
-        <Switch
+        <ThemedSwitch
           accessibilityLabel={t('schedule.enabled')}
           value={schedule.enabled}
           onValueChange={(enabled) => update(schedule.id, { enabled })}

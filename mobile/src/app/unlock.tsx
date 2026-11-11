@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, TextInput } from 'react-native';
 
-import { AppText, Button, Screen } from '@/components/ui';
+import { AppText, Button, Screen, Heading } from '@/components/ui';
 import { countdownRemaining, isSentenceMatch } from '@/features/unlock-guard';
 import { stopFocus } from '@/features/session';
 import { useAppStore } from '@/store';
@@ -45,9 +45,7 @@ export default function UnlockScreen() {
 
   return (
     <Screen scroll={false}>
-      <AppText size={24} weight="700">
-        {t('unlock.title')}
-      </AppText>
+      <Heading>{t('unlock.title')}</Heading>
       {guard === 'countdown' && <AppText muted>{t('unlock.countdown', { seconds: remaining })}</AppText>}
       {guard === 'sentence' && (
         <>

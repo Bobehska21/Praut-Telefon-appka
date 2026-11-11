@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { AppText, Card, Screen } from '@/components/ui';
+import { AppText, Card, Screen, Heading } from '@/components/ui';
 import { buildDayStats, formatDuration, totalBlocked, totalFocusMs } from '@/features/stats';
 import { useAppStore } from '@/store';
 import { spacing, useTheme } from '@/theme';
@@ -33,9 +33,7 @@ export default function StatsScreen() {
 
   return (
     <Screen>
-      <AppText size={24} weight="700">
-        {t('stats.title')}
-      </AppText>
+      <Heading>{t('stats.title')}</Heading>
       <Card>
         <AppText muted size={14}>
           {t('stats.today')}
