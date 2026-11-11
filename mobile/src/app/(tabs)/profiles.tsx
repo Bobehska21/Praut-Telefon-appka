@@ -43,6 +43,7 @@ export default function ProfilesScreen() {
           </Pressable>
         );
       })}
+      <Button label={t('schedule.title')} variant="secondary" onPress={() => router.push('/schedule')} />
       <View style={styles.row}>
         <TextInput
           value={name}

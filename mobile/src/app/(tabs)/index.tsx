@@ -1,17 +1,32 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
-import { AppText, Button, Card, Chip, Screen } from '@/components/ui';
+import { AppText, Button, Card, Chip, ProgressBar, Screen } from '@/components/ui';
+import { FocusRing } from '@/components/focus-ring';
 import { usePermissions } from '@/features/permissions';
+import { dailyGoal } from '@/features/progress/daily-goal';
+import { snapshot } from '@/features/progress/engine';
+import { withLiveSession } from '@/features/progress/live';
 import { startFocus, stopFocus } from '@/features/session';
 import { FocusModule } from '@/modules/focus';
 import { useAppStore } from '@/store';
 import { radius, spacing, useTheme } from '@/theme';
 
 const PRESETS = [25, 50, 90] as const;
+const RING = 248;
+
+/** `m:ss`, or `h:mm:ss` past an hour. */
+function formatRemaining(ms: number): string {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+}
 type Choice = number | 'custom' | 'open';
 
 export default function HomeScreen() {
@@ -24,11 +39,56 @@ export default function HomeScreen() {
   const selectProfile = useAppStore((s) => s.selectProfile);
   const session = useAppStore((s) => s.session);
   const guard = useAppStore((s) => s.settings.unlockGuard);
+  const sessions = useAppStore((s) => s.sessions);
+  const claimed = useAppStore((s) => s.claimed);
+  const achievements = useAppStore((s) => s.achievements);
 
   const [choice, setChoice] = useState<Choice>(25);
   const [customMin, setCustomMin] = useState('45');
   const [busy, setBusy] = useState(false);
   const { perms, loaded, missing } = usePermissions();
+
+  // Once a second while a timed session runs (ring and countdown), otherwise every 30 s. The slow
+  // tick is what rolls the daily goal over at local midnight without the user doing anything.
+  const [now, setNow] = useState(() => Date.now());
+  const timed = session !== null && session.endsAt !== null;
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), timed ? 1000 : 30_000);
+    return () => clearInterval(id);
+  }, [timed]);
+
+  // Compact summary of today's quests and the current rank, shown above the duration picker.
+  const liveSessions = useMemo(() => withLiveSession(sessions, session, now), [sessions, session, now]);
+  const progress = useMemo(
+    () => snapshot({ sessions: liveSessions, claimed, achievements }, now),
+    [liveSessions, claimed, achievements, now],
+  );
+  const goal = useMemo(() => dailyGoal(liveSessions, now), [liveSessions, now]);
+  const questsDone = progress.daily.filter((q) => q.done).length;
+
+  // The idle start button breathes slowly, unless the user asked the system for less motion.
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => {
+    void AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => sub.remove();
+  }, []);
+  const [pulse] = useState(() => new Animated.Value(1));
+  const canPulse = session === null && missing.length === 0 && !reduceMotion;
+  useEffect(() => {
+    if (!canPulse) {
+      pulse.setValue(1);
+      return;
+    }
+    const step = (toValue: number) =>
+      Animated.timing(pulse, { toValue, duration: 1500, easing: Easing.inOut(Easing.ease), useNativeDriver: true });
+    const loop = Animated.loop(Animated.sequence([step(1.04), step(1)]));
+    loop.start();
+    return () => {
+      loop.stop();
+      pulse.setValue(1);
+    };
+  }, [canPulse, pulse]);
 
   const profile = profiles.find((p) => p.id === selectedId) ?? profiles[0];
   const hasApps =
@@ -83,7 +143,18 @@ export default function HomeScreen() {
             })}
           </AppText>
         )}
-        <View style={[styles.ring, { borderColor: active ? theme.primary : theme.border }]}>
+        <View style={styles.ring}>
+          <View style={StyleSheet.absoluteFill} pointerEvents="none">
+            <FocusRing
+              size={RING}
+              stroke={4}
+              // Open-ended sessions have no end to count down to: show the ring full.
+              progress={active ? (session.endsAt === null ? 1 : Math.min(1, Math.max(0, (session.endsAt - now) / (session.endsAt - session.startedAt)))) : null}
+              color={theme.accent}
+              trackColor={theme.border}
+            />
+          </View>
+          <Animated.View style={{ transform: [{ scale: pulse }] }}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={active ? t('home.stop') : t('home.start')}
@@ -101,9 +172,39 @@ export default function HomeScreen() {
             <AppText weight="700" size={18} style={[styles.bigLabel, { color: active ? theme.accent : theme.onPrimary }]}>
               {(active ? t('home.stop') : t('home.start')).toLocaleUpperCase()}
             </AppText>
+            {active && session.endsAt !== null && (
+              <AppText accent size={15} weight="600">
+                {formatRemaining(session.endsAt - now)}
+              </AppText>
+            )}
           </Pressable>
+          </Animated.View>
         </View>
       </View>
+
+      <Card>
+        <View style={styles.between}>
+          <AppText weight="600">{t('home.goalTitle')}</AppText>
+          <AppText accent={goal.reached} muted={!goal.reached} size={13} weight="700">
+            {goal.reached
+              ? t('home.goalReached')
+              : t('home.goalProgress', { minutes: goal.minutes, goal: goal.goal })}
+          </AppText>
+        </View>
+        <ProgressBar fraction={goal.fraction} height={10} />
+        {goal.reached ? (
+          <AppText accent weight="700" size={16}>
+            {t('home.bonus', { count: goal.bonus })}
+          </AppText>
+        ) : (
+          <AppText muted size={13}>
+            {t('home.goalLeft', { minutes: goal.goal - goal.minutes })}
+          </AppText>
+        )}
+        <AppText muted size={12}>
+          {t('home.bonusHint')}
+        </AppText>
+      </Card>
 
       {active && FocusModule.platform === 'android' && loaded && perms.accessibility !== 'granted' && (
         <Card>
@@ -154,6 +255,20 @@ export default function HomeScreen() {
             )}
           </Card>
 
+          <Pressable accessibilityRole="button" onPress={() => router.navigate('/progress')}>
+            <Card>
+              <View style={styles.between}>
+                <AppText weight="600">
+                  {t('progress.summary', { done: questsDone, total: progress.daily.length })}
+                </AppText>
+                <AppText accent size={13} weight="700">
+                  {t(`progress.rank.${progress.rank}`)} · {progress.level.level}
+                </AppText>
+              </View>
+              <ProgressBar fraction={progress.daily.length ? questsDone / progress.daily.length : 0} />
+            </Card>
+          </Pressable>
+
           <Card>
             <AppText muted size={14}>
               {t('home.duration')}
@@ -190,10 +305,8 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.lg },
   // Thin outer ring, then the button itself with a soft red glow (iOS shadow / Android elevation).
   ring: {
-    width: 248,
-    height: 248,
-    borderRadius: 124,
-    borderWidth: 1,
+    width: RING,
+    height: RING,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: spacing.md,
@@ -214,6 +327,7 @@ const styles = StyleSheet.create({
   bigLabel: { letterSpacing: 4 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   flex: { flex: 1 },
+  between: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   missingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   input: {
     borderWidth: 1,

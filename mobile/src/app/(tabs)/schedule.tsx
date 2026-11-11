@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
@@ -15,6 +16,7 @@ function shift(minute: number, delta: number): number {
 
 export default function ScheduleScreen() {
   const { t } = useTranslation();
+  const router = useRouter();
   const schedules = useAppStore((s) => s.schedules);
   const profiles = useAppStore((s) => s.profiles);
   const selectedId = useAppStore((s) => s.selectedProfileId);
@@ -22,6 +24,7 @@ export default function ScheduleScreen() {
 
   return (
     <Screen>
+      <Button label={`‹ ${t('profiles.title')}`} variant="secondary" onPress={() => router.navigate('/profiles')} />
       <Heading>{t('schedule.title')}</Heading>
       {schedules.length === 0 && <AppText muted>{t('schedule.empty')}</AppText>}
       {schedules.map((s) => (

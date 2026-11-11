@@ -167,6 +167,30 @@ Screen Time API (`FamilyControls`, `ManagedSettings`, `DeviceActivity`):
 4. Lock the phone and wait for the timer: the shield must lift by itself.
 5. Add a schedule (15+ minutes) a few minutes in the future and confirm it starts with the app closed.
 
+## Progress, daily goal and nearby users
+
+- **Daily goal:** 90 minutes of focus mode a day. The home screen shows progress towards it; beyond it
+  every extra minute is 1 bonus point (also added to XP). The counter follows the local calendar day
+  and resets at local midnight. XP, levels, daily/weekly quests and achievements live in
+  `src/features/progress/` (pure logic, unit-tested).
+- **Nearby users (Android only for now):** while focus mode is on, the app advertises over Bluetooth
+  Low Energy (own service UUID) and scans for other Focus users. Privacy design:
+  - the advertisement contains no name or location, only a 6-byte token = HMAC(per-install secret,
+    local date), so it **changes every midnight**: the same person is announced at most once a day and
+    cannot be followed for longer than a day;
+  - a sighting only raises a notification with **Accept / Decline**; nothing about the other person is
+    read until Accept, then one small GATT characteristic is read (nickname, rank, level, streak);
+  - it runs only with focus mode on, the setting on, Bluetooth on and the runtime permissions granted;
+  - what is shared is set in Settings (optional nickname; rank, level and streak come from progress).
+  Code: `modules/focus/android/.../NearbyManager.kt`, JS in `src/features/nearby.ts`.
+  - **Nickname rules:** only Latin letters, digits, space, `.`, `_`, `-` (max 20). Racist, sexist,
+    vulgar and insulting words are refused in Czech and English, including tricks like `N3gr`,
+    `p i z d a` or `pizzzzda` (`src/features/nickname.ts`, list in `nickname-blocklist.json`, 60+ tests).
+    The check runs when typing, before sending, and again on every nickname received from another
+    phone; notifications never show a received nickname. No list is complete: extend the JSON when
+    you find a gap.
+  **Test it with two Android phones that both have focus mode on and Bluetooth on.**
+
 ## Known limitations
 
 ### Both platforms
@@ -207,3 +231,16 @@ Screen Time API (`FamilyControls`, `ManagedSettings`, `DeviceActivity`):
 - At most 19 schedules are monitored (system limit of 20 activities, one reserved for the timer).
 - `@bacons/apple-targets` 5.x was installed against Expo SDK 58 and `expo prebuild` works, but the
   Xcode project it generates was not opened or built.
+
+### Nearby users
+- **iOS is not implemented** (CoreBluetooth advertising/scanning, background modes and local
+  notifications with actions are not written). Android phones cannot find iPhones yet.
+- **Not tested with two phones yet.** Compiles and passes lint, nothing more.
+- BLE advertising/scanning in the background depends on the manufacturer: Xiaomi/HyperOS, Samsung and
+  others may throttle scans or kill the service; the foreground service and battery exemption help.
+- The token changes at midnight, so someone met before and after midnight counts as two people. Within a
+  day anyone who also runs Focus can read your nickname/rank/streak after they accept the notification
+  about you; there is no way to refuse that per person (switch the feature off in Settings instead).
+- Range is whatever Bluetooth gives (roughly 10 m indoors, less through walls).
+- Google Play: Bluetooth permissions need a data-safety declaration; the foreground service is declared
+  as `specialUse` (a `connectedDevice` type may be requested by Play review).

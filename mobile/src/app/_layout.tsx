@@ -4,13 +4,17 @@ import { useEffect } from 'react';
 import { AppState } from 'react-native';
 
 import i18n, { resolveLanguage } from '@/i18n';
+import { useNearbySync } from '@/features/nearby';
+import { evaluateProgress } from '@/features/progress/engine';
 import { syncSchedules, syncWithNative } from '@/features/session';
+import { RewardModal } from '@/components/reward-modal';
 import { FocusModule } from '@/modules/focus';
 import { useAppStore } from '@/store';
 import { useTheme } from '@/theme';
 
 export default function RootLayout() {
   const theme = useTheme();
+  useNearbySync();
   const language = useAppStore((s) => s.settings.language);
   const schedules = useAppStore((s) => s.schedules);
   const unlockGuard = useAppStore((s) => s.settings.unlockGuard);
@@ -20,6 +24,7 @@ export default function RootLayout() {
   }, [language]);
 
   useEffect(() => {
+    evaluateProgress(); // achievements and level-ups that became true while the app was closed
     void syncWithNative();
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') void syncWithNative();
@@ -38,6 +43,7 @@ export default function RootLayout() {
   return (
     <>
       <StatusBar style="light" />
+      <RewardModal />
       <Stack
         screenOptions={{
           headerShown: false,

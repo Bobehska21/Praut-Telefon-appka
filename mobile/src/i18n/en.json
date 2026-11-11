@@ -22,7 +22,14 @@
     "noAppsWarning": "This profile has no allowed apps. Phone, messages and emergency calls always stay available.",
     "missingTitle": "Allow these before starting",
     "accessibilityLostTitle": "The accessibility service is off",
-    "accessibilityLostBody": "Without it non-allowed apps cannot be blocked. Turn it back on or focus mode will not hold."
+    "accessibilityLostBody": "Without it non-allowed apps cannot be blocked. Turn it back on or focus mode will not hold.",
+    "goalTitle": "Daily goal",
+    "goalProgress": "{{minutes}} / {{goal}} min",
+    "goalLeft": "{{minutes}} min to go",
+    "goalReached": "Goal reached",
+    "bonus_one": "Bonus: {{count}} extra point",
+    "bonus_other": "Bonus: {{count}} extra points",
+    "bonusHint": "Every minute beyond the goal = 1 point. The counter resets at midnight."
   },
   "unlock": {
     "title": "Really stop?",
@@ -60,7 +67,11 @@
     "week": "Last 7 days",
     "today": "Today",
     "focusTime": "Time in focus mode",
-    "blocked": "Blocked attempts"
+    "blocked": "Blocked attempts",
+    "streakDays_one": "{{count}} day streak",
+    "streakDays_other": "{{count}} day streak",
+    "streakEmpty": "Start a focus session to begin a streak",
+    "best": "Longest streak: {{count}}"
   },
   "settings": {
     "title": "Settings",
@@ -71,7 +82,15 @@
     "accessibility": "Extended blocking (Accessibility)",
     "accessibilityHint": "Optional. More reliable blocking, but requires the Accessibility permission.",
     "language": "Language",
-    "languageSystem": "System default"
+    "languageSystem": "System default",
+    "nearby": "Nearby users",
+    "nearbySwitch": "Look for nearby users",
+    "nearbyHint": "While focus mode is on, your phone announces over Bluetooth that it uses Focus and looks for others. No name or location is sent. If someone is found you get a notification, and you see their details only after you accept.",
+    "nickname": "Nickname (optional)",
+    "nicknameHint": "Nearby users who accept the notification about you see it, together with your rank and streak. Nothing else is shared.",
+    "bluetoothMissing": "Without the Bluetooth permission this does not work.",
+    "nicknameBlocked": "This nickname is not allowed. Please choose another.",
+    "nicknameChars": "Allowed: Latin letters, digits, space, dot, underscore and hyphen."
   },
   "days": {
     "0": "Sun",
@@ -121,11 +140,110 @@
       "notificationAccess": {
         "title": "Notification access",
         "why": "While focus mode is on we dismiss notifications from apps that are not allowed, so the phone only shows what you permit. We read only the name of the app that sent a notification, never its text, and nothing is sent anywhere."
+      },
+      "bluetooth": {
+        "title": "Bluetooth",
+        "why": "While focus mode is on, your phone broadcasts and looks for other Focus users. It does not send your name or location, only a random code that changes every midnight. If it finds someone you get a notification you can accept or decline, and you see their details only after accepting. Bluetooth is not used to find your location. Optional; you can turn it off in Settings."
       }
     },
     "grant": "Allow",
     "granted": "Allowed",
     "skip": "Skip",
     "finish": "Done"
+  },
+  "progress": {
+    "title": "Progress",
+    "level": "Level {{level}}",
+    "xp": "{{into}} / {{needed}} XP",
+    "total": "{{xp}} XP total",
+    "todayQuests": "Today's quests",
+    "weeklyQuests": "Weekly challenges",
+    "achievements": "Achievements",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "summary": "Today's quests {{done}}/{{total}}",
+    "rank": {
+      "novice": "Novice",
+      "apprentice": "Apprentice",
+      "adept": "Adept",
+      "warden": "Warden",
+      "master": "Master",
+      "grandmaster": "Grandmaster"
+    },
+    "quests": {
+      "focus20": "Focus for {{target}} minutes",
+      "session1": "Finish 1 session",
+      "focus45": "Focus for {{target}} minutes",
+      "sessions2": "Finish 2 sessions",
+      "early": "Early start: begin before 10:00",
+      "focus90": "Focus for {{target}} minutes",
+      "long50": "Stay focused {{target}} minutes in one session",
+      "week300": "Focus for 5 hours this week",
+      "days5": "Focus on {{target}} different days this week"
+    },
+    "ach": {
+      "first": {
+        "title": "First step",
+        "desc": "Focus for at least 5 minutes."
+      },
+      "sessions10": {
+        "title": "Habit",
+        "desc": "Finish 10 sessions."
+      },
+      "sessions50": {
+        "title": "Discipline",
+        "desc": "Finish 50 sessions."
+      },
+      "streak3": {
+        "title": "Getting going",
+        "desc": "3 days in a row."
+      },
+      "streak7": {
+        "title": "A week, no excuses",
+        "desc": "7 days in a row."
+      },
+      "streak30": {
+        "title": "Unshaken",
+        "desc": "30 days in a row."
+      },
+      "hours10": {
+        "title": "Ten hours",
+        "desc": "Focus for 10 hours in total."
+      },
+      "hours50": {
+        "title": "Fifty hours",
+        "desc": "Focus for 50 hours in total."
+      },
+      "marathon": {
+        "title": "Marathon",
+        "desc": "Finish a 90+ minute session."
+      },
+      "earlybird": {
+        "title": "Early bird",
+        "desc": "Start a session before 7:00."
+      },
+      "nightowl": {
+        "title": "Night shift",
+        "desc": "Finish a session after 22:00."
+      },
+      "level5": {
+        "title": "Adept",
+        "desc": "Reach level 5."
+      }
+    },
+    "reward": {
+      "completed": "Session complete",
+      "stopped": "Good work",
+      "minutes": "{{minutes}} min of focus",
+      "quest": "Quest complete",
+      "achievement": "New achievement",
+      "level": "Level up",
+      "xp": "+{{xp}} XP",
+      "continue": "Continue"
+    },
+    "nearbyTitle": "People met nearby",
+    "nearbyEmpty": "No one yet. When you are both in range with focus mode and Bluetooth on, you get a notification.",
+    "nearbyLine": "{{name}} · {{rank}} ({{level}}) · {{streak}}-day streak",
+    "anonymous": "Anonymous"
   }
 }

@@ -104,6 +104,17 @@ export function Button({
   );
 }
 
+/** Thin horizontal bar; `fraction` is 0..1. */
+export function ProgressBar({ fraction, height = 8 }: { fraction: number; height?: number }) {
+  const t = useTheme();
+  const width = `${Math.round(Math.min(1, Math.max(0, fraction)) * 100)}%` as const;
+  return (
+    <View style={[styles.track, { height, backgroundColor: t.border }]}>
+      <View style={{ width, height, borderRadius: height / 2, backgroundColor: t.primary }} />
+    </View>
+  );
+}
+
 export function ThemedSwitch({
   value,
   onValueChange,
@@ -156,6 +167,7 @@ const styles = StyleSheet.create({
   content: { padding: spacing.md, gap: spacing.md, flexGrow: 1 },
   heading: { gap: spacing.sm, marginBottom: spacing.xs },
   headingText: { letterSpacing: 2 },
+  track: { borderRadius: 4, overflow: 'hidden' },
   rule: { width: 36, height: 3, borderRadius: 2 },
   card: { borderWidth: 1, borderRadius: radius.md, padding: spacing.md, gap: spacing.sm },
   button: {

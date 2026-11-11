@@ -22,7 +22,16 @@
     "noAppsWarning": "Tento profil nemá žádné povolené aplikace. Telefon, SMS a nouzová volání zůstanou dostupné vždy.",
     "missingTitle": "Před zapnutím je potřeba povolit",
     "accessibilityLostTitle": "Služba usnadnění je vypnutá",
-    "accessibilityLostBody": "Bez ní nejde blokovat nepovolené aplikace. Zapni ji znovu, jinak režim soustředění nedrží."
+    "accessibilityLostBody": "Bez ní nejde blokovat nepovolené aplikace. Zapni ji znovu, jinak režim soustředění nedrží.",
+    "goalTitle": "Denní cíl",
+    "goalProgress": "{{minutes}} / {{goal}} min",
+    "goalLeft": "Zbývá {{minutes}} min do cíle",
+    "goalReached": "Cíl splněn",
+    "bonus_one": "Bonus: {{count}} bod navíc",
+    "bonus_few": "Bonus: {{count}} body navíc",
+    "bonus_many": "Bonus: {{count}} bodu navíc",
+    "bonus_other": "Bonus: {{count}} bodů navíc",
+    "bonusHint": "Každá další minuta nad cíl = 1 bod. Počítadlo se vynuluje o půlnoci."
   },
   "unlock": {
     "title": "Opravdu vypnout?",
@@ -60,7 +69,13 @@
     "week": "Posledních 7 dní",
     "today": "Dnes",
     "focusTime": "Čas v režimu",
-    "blocked": "Zablokované pokusy"
+    "blocked": "Zablokované pokusy",
+    "streakDays_one": "{{count}} den v řadě",
+    "streakDays_few": "{{count}} dny v řadě",
+    "streakDays_many": "{{count}} dne v řadě",
+    "streakDays_other": "{{count}} dní v řadě",
+    "streakEmpty": "Zapni režim a začni sérii",
+    "best": "Nejdelší série: {{count}}"
   },
   "settings": {
     "title": "Nastavení",
@@ -71,7 +86,15 @@
     "accessibility": "Rozšířené blokování (Přístupnost)",
     "accessibilityHint": "Volitelné. Spolehlivější blokování, ale vyžaduje oprávnění Přístupnost.",
     "language": "Jazyk",
-    "languageSystem": "Podle systému"
+    "languageSystem": "Podle systému",
+    "nearby": "Uživatelé v okolí",
+    "nearbySwitch": "Zjišťovat uživatele v okolí",
+    "nearbyHint": "Za běhu režimu soustředění tvůj telefon přes Bluetooth ohlásí, že používá Focus, a hledá další. Neposílá se jméno ani poloha. Když někoho najdeš, přijde oznámení a údaje o něm uvidíš až po přijetí.",
+    "nickname": "Přezdívka (nepovinná)",
+    "nicknameHint": "Uvidí ji uživatelé v okolí, kteří přijmou oznámení o tobě, spolu s hodností a sérií. Nic víc se nesdílí.",
+    "bluetoothMissing": "Bez oprávnění k Bluetooth funkce nefunguje.",
+    "nicknameBlocked": "Tato přezdívka není povolená. Zvol jinou.",
+    "nicknameChars": "Povolená jsou písmena latinky, číslice, mezera, tečka, podtržítko a pomlčka."
   },
   "days": {
     "0": "Ne",
@@ -121,11 +144,110 @@
       "notificationAccess": {
         "title": "Přístup k oznámením",
         "why": "Během režimu soustředění mažeme oznámení od aplikací, které nejsou povolené, aby telefon ukazoval jen to, co povolíš. Čteme pouze název aplikace, která oznámení poslala, nikdy jeho text, a nic neodesíláme."
+      },
+      "bluetooth": {
+        "title": "Bluetooth",
+        "why": "Za běhu režimu soustředění telefon vysílá a hledá další uživatele Focus. Nevysílá jméno ani polohu, jen náhodný kód, který se každou půlnoc mění. Když někoho najde, přijde oznámení, které můžeš přijmout, nebo odmítnout, a údaje o něm uvidíš až po přijetí. Pomocí Bluetooth se nezjišťuje tvoje poloha. Volitelné, jde vypnout v Nastavení."
       }
     },
     "grant": "Povolit",
     "granted": "Povoleno",
     "skip": "Přeskočit",
     "finish": "Hotovo"
+  },
+  "progress": {
+    "title": "Pokrok",
+    "level": "Úroveň {{level}}",
+    "xp": "{{into}} / {{needed}} XP",
+    "total": "Celkem {{xp}} XP",
+    "todayQuests": "Dnešní mise",
+    "weeklyQuests": "Týdenní výzvy",
+    "achievements": "Úspěchy",
+    "claim": "Převzít",
+    "claimed": "Převzato",
+    "summary": "Dnešní mise {{done}}/{{total}}",
+    "rank": {
+      "novice": "Nováček",
+      "apprentice": "Učedník",
+      "adept": "Adept",
+      "warden": "Strážce",
+      "master": "Mistr",
+      "grandmaster": "Velmistr"
+    },
+    "quests": {
+      "focus20": "Soustřeď se {{target}} minut",
+      "session1": "Dokonči 1 sezení",
+      "focus45": "Soustřeď se {{target}} minut",
+      "sessions2": "Dokonči 2 sezení",
+      "early": "Ranní soustředění: začni před 10:00",
+      "focus90": "Soustřeď se {{target}} minut",
+      "long50": "Vydrž {{target}} minut v jednom sezení",
+      "week300": "Soustřeď se 5 hodin tento týden",
+      "days5": "Soustřeď se {{target}} různých dnů tento týden"
+    },
+    "ach": {
+      "first": {
+        "title": "První krok",
+        "desc": "Soustřeď se aspoň 5 minut."
+      },
+      "sessions10": {
+        "title": "Zvyk",
+        "desc": "Dokonči 10 sezení."
+      },
+      "sessions50": {
+        "title": "Disciplína",
+        "desc": "Dokonči 50 sezení."
+      },
+      "streak3": {
+        "title": "Rozjezd",
+        "desc": "3 dny v řadě."
+      },
+      "streak7": {
+        "title": "Týden bez kompromisů",
+        "desc": "7 dní v řadě."
+      },
+      "streak30": {
+        "title": "Neochvějný",
+        "desc": "30 dní v řadě."
+      },
+      "hours10": {
+        "title": "Deset hodin",
+        "desc": "Soustřeď se celkem 10 hodin."
+      },
+      "hours50": {
+        "title": "Padesát hodin",
+        "desc": "Soustřeď se celkem 50 hodin."
+      },
+      "marathon": {
+        "title": "Maraton",
+        "desc": "Dokonči sezení na 90+ minut."
+      },
+      "earlybird": {
+        "title": "Ranní ptáče",
+        "desc": "Začni sezení před 7:00."
+      },
+      "nightowl": {
+        "title": "Noční směna",
+        "desc": "Dokonči sezení po 22:00."
+      },
+      "level5": {
+        "title": "Adept",
+        "desc": "Dosáhni úrovně 5."
+      }
+    },
+    "reward": {
+      "completed": "Sezení dokončeno",
+      "stopped": "Dobrá práce",
+      "minutes": "{{minutes}} min soustředění",
+      "quest": "Mise splněna",
+      "achievement": "Nový úspěch",
+      "level": "Nová úroveň",
+      "xp": "+{{xp}} XP",
+      "continue": "Pokračovat"
+    },
+    "nearbyTitle": "Potkaní v okolí",
+    "nearbyEmpty": "Zatím nikdo. Když budete v dosahu oba se zapnutým režimem a Bluetooth, přijde oznámení.",
+    "nearbyLine": "{{name}} · {{rank}} ({{level}}) · série {{streak}}",
+    "anonymous": "Anonym"
   }
 }
