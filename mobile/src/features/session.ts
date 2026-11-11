@@ -1,4 +1,5 @@
 import { FocusModule } from '@/modules/focus';
+import { evaluateProgress } from '@/features/progress/engine';
 import { useAppStore } from '@/store';
 
 /**
@@ -26,6 +27,7 @@ export async function startFocus(profileId: string, durationMs: number | null): 
 export async function stopFocus(): Promise<void> {
   await FocusModule.stopFocus();
   useAppStore.getState().endSession(Date.now());
+  evaluateProgress();
 }
 
 /** Call on app start and whenever the app returns to foreground. */
@@ -36,6 +38,7 @@ export async function syncWithNative(): Promise<void> {
   if (state.session && !status.active) {
     // Timer expired natively while the app was not running.
     state.endSession(state.session.endsAt ?? Date.now());
+    evaluateProgress();
   } else if (!state.session && status.active && status.profileId && status.startedAt) {
     // Started natively, e.g. by a schedule.
     state.beginSession({

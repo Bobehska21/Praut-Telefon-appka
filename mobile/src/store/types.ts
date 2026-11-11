@@ -26,6 +26,21 @@ export interface SessionRecord {
   profileId: string;
   startedAt: number;
   endedAt: number;
+  /** Planned length, `null` for "until I stop it". Missing on records saved before rewards existed. */
+  plannedMs?: number | null;
+  /** True if a timed session ran to its end instead of being stopped early. */
+  completed?: boolean;
+}
+
+/** Something to celebrate: shown one at a time in a modal. */
+export interface RewardEvent {
+  id: string;
+  kind: 'session' | 'quest' | 'achievement' | 'level';
+  xp: number;
+  /** i18n key suffix and params for the title (quest key, achievement id). */
+  ref?: string;
+  params?: Record<string, string | number>;
+  level?: number;
 }
 
 export interface BlockedAttempt {
@@ -42,4 +57,8 @@ export interface Settings {
   accessibilityMode: boolean;
   onboardingDone: boolean;
   language: 'system' | 'cs' | 'en';
+  /** Shown to nearby users who accept the notification about you. Optional. */
+  nickname: string;
+  /** Take part in nearby detection (still needs the Bluetooth permission). */
+  nearbyEnabled: boolean;
 }

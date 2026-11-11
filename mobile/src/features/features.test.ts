@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { isScheduleActive } from './scheduler';
-import { buildDayStats, formatDuration, totalBlocked, totalFocusMs } from './stats';
+import { buildDayStats, computeStreaks, formatDuration, totalBlocked, totalFocusMs, weekdayOf } from './stats';
 import { COUNTDOWN_SECONDS, countdownRemaining, isSentenceMatch } from './unlock-guard';
 import type { Schedule } from '@/store/types';
 
@@ -73,5 +73,36 @@ describe('stats', () => {
     expect(totalFocusMs(stats)).toBe(hour);
     expect(formatDuration(90 * 60_000)).toBe('1 h 30 min');
     expect(formatDuration(25 * 60_000)).toBe('25 min');
+  });
+});
+
+describe('streaks', () => {
+  const now = Date.UTC(2026, 10, 9, 12); // Mon 12:00
+  const day = 24 * 3_600_000;
+  const session = (daysAgo: number, minutes = 30) => ({
+    id: `s${daysAgo}`,
+    profileId: 'p',
+    startedAt: now - daysAgo * day - 3_600_000,
+    endedAt: now - daysAgo * day - 3_600_000 + minutes * 60_000,
+  });
+
+  it('counts consecutive days including today', () => {
+    expect(computeStreaks([session(0), session(1), session(2)], now)).toEqual({ current: 3, best: 3 });
+  });
+  it('does not break the streak while today is still empty', () => {
+    expect(computeStreaks([session(1), session(2)], now).current).toBe(2);
+  });
+  it('breaks on a missing day and remembers the best run', () => {
+    const result = computeStreaks([session(0), session(2), session(3), session(4)], now);
+    expect(result).toEqual({ current: 1, best: 3 });
+  });
+  it('ignores days with less than 5 minutes of focus', () => {
+    expect(computeStreaks([session(0, 4), session(1, 30)], now).current).toBe(1);
+  });
+  it('is zero without sessions', () => {
+    expect(computeStreaks([], now)).toEqual({ current: 0, best: 0 });
+  });
+  it('reads the weekday from a date key', () => {
+    expect(weekdayOf('2026-11-09')).toBe(1); // Monday
   });
 });

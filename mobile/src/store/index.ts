@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { mmkvStorage } from './storage';
-import type { BlockedAttempt, Profile, Schedule, SessionRecord, Settings } from './types';
+import { sessionMinutes, sessionXp } from '@/features/progress/xp';
+import type { BlockedAttempt, Profile, RewardEvent, Schedule, SessionRecord, Settings } from './types';
 
 export * from './types';
 
@@ -28,6 +29,12 @@ interface AppState {
   session: ActiveSession | null;
   sessions: SessionRecord[];
   attempts: BlockedAttempt[];
+  /** Quest id -> XP granted when it was claimed (kept, so later rule changes never rewrite history). */
+  claimed: Record<string, number>;
+  /** Achievement id -> when it unlocked and the XP it gave. */
+  achievements: Record<string, { at: number; xp: number }>;
+  lastLevelSeen: number;
+  rewardQueue: RewardEvent[];
 
   addProfile: (name: string) => string;
   renameProfile: (id: string, name: string) => void;
@@ -45,6 +52,12 @@ interface AppState {
   beginSession: (session: ActiveSession) => void;
   endSession: (endedAt: number) => void;
   recordAttempt: (attempt: BlockedAttempt) => void;
+
+  claimQuest: (id: string, xp: number, ref: string, params: Record<string, string | number>) => void;
+  unlockAchievement: (id: string, xp: number, at: number) => void;
+  setLastLevelSeen: (level: number) => void;
+  pushReward: (event: Omit<RewardEvent, 'id'>) => void;
+  popReward: () => void;
 }
 
 const defaultProfiles: Profile[] = [
@@ -64,10 +77,16 @@ export const useAppStore = create<AppState>()(
         accessibilityMode: false,
         onboardingDone: false,
         language: 'system',
+        nickname: '',
+        nearbyEnabled: true,
       },
       session: null,
       sessions: [],
       attempts: [],
+      claimed: {},
+      achievements: {},
+      lastLevelSeen: 1,
+      rewardQueue: [],
 
       addProfile: (name) => {
         const id = uid('p');
@@ -127,16 +146,39 @@ export const useAppStore = create<AppState>()(
       endSession: (endedAt) => {
         const { session, sessions } = get();
         if (!session) return;
+        const planned = session.endsAt === null ? null : session.endsAt - session.startedAt;
         const record: SessionRecord = {
           id: uid('r'),
           profileId: session.profileId,
           startedAt: session.startedAt,
           endedAt,
+          plannedMs: planned,
+          // Ran to its planned end (a few seconds of slack for timer jitter) rather than being stopped early.
+          completed: session.endsAt !== null && endedAt >= session.endsAt - 5000,
         };
         set({ session: null, sessions: [...sessions, record].slice(-MAX_SESSIONS) });
+        // Under a minute earns nothing, so there is nothing to celebrate.
+        if (sessionMinutes(record) >= 1) {
+          get().pushReward({ kind: 'session', xp: sessionXp(record), params: { minutes: Math.floor(sessionMinutes(record)) }, ref: record.completed ? 'completed' : 'stopped' });
+        }
       },
       recordAttempt: (attempt) =>
         set((s) => ({ attempts: [...s.attempts, attempt].slice(-MAX_ATTEMPTS) })),
+
+      claimQuest: (id, xp, ref, params) => {
+        if (get().claimed[id] !== undefined) return; // already claimed: never pay twice
+        set((s) => ({ claimed: { ...s.claimed, [id]: xp } }));
+        get().pushReward({ kind: 'quest', xp, ref, params });
+      },
+      unlockAchievement: (id, xp, at) => {
+        if (get().achievements[id]) return;
+        set((s) => ({ achievements: { ...s.achievements, [id]: { at, xp } } }));
+        get().pushReward({ kind: 'achievement', xp, ref: id });
+      },
+      setLastLevelSeen: (level) => set({ lastLevelSeen: level }),
+      pushReward: (event) =>
+        set((s) => ({ rewardQueue: [...s.rewardQueue, { ...event, id: uid('e') }].slice(-20) })),
+      popReward: () => set((s) => ({ rewardQueue: s.rewardQueue.slice(1) })),
     }),
     {
       name: 'focus-mode-state',
