@@ -33,6 +33,7 @@ object BlockEngine {
     val state = store.state()
     if (!state.active) {
       hideOverlay()
+      FocusAccessibilityService.focusWindows?.clear()
       return
     }
     if (pkg == lastPackage) return
@@ -41,8 +42,15 @@ object BlockEngine {
     refreshCachesIfStale(app, store, state)
     if (pkg in allowed) {
       hideOverlay()
+      FocusAccessibilityService.focusWindows?.let { windows ->
+        windows.hideCurtain()
+        // The status bar and "android" are not where the user is: leave the guard as it is for those.
+        if (pkg == app.packageName) windows.setNavGuard(true)
+        else if (pkg != "com.android.systemui" && pkg != "android") windows.setNavGuard(false)
+      }
       return
     }
+    FocusAccessibilityService.focusWindows?.setNavGuard(false)
 
     // Pressing Home or opening Recents lands on a launcher. That is leaving, not an attempt to open
     // a forbidden app, so it is not counted in the statistics.
@@ -80,12 +88,15 @@ object BlockEngine {
     lastPackage = null
     allowedLoadedAt = 0L
     hideOverlay()
+    FocusAccessibilityService.focusWindows?.clear()
   }
 
   private fun relaunchFocusScreen(context: Context, blocked: Boolean) {
     val now = SystemClock.elapsedRealtime()
     if (now - lastRelaunchAt < RELAUNCH_DEBOUNCE_MS) return
     lastRelaunchAt = now
+    // Cover the screen first so the launcher / Recents never flash while the focus screen starts.
+    FocusAccessibilityService.focusWindows?.showCurtain()
     BlockOverlay.goHome(context, blocked)
   }
 

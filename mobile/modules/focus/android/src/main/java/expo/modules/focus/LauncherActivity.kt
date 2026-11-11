@@ -85,7 +85,8 @@ class LauncherActivity : Activity() {
       verticalSpacing = dp(12)
       horizontalSpacing = dp(4)
       stretchMode = GridView.STRETCH_COLUMN_WIDTH
-      setPadding(pad, 0, pad, pad)
+      // Extra bottom room: the invisible navigation guard covers the strip where the nav bar sits.
+      setPadding(pad, 0, pad, pad + dp(64))
       clipToPadding = false
       this.adapter = this@LauncherActivity.adapter
       setOnItemClickListener { _, _, position, _ -> launch(this@LauncherActivity.adapter.getItem(position)) }

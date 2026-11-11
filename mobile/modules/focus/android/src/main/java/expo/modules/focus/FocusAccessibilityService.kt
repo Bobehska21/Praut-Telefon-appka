@@ -15,6 +15,7 @@ import android.view.accessibility.AccessibilityEvent
 class FocusAccessibilityService : AccessibilityService() {
   override fun onServiceConnected() {
     super.onServiceConnected()
+    focusWindows = FocusWindows(this)
     // After a reboot the system starts this service again; if focus mode is still on (restored by
     // BootReceiver), bring the focus screen up straight away.
     if (FocusStore.get(this).state().active) BlockOverlay.goHome(this)
@@ -27,4 +28,15 @@ class FocusAccessibilityService : AccessibilityService() {
   }
 
   override fun onInterrupt() {}
+
+  override fun onUnbind(intent: android.content.Intent?): Boolean {
+    focusWindows?.clear()
+    focusWindows = null
+    return super.onUnbind(intent)
+  }
+
+  companion object {
+    /** Overlay windows; only exists while the service is connected. Main thread only. */
+    @Volatile var focusWindows: FocusWindows? = null
+  }
 }
