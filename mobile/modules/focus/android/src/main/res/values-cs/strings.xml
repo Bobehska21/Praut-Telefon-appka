@@ -33,4 +33,10 @@
   <string name="focus_rank_warden">Strážce</string>
   <string name="focus_rank_master">Mistr</string>
   <string name="focus_rank_grandmaster">Velmistr</string>
+  <string name="focus_wasteman_title">Jsi wasteman</string>
+  <string name="focus_wasteman_text">Zapni znovu režim soustředění a zachráníš se.</string>
+  <string name="focus_killed_channel">Zabití</string>
+  <string name="focus_killed_title">Byl jsi zabit</string>
+  <string name="focus_killed_text">%1$s tě zabil. Přišel jsi o %2$d bodů.</string>
+  <string name="focus_nearby_anonymous_player">Jiný hráč</string>
 </resources>

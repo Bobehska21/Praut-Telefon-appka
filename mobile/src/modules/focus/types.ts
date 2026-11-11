@@ -41,6 +41,8 @@ export interface FocusStatus {
   endsAt: number | null;
   /** Blocked attempts since the session started (native-side counter). */
   blockedAttempts: number;
+  /** Focus was switched off by hand and not yet restarted (multiplayer only). */
+  wasteman?: boolean;
 }
 
 export interface PickResult {
@@ -67,6 +69,17 @@ export interface NearbyEncounter {
   rank: string;
   level: number;
   streak: number;
+}
+
+/** A phone seen over Bluetooth recently. The token is a daily rotating pseudonym; the server says who it is. */
+export interface NearbyToken {
+  /** 6 bytes as hex. */
+  token: string;
+  /** What the other phone advertises. A hint only: the server decides who is really a wasteman. */
+  status: 'focus' | 'wasteman';
+  rssi: number;
+  /** Epoch ms of the last sighting. */
+  seenAt: number;
 }
 
 export interface NativeSchedule {
@@ -96,6 +109,21 @@ export interface FocusModuleApi {
   /** Android only. Tells the native layer what to share and whether to look for others. */
   setNearby(config: NearbyConfig): Promise<void>;
   getNearbyEncounters(): Promise<NearbyEncounter[]>;
+  // --- multiplayer (Android first; iOS rejects with UNSUPPORTED until it is implemented) ---
+  /** Public half of this device's signing key (base64 SPKI); registered with the server. */
+  getDevicePublicKey(): Promise<string>;
+  /** The server-issued player id, needed to sign proximity proofs. Empty string clears it. */
+  setPlayerId(playerId: string): Promise<void>;
+  /** Mirrors the server's wasteman state so the phone stays visible over Bluetooth. */
+  setWasteman(wasteman: boolean): Promise<void>;
+  /** Game server address and bearer token for the background sync (heartbeats, events). Empty strings clear them. */
+  setServer(url: string, token: string): Promise<void>;
+  /** Today's rotating Bluetooth token, to register with the server. */
+  getTodayToken(): Promise<{ token: string; day: string }>;
+  /** Phones seen over Bluetooth in the last few minutes. */
+  getNearbyTokens(): Promise<NearbyToken[]>;
+  /** Exchanges the server's challenge (`challengeId|nonce|killerPlayerId`) with the phone behind `token`; returns its signature. */
+  requestKillProof(token: string, payload: string): Promise<string>;
   /** Native side runs the schedule (Android: alarms/service, iOS: DeviceActivityMonitor). */
   setSchedules(items: NativeSchedule[]): Promise<void>;
   /** Returns attempts recorded natively since the last call and clears them. */

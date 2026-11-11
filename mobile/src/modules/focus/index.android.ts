@@ -6,6 +6,7 @@ import type {
   FocusStatus,
   InstalledApp,
   NearbyEncounter,
+  NearbyToken,
   NativeSchedule,
   PermissionMap,
   PermissionName,
@@ -23,6 +24,13 @@ declare class NativeFocus extends NativeModule<FocusEvents> {
   setUnlockGuard(mode: 'none' | 'countdown' | 'sentence'): Promise<void>;
   setNearby(enabled: boolean, nickname: string, rank: string, level: number, streak: number): Promise<void>;
   getNearbyEncounters(): Promise<NearbyEncounter[]>;
+  getDevicePublicKey(): Promise<string>;
+  setPlayerId(playerId: string): Promise<void>;
+  setServer(url: string, token: string): Promise<void>;
+  setWasteman(wasteman: boolean): Promise<void>;
+  getTodayToken(): Promise<{ token: string; day: string }>;
+  getNearbyTokens(): Promise<NearbyToken[]>;
+  requestKillProof(token: string, payload: string): Promise<string>;
   setSchedules(items: NativeSchedule[]): Promise<void>;
   drainBlockedAttempts(): Promise<BlockedAttemptRecord[]>;
   startFocus(profileId: string, durationMs: number | null): Promise<FocusStatus>;
@@ -57,6 +65,13 @@ export const FocusModule: FocusModuleApi = {
   setUnlockGuard: (mode) => native.setUnlockGuard(mode),
   setNearby: (c) => native.setNearby(c.enabled, c.nickname, c.rank, c.level, c.streak),
   getNearbyEncounters: () => native.getNearbyEncounters(),
+  getDevicePublicKey: () => native.getDevicePublicKey(),
+  setPlayerId: (playerId) => native.setPlayerId(playerId),
+  setServer: (url, token) => native.setServer(url, token),
+  setWasteman: (wasteman) => native.setWasteman(wasteman),
+  getTodayToken: () => native.getTodayToken(),
+  getNearbyTokens: () => native.getNearbyTokens(),
+  requestKillProof: (token, payload) => native.requestKillProof(token, payload),
   setSchedules: (items) => native.setSchedules(items),
   drainBlockedAttempts: () => native.drainBlockedAttempts(),
   startFocus: (profileId, durationMs) => native.startFocus(profileId, durationMs),

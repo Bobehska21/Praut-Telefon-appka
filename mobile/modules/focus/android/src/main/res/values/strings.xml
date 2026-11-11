@@ -33,4 +33,10 @@
   <string name="focus_rank_warden">Warden</string>
   <string name="focus_rank_master">Master</string>
   <string name="focus_rank_grandmaster">Grandmaster</string>
+  <string name="focus_wasteman_title">You are a wasteman</string>
+  <string name="focus_wasteman_text">Turn focus mode back on to save yourself.</string>
+  <string name="focus_killed_channel">Kills</string>
+  <string name="focus_killed_title">You were killed</string>
+  <string name="focus_killed_text">%1$s killed you. You lost %2$d points.</string>
+  <string name="focus_nearby_anonymous_player">Another player</string>
 </resources>

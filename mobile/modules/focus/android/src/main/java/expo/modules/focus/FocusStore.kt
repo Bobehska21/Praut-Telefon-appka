@@ -45,6 +45,12 @@ class FocusStore private constructor(context: Context) {
     private const val K_ATTEMPT_COUNT = "attemptCount"
     private const val K_UNLOCK_GUARD = "unlockGuard"
     private const val K_NEARBY_ENABLED = "nearbyEnabled"
+    private const val K_WASTEMAN = "wasteman"
+    private const val K_PLAYER_ID = "playerId"
+    private const val K_SERVER_URL = "serverUrl"
+    private const val K_SERVER_TOKEN = "serverToken"
+    private const val K_LAST_EVENT = "lastEventId"
+    private const val K_SYNC_QUEUE = "syncQueue"
     private const val K_NEARBY_PROFILE = "nearbyProfile"
     private const val K_NEARBY_SECRET = "nearbySecret"
     private const val K_NEARBY_SEEN = "nearbySeen"
@@ -177,6 +183,50 @@ class FocusStore private constructor(context: Context) {
     set(value) {
       prefs.edit().putBoolean(K_NEARBY_ENABLED, value).apply()
     }
+
+  /**
+   * True after the user manually stopped a running focus mode while taking part in multiplayer, until
+   * focus mode is started again. The server is authoritative; this lets the phone stay visible over
+   * Bluetooth (so it can be found and killed) even when it is offline.
+   */
+  var wasteman: Boolean
+    get() = prefs.getBoolean(K_WASTEMAN, false)
+    set(value) {
+      prefs.edit().putBoolean(K_WASTEMAN, value).apply()
+    }
+
+  /** This player's id on the server (`null` until registered). Needed to sign proximity proofs. */
+  var playerId: String?
+    get() = prefs.getString(K_PLAYER_ID, null)
+    set(value) {
+      prefs.edit().putString(K_PLAYER_ID, value).apply()
+    }
+
+  /** Game server base URL and bearer token, given by JS after joining. Private to this app (app sandbox). */
+  var serverUrl: String?
+    get() = prefs.getString(K_SERVER_URL, null)
+    set(value) {
+      prefs.edit().putString(K_SERVER_URL, value).apply()
+    }
+
+  var serverToken: String?
+    get() = prefs.getString(K_SERVER_TOKEN, null)
+    set(value) {
+      prefs.edit().putString(K_SERVER_TOKEN, value).apply()
+    }
+
+  var lastEventId: Long
+    get() = prefs.getLong(K_LAST_EVENT, 0L)
+    set(value) {
+      prefs.edit().putLong(K_LAST_EVENT, value).apply()
+    }
+
+  /** Focus start/stop events waiting for a connection, oldest first. */
+  fun syncQueue(): JSONArray = try { JSONArray(prefs.getString(K_SYNC_QUEUE, "[]")) } catch (_: Exception) { JSONArray() }
+
+  fun setSyncQueue(queue: JSONArray) {
+    prefs.edit().putString(K_SYNC_QUEUE, queue.toString()).apply()
+  }
 
   /** Random per-install key. Never leaves the device; only a daily token derived from it is broadcast. */
   @Synchronized

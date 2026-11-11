@@ -32,6 +32,21 @@ export const FocusModule: FocusModuleApi = {
   async setAllowedApps() {},
   async setUnlockGuard() {},
   async setNearby() {},
+  async getDevicePublicKey() {
+    return 'mock-public-key';
+  },
+  async setPlayerId() {},
+  async setServer() {},
+  async setWasteman() {},
+  async getTodayToken() {
+    return { token: '000000000000', day: '1970-01-01' };
+  },
+  async getNearbyTokens() {
+    return [];
+  },
+  async requestKillProof() {
+    throw new Error('No Bluetooth in the mock');
+  },
   async getNearbyEncounters() {
     return [];
   },

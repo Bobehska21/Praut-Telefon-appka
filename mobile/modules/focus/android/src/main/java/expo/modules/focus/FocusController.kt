@@ -9,13 +9,19 @@ import android.util.Log
 
 /** Start/stop/status for focus mode plus the alarm that drives timers and schedules. */
 object FocusController {
+  /** MANUAL: the user turned it off. EXPIRED: the timer or schedule ran out (never makes a wasteman). */
+  enum class StopReason { MANUAL, EXPIRED }
+
   private const val TAG = "FocusController"
   const val ACTION_TICK = "expo.modules.focus.TICK"
   private const val ALARM_REQUEST_CODE = 4101
 
   fun start(context: Context, profileId: String, endsAt: Long?) {
     val app = context.applicationContext
-    FocusStore.get(app).setActive(profileId, System.currentTimeMillis(), endsAt ?: 0L)
+    val store = FocusStore.get(app)
+    store.setActive(profileId, System.currentTimeMillis(), endsAt ?: 0L)
+    store.wasteman = false // starting focus again saves a wasteman
+    FocusSync.onStarted(app)
     BlockEngine.reset()
     startService(app)
     scheduleNextAlarm(app)
@@ -23,7 +29,7 @@ object FocusController {
     BlockOverlay.goHome(app) // show the grid of allowed apps immediately
   }
 
-  fun stop(context: Context) {
+  fun stop(context: Context, reason: StopReason = StopReason.MANUAL) {
     val app = context.applicationContext
     val store = FocusStore.get(app)
     val now = System.currentTimeMillis()
@@ -33,7 +39,14 @@ object FocusController {
 
     store.clearActive()
     BlockEngine.reset()
-    app.stopService(Intent(app, FocusService::class.java))
+
+    // Turning off a running focus mode by hand makes the player a "wasteman" (multiplayer only, and only
+    // once registered). The service then keeps running, without blocking anything, so the phone stays
+    // visible over Bluetooth until focus mode is started again.
+    val becomesWasteman = reason == StopReason.MANUAL && store.nearbyEnabled && store.playerId != null
+    store.wasteman = becomesWasteman
+    FocusSync.onStopped(app, reason == StopReason.MANUAL)
+    if (becomesWasteman) startService(app) else app.stopService(Intent(app, FocusService::class.java))
     scheduleNextAlarm(app)
   }
 
@@ -46,6 +59,7 @@ object FocusController {
       "startedAt" to (if (s.active) s.startedAt else null),
       "endsAt" to (if (s.active && s.endsAt > 0L) s.endsAt else null),
       "blockedAttempts" to store.attemptCount(),
+      "wasteman" to store.wasteman,
     )
   }
 
@@ -57,7 +71,7 @@ object FocusController {
     var state = store.state()
 
     if (state.active && state.endsAt in 1..now) {
-      stop(app)
+      stop(app, StopReason.EXPIRED)
       state = store.state()
     }
 
@@ -71,6 +85,7 @@ object FocusController {
       // Process was killed or the device rebooted: make sure the service is running again.
       startService(app)
     }
+    if (!state.active && store.wasteman) startService(app) // a wasteman stays visible after a reboot too
     scheduleNextAlarm(app)
   }
 

@@ -5,6 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import expo.modules.kotlin.Promise
 import android.util.Log
 import expo.modules.kotlin.exception.CodedException
 import expo.modules.kotlin.exception.Exceptions
@@ -96,6 +99,53 @@ class FocusModule : Module() {
     AsyncFunction("setNearby") { enabled: Boolean, nickname: String, rank: String, level: Int, streak: Int ->
       store.nearbyEnabled = enabled
       store.setNearbyProfile(nickname, rank, level, streak)
+    }
+
+    // --- multiplayer ---------------------------------------------------------------------------
+
+    /** Public half of this device's signing key; the server stores it when the player registers. */
+    AsyncFunction("getDevicePublicKey") {
+      DeviceKey.publicKeyBase64()
+    }
+
+    /** Remember the server-issued player id (needed to sign proximity proofs) or clear it with an empty string. */
+    AsyncFunction("setPlayerId") { playerId: String ->
+      store.playerId = playerId.ifBlank { null }
+      if (playerId.isBlank()) store.wasteman = false
+    }
+
+    /** The server is authoritative for the wasteman state; JS pushes its view here after each sync. */
+    AsyncFunction("setWasteman") { wasteman: Boolean ->
+      store.wasteman = wasteman && store.playerId != null && store.nearbyEnabled
+      FocusController.tick(ctx)
+    }
+
+    /** Server address and bearer token for the background sync; empty strings clear them. */
+    AsyncFunction("setServer") { url: String, token: String ->
+      store.serverUrl = url.ifBlank { null }
+      store.serverToken = token.ifBlank { null }
+      if (token.isBlank()) {
+        store.lastEventId = 0L
+        store.setSyncQueue(org.json.JSONArray())
+      }
+    }
+
+    AsyncFunction("getTodayToken") {
+      NearbyManager.todayToken(ctx)
+    }
+
+    AsyncFunction("getNearbyTokens") {
+      NearbyManager.nearbyTokens()
+    }
+
+    /** Killer side: exchange the server's challenge with the wasteman over Bluetooth and return their signature. */
+    AsyncFunction("requestKillProof") { token: String, payload: String, promise: Promise ->
+      Handler(Looper.getMainLooper()).post {
+        NearbyManager.requestKillProof(ctx, token, payload) { signature, error ->
+          if (signature != null) promise.resolve(signature)
+          else promise.reject(CodedException(error ?: "failed", "Could not get a proximity proof: ${error ?: "failed"}", null))
+        }
+      }
     }
 
     AsyncFunction("getNearbyEncounters") {

@@ -29,6 +29,9 @@ interface NativeFocus {
 
 const native = requireNativeModule<NativeFocus>('Focus');
 
+const unsupported = (name: string) =>
+  Promise.reject(Object.assign(new Error(`${name} is not available on iOS yet`), { code: 'UNSUPPORTED' }));
+
 export const FocusModule: FocusModuleApi = {
   platform: 'ios',
   addPackagesListener: () => () => {},
@@ -39,6 +42,15 @@ export const FocusModule: FocusModuleApi = {
   setAllowedApps: (profileId, appIds) => native.setAllowedApps(profileId, appIds),
   // Nearby detection is not implemented on iOS yet (see README), so these do nothing.
   setNearby: () => Promise.resolve(),
+  // Multiplayer is not implemented on iOS yet. The API is platform-neutral (see docs/multiplayer-api.md),
+  // so adding CoreBluetooth and the Keychain/Secure Enclave key later changes only this file and Swift.
+  getDevicePublicKey: () => unsupported('getDevicePublicKey'),
+  setPlayerId: () => Promise.resolve(),
+  setServer: () => Promise.resolve(),
+  setWasteman: () => Promise.resolve(),
+  getTodayToken: () => unsupported('getTodayToken'),
+  getNearbyTokens: () => Promise.resolve([]),
+  requestKillProof: () => unsupported('requestKillProof'),
   getNearbyEncounters: () => Promise.resolve([]),
   setUnlockGuard: (mode) => native.setUnlockGuard(mode),
   setSchedules: (items) => native.setSchedules(items),

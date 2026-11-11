@@ -24,17 +24,27 @@ class FocusService : Service() {
   private var lastSeen: String? = null
   private var running = false
   private var lastNearbyCheck = 0L
+  private var lastHeartbeat = 0L
+  private var poller: EventsPoller? = null
 
   private val tick = object : Runnable {
     override fun run() {
       if (!running) return
-      val state = FocusStore.get(this@FocusService).state()
+      val store = FocusStore.get(this@FocusService)
+      val state = store.state()
       if (!state.active) {
-        stopSelf()
+        if (!store.wasteman) {
+          stopSelf()
+          return
+        }
+        // Wasteman: nothing is blocked, but the phone stays visible over Bluetooth so it can be found.
+        NearbyManager.ensure(this@FocusService)
+        FocusSync.flushAsync(this@FocusService)
+        handler.postDelayed(this, WASTEMAN_POLL_MS)
         return
       }
       if (state.endsAt in 1..System.currentTimeMillis()) {
-        FocusController.stop(this@FocusService)
+        FocusController.stop(this@FocusService, FocusController.StopReason.EXPIRED)
         return
       }
       // Align Bluetooth with the current state a few times a minute (cheap; it only acts on changes).
@@ -42,6 +52,11 @@ class FocusService : Service() {
       if (now - lastNearbyCheck > NEARBY_CHECK_MS) {
         lastNearbyCheck = now
         NearbyManager.ensure(this@FocusService)
+      }
+      // One heartbeat a minute: the server credits focus minutes from these, not from the phone's claim.
+      if (now - lastHeartbeat > HEARTBEAT_MS) {
+        lastHeartbeat = now
+        FocusSync.heartbeat(this@FocusService)
       }
       detector.poll()?.let { pkg ->
         // Only react to changes: the detector keeps returning the last known package.
@@ -68,7 +83,8 @@ class FocusService : Service() {
       startForeground(NOTIFICATION_ID, notification)
     }
 
-    if (!FocusStore.get(this).state().active) {
+    val store = FocusStore.get(this)
+    if (!store.state().active && !store.wasteman) {
       stopSelf()
       return START_NOT_STICKY
     }
@@ -76,6 +92,8 @@ class FocusService : Service() {
       running = true
       detector.reset()
       lastSeen = null
+      lastHeartbeat = 0L
+      poller = EventsPoller(applicationContext).also { it.start() }
       handler.post(tick)
     }
     return START_STICKY
@@ -84,6 +102,8 @@ class FocusService : Service() {
   override fun onDestroy() {
     running = false
     NearbyManager.stop()
+    poller?.finish()
+    poller = null
     handler.removeCallbacks(tick)
     super.onDestroy()
   }
@@ -107,9 +127,10 @@ class FocusService : Service() {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(this, CHANNEL_ID)
       else @Suppress("DEPRECATION") Notification.Builder(this)
 
+    val wasteman = !FocusStore.get(this).state().active && FocusStore.get(this).wasteman
     return builder
-      .setContentTitle(getString(R.string.focus_notification_title))
-      .setContentText(getString(R.string.focus_notification_text))
+      .setContentTitle(getString(if (wasteman) R.string.focus_wasteman_title else R.string.focus_notification_title))
+      .setContentText(getString(if (wasteman) R.string.focus_wasteman_text else R.string.focus_notification_text))
       .setSmallIcon(android.R.drawable.ic_lock_idle_lock)
       .setOngoing(true)
       .setContentIntent(contentIntent)
@@ -121,5 +142,7 @@ class FocusService : Service() {
     const val NOTIFICATION_ID = 4100
     const val POLL_MS = 700L
     const val NEARBY_CHECK_MS = 5_000L
+    const val WASTEMAN_POLL_MS = 3_000L
+    const val HEARTBEAT_MS = 60_000L
   }
 }
