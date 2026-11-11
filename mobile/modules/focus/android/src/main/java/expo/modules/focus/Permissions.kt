@@ -5,6 +5,7 @@ import android.app.Activity
 import android.app.AlarmManager
 import android.app.AppOpsManager
 import android.app.NotificationManager
+import android.app.role.RoleManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -28,6 +29,7 @@ object Permissions {
   )
 
   private const val NOTIFICATION_REQUEST_CODE = 4102
+  private const val ROLE_REQUEST_CODE = 4103
 
   fun isGranted(context: Context, name: String): Boolean = when (name) {
     "usageAccess" -> usageAccess(context)
@@ -54,6 +56,13 @@ object Permissions {
     if (name == "notifications" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && activity != null) {
       activity.requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), NOTIFICATION_REQUEST_CODE)
       return
+    }
+    if (name == "defaultLauncher" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && activity != null) {
+      val roles = context.getSystemService(RoleManager::class.java)
+      if (roles != null && roles.isRoleAvailable(RoleManager.ROLE_HOME) && !roles.isRoleHeld(RoleManager.ROLE_HOME)) {
+        runCatching { activity.startActivityForResult(roles.createRequestRoleIntent(RoleManager.ROLE_HOME), ROLE_REQUEST_CODE) }
+        return
+      }
     }
     val intent = settingsIntent(context, name) ?: return
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

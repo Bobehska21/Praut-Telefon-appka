@@ -19,7 +19,10 @@
     "custom": "Vlastní",
     "minutes": "{{count}} min",
     "profile": "Profil",
-    "noAppsWarning": "Tento profil nemá žádné povolené aplikace. Telefon, SMS a nouzová volání zůstanou dostupné vždy."
+    "noAppsWarning": "Tento profil nemá žádné povolené aplikace. Telefon, SMS a nouzová volání zůstanou dostupné vždy.",
+    "missingTitle": "Před zapnutím je potřeba povolit",
+    "accessibilityLostTitle": "Služba usnadnění je vypnutá",
+    "accessibilityLostBody": "Bez ní nejde blokovat nepovolené aplikace. Zapni ji znovu, jinak režim soustředění nedrží."
   },
   "unlock": {
     "title": "Opravdu vypnout?",
@@ -100,16 +103,16 @@
         "why": "Aby systém režim během soustředění neukončil."
       },
       "defaultLauncher": {
-        "title": "Výchozí domovská obrazovka",
-        "why": "V režimu ukážeme jen mřížku povolených aplikací."
+        "title": "Výchozí domovská obrazovka (volitelné)",
+        "why": "Volitelné. Tlačítko Domů pak vede přímo na obrazovku soustředění. Funguje i bez toho, jen s kratším probliknutím."
       },
       "exactAlarm": {
         "title": "Přesné časovače",
         "why": "Aby se plánované režimy spustily přesně ve zvolený čas, i když je aplikace zavřená."
       },
       "accessibility": {
-        "title": "Přístupnost",
-        "why": "Volitelné. Spolehlivěji pozná otevřenou aplikaci. Nic jiného z obrazovky nečteme ani neukládáme."
+        "title": "Služba usnadnění",
+        "why": "Používáme ji pouze ke zjištění názvu aplikace, která je právě v popředí, abychom nepovolenou aplikaci hned nahradili obrazovkou soustředění. Nečteme obsah obrazovky, texty ani hesla a nic neodesíláme, vše zůstává v telefonu. Bez ní režim soustředění nezapneš."
       },
       "screenTime": {
         "title": "Čas u obrazovky",

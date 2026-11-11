@@ -1,4 +1,4 @@
-import { requireNativeModule } from 'expo';
+import { NativeModule, requireNativeModule } from 'expo';
 
 import type {
   BlockedAttemptRecord,
@@ -14,7 +14,9 @@ import type {
 export * from './types';
 
 /** Shape of the Kotlin module in `modules/focus/android`. */
-interface NativeFocus {
+type FocusEvents = { onPackagesChanged: (payload: { packageName: string }) => void };
+
+declare class NativeFocus extends NativeModule<FocusEvents> {
   getInstalledApps(): Promise<InstalledApp[]>;
   setAllowedApps(profileId: string, appIds: string[]): Promise<void>;
   setUnlockGuard(mode: 'none' | 'countdown' | 'sentence'): Promise<void>;
@@ -40,6 +42,10 @@ const REQUEST_ORDER: PermissionName[] = [
 
 export const FocusModule: FocusModuleApi = {
   platform: 'android',
+  addPackagesListener: (callback) => {
+    const subscription = native.addListener('onPackagesChanged', () => callback());
+    return () => subscription.remove();
+  },
   getInstalledApps: () => native.getInstalledApps(),
   pickAllowedApps: () =>
     Promise.reject(Object.assign(new Error('pickAllowedApps is iOS only'), { code: 'UNSUPPORTED' })),

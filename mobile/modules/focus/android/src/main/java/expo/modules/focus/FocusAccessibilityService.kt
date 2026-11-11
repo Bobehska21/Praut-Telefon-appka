@@ -4,16 +4,25 @@ import android.accessibilityservice.AccessibilityService
 import android.view.accessibility.AccessibilityEvent
 
 /**
- * OPTIONAL, off by default: only runs once the user enables it in system
- * Accessibility settings (the "Extended blocking" switch in the app). It reads
- * only the package name of the window that came to the front, never content
- * (`canRetrieveWindowContent="false"`). Google Play reviews apps that declare
- * an AccessibilityService; see README for how to strip it from a Play build.
+ * Main enforcement of focus mode: Android pushes a window event the moment any app (including the
+ * launcher, Recents and Settings) comes to the front, so a forbidden one is replaced by the focus
+ * screen immediately instead of after a polling interval.
+ *
+ * Privacy: reads ONLY the package name of the window that came to the front
+ * (`canRetrieveWindowContent="false"`). It never reads text or content, and sends nothing anywhere.
+ * Google Play requires this to be disclosed prominently; see the onboarding text and README.
  */
 class FocusAccessibilityService : AccessibilityService() {
+  override fun onServiceConnected() {
+    super.onServiceConnected()
+    // After a reboot the system starts this service again; if focus mode is still on (restored by
+    // BootReceiver), bring the focus screen up straight away.
+    if (FocusStore.get(this).state().active) BlockOverlay.goHome(this)
+  }
+
   override fun onAccessibilityEvent(event: AccessibilityEvent?) {
     if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
-    val pkg = event.packageName?.toString() ?: return
+    val pkg = event.packageName?.toString()?.takeIf { it.isNotBlank() } ?: return
     BlockEngine.onForeground(this, pkg)
   }
 

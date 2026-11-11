@@ -3,22 +3,29 @@ package expo.modules.focus
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
+import android.util.Log
 
 /**
- * Decides whether the foreground app is allowed and shows/hides the block
- * overlay. Fed by [FocusService] (UsageStats polling) and, optionally, by
- * [FocusAccessibilityService]. Both call [onForeground] on the main thread;
- * repeated calls for the same package are no-ops.
+ * Decides whether the foreground app is allowed and, if not, sends the user back to the focus screen.
+ * Fed by [FocusAccessibilityService] (the main source: it is pushed a window event for every app that
+ * comes to the front) and by [FocusService] (UsageStats polling, a fallback). Both call [onForeground]
+ * on the main thread; repeated calls for the same package are no-ops.
  */
 object BlockEngine {
+  private const val TAG = "FocusBlock"
+  private const val ALLOWED_TTL_MS = 30_000L
+
+  /** A blocked app can emit several window events in a row; relaunching more often would flicker. */
+  private const val RELAUNCH_DEBOUNCE_MS = 400L
+
   private val main = Handler(Looper.getMainLooper())
   private var overlay: BlockOverlay? = null
   private var lastPackage: String? = null
+  private var lastRelaunchAt = 0L
   private var allowed: Set<String> = emptySet()
   private var allowedLoadedAt = 0L
   private var homePackages: Set<String> = emptySet()
-
-  private const val ALLOWED_TTL_MS = 30_000L
 
   fun onForeground(context: Context, pkg: String) {
     val app = context.applicationContext
@@ -31,26 +38,29 @@ object BlockEngine {
     if (pkg == lastPackage) return
     lastPackage = pkg
 
-    // Home pressed (or Recents opened): show the focus grid instead of the regular launcher.
-    // Not a blocked attempt, so no overlay and no statistics entry.
-    if (pkg in homeFor(app)) {
-      BlockOverlay.goHome(app)
+    refreshCachesIfStale(app, store, state)
+    if (pkg in allowed) {
+      hideOverlay()
       return
     }
 
-    if (isAllowed(app, store, state, pkg)) {
-      hideOverlay()
+    // Pressing Home or opening Recents lands on a launcher. That is leaving, not an attempt to open
+    // a forbidden app, so it is not counted in the statistics.
+    val isLauncher = pkg in homePackages
+    if (!isLauncher) store.addAttempt(System.currentTimeMillis(), pkg)
+    Log.i(TAG, "not allowed: $pkg (launcher=$isLauncher)")
+
+    if (Permissions.isGranted(app, "accessibility")) {
+      relaunchFocusScreen(app, blocked = !isLauncher)
+    } else if (isLauncher) {
+      BlockOverlay.goHome(app)
     } else {
-      store.addAttempt(System.currentTimeMillis(), pkg)
+      // No accessibility service: the overlay (when permitted) is all we can draw over the app.
       overlayFor(app).show()
     }
   }
 
-  /**
-   * Called when the user taps "back" on the overlay. Only hides the overlay:
-   * `lastPackage` stays, so the stale blocked package is not counted again
-   * before the launcher's own foreground event arrives.
-   */
+  /** Called when the user taps "back" on the overlay. Only hides it; `lastPackage` stays. */
   fun onLeftBlockedApp() {
     hideOverlay()
   }
@@ -62,21 +72,20 @@ object BlockEngine {
     hideOverlay()
   }
 
-  private fun homeFor(context: Context): Set<String> {
-    if (homePackages.isEmpty() || System.currentTimeMillis() - allowedLoadedAt > ALLOWED_TTL_MS) {
-      homePackages = AppCatalog.homePackages(context)
-    }
-    return homePackages
+  private fun relaunchFocusScreen(context: Context, blocked: Boolean) {
+    val now = SystemClock.elapsedRealtime()
+    if (now - lastRelaunchAt < RELAUNCH_DEBOUNCE_MS) return
+    lastRelaunchAt = now
+    BlockOverlay.goHome(context, blocked)
   }
 
-  private fun isAllowed(context: Context, store: FocusStore, state: FocusState, pkg: String): Boolean {
+  private fun refreshCachesIfStale(context: Context, store: FocusStore, state: FocusState) {
     val now = System.currentTimeMillis()
-    if (now - allowedLoadedAt > ALLOWED_TTL_MS) {
-      val profile = state.profileId?.let { store.allowedApps(it) } ?: emptySet()
-      allowed = profile + AppCatalog.alwaysAllowed(context)
-      allowedLoadedAt = now
-    }
-    return pkg in allowed
+    if (now - allowedLoadedAt <= ALLOWED_TTL_MS) return
+    val profile = state.profileId?.let { store.allowedApps(it) } ?: emptySet()
+    allowed = profile + AppCatalog.alwaysAllowed(context)
+    homePackages = AppCatalog.homePackages(context)
+    allowedLoadedAt = now
   }
 
   private fun overlayFor(context: Context): BlockOverlay =

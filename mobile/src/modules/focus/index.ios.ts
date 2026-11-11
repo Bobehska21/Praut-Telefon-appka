@@ -31,6 +31,7 @@ const native = requireNativeModule<NativeFocus>('Focus');
 
 export const FocusModule: FocusModuleApi = {
   platform: 'ios',
+  addPackagesListener: () => () => {},
   // Apple does not expose installed apps; selection happens in the system picker.
   getInstalledApps: () =>
     Promise.reject(Object.assign(new Error('getInstalledApps is Android only'), { code: 'UNSUPPORTED' })),

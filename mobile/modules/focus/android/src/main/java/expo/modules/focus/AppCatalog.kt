@@ -10,12 +10,23 @@ import android.graphics.drawable.Drawable
 import android.provider.Telephony
 import android.telecom.TelecomManager
 import android.util.Base64
+import android.util.LruCache
 import android.view.inputmethod.InputMethodManager
 import java.io.ByteArrayOutputStream
 
 data class LaunchableApp(val packageName: String, val label: String, val icon: Drawable)
 
 object AppCatalog {
+  /** Icons are expensive to render and encode; cache by package + last update so updates refresh them. */
+  private val iconCache = LruCache<String, String>(400)
+
+  fun cachedIconDataUri(context: Context, app: LaunchableApp): String {
+    val updated = runCatching { context.packageManager.getPackageInfo(app.packageName, 0).lastUpdateTime }.getOrDefault(0L)
+    val key = "${app.packageName}:$updated"
+    iconCache.get(key)?.let { return it }
+    return iconDataUri(app.icon).also { iconCache.put(key, it) }
+  }
+
   /**
    * Phone, messages and emergency calling are always allowed. Packages that are
    * not apps the user "uses" but that the system shows on top (keyboard, system

@@ -10,6 +10,7 @@ import android.text.TextWatcher
 import android.widget.Button
 import android.widget.EditText
 import java.util.Locale
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -17,6 +18,7 @@ import android.text.format.DateFormat
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.window.OnBackInvokedDispatcher
 import android.widget.BaseAdapter
 import android.widget.GridView
 import android.widget.ImageView
@@ -25,14 +27,17 @@ import android.widget.TextView
 import java.util.Date
 
 /**
- * Minimal home screen. While focus mode is on it shows only the allowed apps.
- * While it is off it hands over to the user's regular launcher, and falls back
- * to showing every app if there is none.
+ * The focus screen: a full-screen grid of the allowed apps with a Stop button. Shown the moment focus
+ * mode starts and again whenever the user leaves for something that is not allowed. It is a normal
+ * activity (the app does not have to be the default home app); if the user did choose it as their
+ * home app it shows every app while focus mode is off. The status bar is left visible and
+ * pull-down-able: no immersive mode and no screen pinning.
  */
 class LauncherActivity : Activity() {
   private val handler = Handler(Looper.getMainLooper())
   private lateinit var header: TextView
   private lateinit var stopButton: Button
+  private lateinit var banner: TextView
   private lateinit var grid: GridView
   private val adapter = AppAdapter()
   private var shownActive: Boolean? = null
@@ -65,6 +70,14 @@ class LauncherActivity : Activity() {
       addView(header, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
       addView(stopButton)
     }
+    banner = TextView(this).apply {
+      text = getString(R.string.focus_blocked_message)
+      setTextColor(getColor(R.color.focus_text))
+      textSize = 14f
+      gravity = Gravity.CENTER
+      setPadding(dp(16), dp(8), dp(16), dp(8))
+      visibility = View.GONE
+    }
     grid = GridView(this).apply {
       numColumns = 4
       verticalSpacing = dp(12)
@@ -80,10 +93,34 @@ class LauncherActivity : Activity() {
         orientation = LinearLayout.VERTICAL
         setBackgroundColor(getColor(R.color.focus_bg))
         addView(headerRow)
+        addView(banner)
         addView(grid, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
       },
     )
+
+    // With targetSdk 33+ the system uses predictive back and no longer calls onBackPressed(), so the
+    // callback must be registered or Back would close this screen and reveal what is underneath.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT) {}
+    }
+    showBannerIfBlocked(intent)
   }
+
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+    showBannerIfBlocked(intent)
+  }
+
+  /** Tells the user why they were sent back, for a few seconds. */
+  private fun showBannerIfBlocked(intent: Intent?) {
+    if (intent?.getBooleanExtra(EXTRA_BLOCKED, false) != true) return
+    banner.visibility = View.VISIBLE
+    handler.removeCallbacks(hideBanner)
+    handler.postDelayed(hideBanner, BANNER_MS)
+  }
+
+  private val hideBanner = Runnable { banner.visibility = View.GONE }
 
   override fun onResume() {
     super.onResume()
@@ -96,7 +133,7 @@ class LauncherActivity : Activity() {
     super.onPause()
   }
 
-  // A home screen has nowhere to go back to.
+  // Android 12 and older: the same "Back does nothing" rule.
   @Suppress("OVERRIDE_DEPRECATION")
   override fun onBackPressed() {}
 
@@ -134,8 +171,17 @@ class LauncherActivity : Activity() {
     when (FocusStore.get(this).unlockGuard) {
       "countdown" -> showCountdownDialog()
       "sentence" -> showSentenceDialog()
-      else -> stopNow()
+      else -> showConfirmDialog()
     }
+  }
+
+  /** No extra protection configured: still ask once, so a stray tap does not end focus mode. */
+  private fun showConfirmDialog() {
+    AlertDialog.Builder(this)
+      .setTitle(R.string.focus_unlock_title)
+      .setPositiveButton(R.string.focus_confirm_stop) { _, _ -> stopNow() }
+      .setNegativeButton(R.string.focus_keep, null)
+      .show()
   }
 
   private fun stopNow() {
@@ -244,8 +290,10 @@ class LauncherActivity : Activity() {
     }
   }
 
-  private companion object {
+  companion object {
+    const val EXTRA_BLOCKED = "expo.modules.focus.BLOCKED"
     const val WATCH_MS = 1500L
+    const val BANNER_MS = 3500L
     const val COUNTDOWN_SECONDS = 30
   }
 }

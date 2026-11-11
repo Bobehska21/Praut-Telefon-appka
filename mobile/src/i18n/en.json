@@ -19,7 +19,10 @@
     "custom": "Custom",
     "minutes": "{{count}} min",
     "profile": "Profile",
-    "noAppsWarning": "This profile has no allowed apps. Phone, messages and emergency calls always stay available."
+    "noAppsWarning": "This profile has no allowed apps. Phone, messages and emergency calls always stay available.",
+    "missingTitle": "Allow these before starting",
+    "accessibilityLostTitle": "The accessibility service is off",
+    "accessibilityLostBody": "Without it non-allowed apps cannot be blocked. Turn it back on or focus mode will not hold."
   },
   "unlock": {
     "title": "Really stop?",
@@ -100,16 +103,16 @@
         "why": "So the system does not stop focus mode while you are focusing."
       },
       "defaultLauncher": {
-        "title": "Default home app",
-        "why": "During focus mode we show only a grid of allowed apps."
+        "title": "Default home app (optional)",
+        "why": "Optional. The Home button then goes straight to the focus screen. It also works without it, with a slightly longer flash."
       },
       "exactAlarm": {
         "title": "Exact alarms",
         "why": "So scheduled sessions start exactly on time, even when the app is closed."
       },
       "accessibility": {
-        "title": "Accessibility",
-        "why": "Optional. Detects the open app more reliably. We do not read or store anything else on screen."
+        "title": "Accessibility service",
+        "why": "We use it only to learn the name of the app that is in the foreground, so a non-allowed app can be replaced by the focus screen right away. We do not read screen content, text or passwords, and nothing is sent anywhere; it all stays on the phone. Focus mode cannot start without it."
       },
       "screenTime": {
         "title": "Screen Time",

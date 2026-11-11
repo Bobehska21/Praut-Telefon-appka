@@ -5,14 +5,12 @@ import { AppState, View } from 'react-native';
 
 import { AppText, Button, Card, Screen } from '@/components/ui';
 import { FocusModule, type PermissionName, type PermissionMap } from '@/modules/focus';
+import { OPTIONAL_PERMISSIONS, REQUIRED_PERMISSIONS } from '@/features/permissions';
 import { useAppStore } from '@/store';
 
 const ANDROID_STEPS: PermissionName[] = [
-  'usageAccess',
-  'overlay',
-  'notifications',
-  'batteryOptimization',
-  'exactAlarm',
+  ...REQUIRED_PERMISSIONS,
+  ...OPTIONAL_PERMISSIONS,
 ];
 const IOS_STEPS: PermissionName[] = ['screenTime'];
 
@@ -66,6 +64,7 @@ export default function OnboardingScreen() {
   }
 
   const granted = perms[step] === 'granted';
+  const required = REQUIRED_PERMISSIONS.includes(step);
   return (
     <Screen>
       <AppText muted size={14}>
@@ -83,11 +82,14 @@ export default function OnboardingScreen() {
         ) : (
           <Button label={t('onboarding.grant')} onPress={() => grant(step)} />
         )}
-        <Button
-          label={granted ? (isLast ? t('onboarding.finish') : t('common.continue')) : t('onboarding.skip')}
-          variant={granted ? 'primary' : 'secondary'}
-          onPress={next}
-        />
+        {/* Required permissions cannot be skipped: focus mode will not start without them. */}
+        {(granted || !required) && (
+          <Button
+            label={granted ? (isLast ? t('onboarding.finish') : t('common.continue')) : t('onboarding.skip')}
+            variant={granted ? 'primary' : 'secondary'}
+            onPress={next}
+          />
+        )}
       </View>
     </Screen>
   );

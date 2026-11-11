@@ -62,6 +62,8 @@ export interface BlockedAttemptRecord {
 
 export interface FocusModuleApi {
   readonly platform: Platform;
+  /** Calls `callback` when an app is installed, removed or updated. Returns an unsubscribe function. */
+  addPackagesListener(callback: () => void): () => void;
   /** Android only. iOS rejects with `UNSUPPORTED`. */
   getInstalledApps(): Promise<InstalledApp[]>;
   /** iOS only. Opens FamilyActivityPicker. Android rejects with `UNSUPPORTED`. */

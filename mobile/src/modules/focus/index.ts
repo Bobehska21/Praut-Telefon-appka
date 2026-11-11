@@ -18,6 +18,7 @@ const allGranted: PermissionMap = {
 
 export const FocusModule: FocusModuleApi = {
   platform: 'unsupported',
+  addPackagesListener: () => () => {},
   async getInstalledApps() {
     return [
       { id: 'mock.notes', label: 'Notes' },

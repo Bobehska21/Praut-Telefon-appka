@@ -69,9 +69,12 @@ installed apps (Apple only exposes opaque tokens through a system picker).
   Recents, the regular launcher counts as a non-allowed app and the grid is shown again right away.
   Android cannot set a default launcher silently, so you may *optionally* choose this app as home
   in system settings; it then shows all apps while focus mode is off.
-- **Blocking:** a foreground service polls `UsageStatsManager` (~0.7 s). If the app in front is not
-  allowed, a full-screen overlay (`SYSTEM_ALERT_WINDOW`) says
-  "Tato aplikace je v režimu soustředění vypnutá" with a Back button that returns to the launcher.
+- **Blocking:** the accessibility service is the main safeguard. Android tells it the package of every
+  window that comes to the front; if focus mode is on and the package is not allowed (this includes
+  the regular launcher, Recents and Settings), the focus screen is relaunched at once, with a short
+  debounce and a hint explaining why. The status bar stays usable: its package (`com.android.systemui`)
+  is always allowed. A UsageStats poll + overlay remains as a fallback when the service is off, but
+  focus mode cannot be started without the service.
 - **Persistence:** persistent notification, `START_STICKY`, `BOOT_COMPLETED` receiver and an alarm
   for timers and schedules.
 - **Always allowed:** default dialer and SMS app, emergency/phone packages, keyboards, system UI and
@@ -81,28 +84,25 @@ installed apps (Apple only exposes opaque tokens through a system picker).
 
 | Permission | Why | How it is granted |
 |---|---|---|
-| Usage access (`PACKAGE_USAGE_STATS`) | know which app is in front | Settings screen |
-| Display over other apps (`SYSTEM_ALERT_WINDOW`) | show the block screen over a blocked app | Settings screen |
+| Usage access (`PACKAGE_USAGE_STATS`) | optional fallback detection | Settings screen |
+| Display over other apps (`SYSTEM_ALERT_WINDOW`) | optional fallback block screen | Settings screen |
 | Notifications (`POST_NOTIFICATIONS`) | Android requires a notification for a foreground service | runtime prompt |
 | Foreground service, special use | keep focus mode alive | manifest |
 | Receive boot completed | resume after reboot | manifest |
 | Exact alarms (`SCHEDULE_EXACT_ALARM`) | start schedules on time (Android 14+ needs the user to allow it) | Settings screen |
 | Battery optimization exemption | stop the system from killing the service | Settings screen |
-| Accessibility service (optional) | more reliable detection of the opened app | Settings screen, off by default |
+| Accessibility service (**required**) | learn which app came to the front (package name only) | Settings screen |
 
 `QUERY_ALL_PACKAGES` is deliberately **not** used (Google Play restricts it); package visibility is
 declared with `<queries>`.
 
-### Optional AccessibilityService and Google Play
+### AccessibilityService and Google Play
 
-`FocusAccessibilityService` is declared in `modules/focus/android/src/main/AndroidManifest.xml` but
-does nothing until the user enables it in system Accessibility settings. It only reads the package
-name of the window that came to the front (`canRetrieveWindowContent="false"`).
-
-Declaring any AccessibilityService makes Google Play review the app's accessibility use. For a Play
-build that must avoid it, delete the `<service ... FocusAccessibilityService>` element from that
-manifest (and the "Extended blocking" switch in Settings has no effect). The UsageStats + overlay
-path works without it.
+`FocusAccessibilityService` reads only the package name of the window that came to the front
+(`canRetrieveWindowContent="false"`), never text or content, and sends nothing anywhere. Google Play
+requires a prominent in-app disclosure (the onboarding step contains it) and a Play Console
+declaration of the accessibility use. It must be enabled by the user; on Android 13+ a sideloaded
+build may show "Restricted setting" until you allow it under App info > menu > "Allow restricted settings".
 
 ### Google Play declarations to prepare
 

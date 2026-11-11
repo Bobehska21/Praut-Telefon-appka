@@ -1,7 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { AppState, FlatList, Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { AppText, Button, Card, Screen } from '@/components/ui';
 import { FocusModule, type InstalledApp } from '@/modules/focus';
@@ -66,9 +66,20 @@ function AppList({ profileId }: { profileId: string }) {
   const [query, setQuery] = useState('');
 
   useEffect(() => {
-    void FocusModule.getInstalledApps().then((list) =>
-      setApps([...list].sort((a, b) => a.label.localeCompare(b.label))),
-    );
+    const load = () =>
+      void FocusModule.getInstalledApps().then((list) =>
+        setApps([...list].sort((a, b) => a.label.localeCompare(b.label))),
+      );
+    load();
+    // Keep the list current when apps are installed or removed, and after a permission change.
+    const unsubscribe = FocusModule.addPackagesListener(load);
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') load();
+    });
+    return () => {
+      unsubscribe();
+      sub.remove();
+    };
   }, []);
 
   const visible = useMemo(() => {

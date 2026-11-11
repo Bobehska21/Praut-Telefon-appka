@@ -94,9 +94,10 @@ class BlockOverlay(context: Context) {
 
   companion object {
     /** Send the user to the focus launcher (grid of allowed apps). */
-    fun goHome(context: Context) {
+    fun goHome(context: Context, blocked: Boolean = false) {
       val intent = Intent(context, LauncherActivity::class.java)
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        .putExtra(LauncherActivity.EXTRA_BLOCKED, blocked)
       runCatching { context.startActivity(intent) }
       BlockEngine.onLeftBlockedApp()
     }

@@ -1,5 +1,11 @@
 package expo.modules.focus
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
+import android.util.Log
 import expo.modules.kotlin.exception.CodedException
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.modules.Module
@@ -15,20 +21,53 @@ class FocusModule : Module() {
 
   private val store get() = FocusStore.get(ctx)
 
+  private var packagesReceiver: BroadcastReceiver? = null
+
   override fun definition() = ModuleDefinition {
     Name("Focus")
 
+    Events("onPackagesChanged")
+
+    // Tell JS when an app is installed, removed or updated so the picker can refresh itself.
+    OnCreate {
+      val filter = IntentFilter().apply {
+        addAction(Intent.ACTION_PACKAGE_ADDED)
+        addAction(Intent.ACTION_PACKAGE_REMOVED)
+        addAction(Intent.ACTION_PACKAGE_REPLACED)
+        addDataScheme("package")
+      }
+      val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+          sendEvent("onPackagesChanged", mapOf("packageName" to (intent.data?.schemeSpecificPart ?: "")))
+        }
+      }
+      packagesReceiver = receiver
+      // System broadcasts, so the receiver must be exported on Android 13+.
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        ctx.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+      } else {
+        ctx.registerReceiver(receiver, filter)
+      }
+    }
+
+    OnDestroy {
+      packagesReceiver?.let { runCatching { ctx.unregisterReceiver(it) } }
+      packagesReceiver = null
+    }
+
     AsyncFunction("getInstalledApps") {
       val pm = ctx.packageManager
-      AppCatalog.launchableApps(ctx)
+      val apps = AppCatalog.launchableApps(ctx)
         .filter { it.packageName != ctx.packageName && AppCatalog.hasPackage(pm, it.packageName) }
-        .map {
-          mapOf(
-            "id" to it.packageName,
-            "label" to it.label,
-            "iconUri" to AppCatalog.iconDataUri(it.icon),
-          )
-        }
+      // Compare this number with the apps on the home screen; fewer means package visibility is limited.
+      Log.i("FocusModule", "getInstalledApps: ${apps.size} launchable apps")
+      apps.map {
+        mapOf(
+          "id" to it.packageName,
+          "label" to it.label,
+          "iconUri" to AppCatalog.cachedIconDataUri(ctx, it),
+        )
+      }
     }
 
     AsyncFunction("setAllowedApps") { profileId: String, appIds: List<String> ->
