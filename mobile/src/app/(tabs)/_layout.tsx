@@ -13,6 +13,7 @@ const ICONS: Record<string, { idle: IconName; active: IconName }> = {
   index: { idle: 'flame-outline', active: 'flame' },
   profiles: { idle: 'layers-outline', active: 'layers' },
   progress: { idle: 'trophy-outline', active: 'trophy' },
+  players: { idle: 'people-outline', active: 'people' },
   schedule: { idle: 'calendar-outline', active: 'calendar' },
   stats: { idle: 'stats-chart-outline', active: 'stats-chart' },
   settings: { idle: 'settings-outline', active: 'settings' },
@@ -49,10 +50,11 @@ export default function TabsLayout() {
       }}>
       {screen('index', t('home.title'))}
       {screen('progress', t('progress.title'))}
+      {screen('players', t('players.title'))}
       {screen('profiles', t('profiles.title'))}
-      {/* Reachable from Profiles, but not a tab of its own: six tabs would not fit. */}
+      {/* Reachable from Progress and Profiles, but not tabs of their own: seven tabs would not fit. */}
       <Tabs.Screen name="schedule" options={{ href: null }} />
-      {screen('stats', t('stats.title'))}
+      <Tabs.Screen name="stats" options={{ href: null }} />
       {screen('settings', t('settings.title'))}
     </Tabs>
   );

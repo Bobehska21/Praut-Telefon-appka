@@ -46,7 +46,16 @@
           }
         }
       ],
-      "@bacons/apple-targets"
+      "@bacons/apple-targets",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Fotoapar\u00e1t se pou\u017e\u00edv\u00e1 jen k po\u0159\u00edzen\u00ed profilov\u00e9 fotky.",
+          "microphonePermission": false,
+          "photosPermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

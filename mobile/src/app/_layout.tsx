@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { AppState } from 'react-native';
 
 import i18n, { resolveLanguage } from '@/i18n';
+import { useMultiplayerSync } from '@/features/multiplayer/sync';
 import { useNearbySync } from '@/features/nearby';
 import { evaluateProgress } from '@/features/progress/engine';
 import { syncSchedules, syncWithNative } from '@/features/session';
@@ -15,6 +16,7 @@ import { useTheme } from '@/theme';
 export default function RootLayout() {
   const theme = useTheme();
   useNearbySync();
+  useMultiplayerSync();
   const language = useAppStore((s) => s.settings.language);
   const schedules = useAppStore((s) => s.schedules);
   const unlockGuard = useAppStore((s) => s.settings.unlockGuard);

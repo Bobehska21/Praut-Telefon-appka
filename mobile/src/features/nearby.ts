@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { FocusModule } from '@/modules/focus';
 import { useAppStore } from '@/store';
-import { totalXp } from './progress/engine';
+import { totalXp } from './progress/totals';
 import { levelForXp, rankKey } from './progress/xp';
 import { safeNickname } from './nickname';
 import { computeStreaks } from './stats';
@@ -26,7 +26,7 @@ export function useNearbySync(): void {
   }, []);
 
   useEffect(() => {
-    const level = levelForXp(totalXp({ sessions, claimed, achievements }, now));
+    const level = levelForXp(totalXp({ claimed, achievements }));
     void FocusModule.setNearby({
       enabled,
       nickname: safeNickname(nickname),
