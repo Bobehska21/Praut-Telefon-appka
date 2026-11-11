@@ -50,6 +50,10 @@ class FocusModule : Module() {
       FocusController.tick(ctx)
     }
 
+    AsyncFunction("setUnlockGuard") { mode: String ->
+      store.unlockGuard = if (mode == "countdown" || mode == "sentence") mode else "none"
+    }
+
     AsyncFunction("drainBlockedAttempts") {
       store.drainAttempts().map { mapOf("at" to it.at, "appId" to it.appId) }
     }

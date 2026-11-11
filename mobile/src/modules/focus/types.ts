@@ -68,6 +68,8 @@ export interface FocusModuleApi {
   pickAllowedApps(profileId: string): Promise<PickResult | null>;
   /** Android: pushes the whitelist to native before starting. */
   setAllowedApps(profileId: string, appIds: string[]): Promise<void>;
+  /** Mirrors the stop-protection setting so the native launcher can enforce it without JS. */
+  setUnlockGuard(mode: 'none' | 'countdown' | 'sentence'): Promise<void>;
   /** Native side runs the schedule (Android: alarms/service, iOS: DeviceActivityMonitor). */
   setSchedules(items: NativeSchedule[]): Promise<void>;
   /** Returns attempts recorded natively since the last call and clears them. */

@@ -54,6 +54,9 @@ public class FocusModule: Module {
     // Whitelists live in the shared App Group as picker selections, nothing to push from JS.
     AsyncFunction("setAllowedApps") { (_: String, _: [String]) in }
 
+    // The shield is shown by the system, so iOS cannot enforce the stop guard natively; JS does.
+    AsyncFunction("setUnlockGuard") { (_: String) in }
+
     AsyncFunction("setSchedules") { (items: [ScheduleRecord]) in
       let schedules = items.map {
         FocusLogic.Schedule(

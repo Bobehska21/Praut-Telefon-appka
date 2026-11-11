@@ -17,6 +17,7 @@ export * from './types';
 interface NativeFocus {
   pickAllowedApps(profileId: string): Promise<PickResult | null>;
   setAllowedApps(profileId: string, appIds: string[]): Promise<void>;
+  setUnlockGuard(mode: 'none' | 'countdown' | 'sentence'): Promise<void>;
   setSchedules(items: NativeSchedule[]): Promise<void>;
   drainBlockedAttempts(): Promise<BlockedAttemptRecord[]>;
   startFocus(profileId: string, durationMs: number | null): Promise<FocusStatus>;
@@ -35,6 +36,7 @@ export const FocusModule: FocusModuleApi = {
     Promise.reject(Object.assign(new Error('getInstalledApps is Android only'), { code: 'UNSUPPORTED' })),
   pickAllowedApps: (profileId) => native.pickAllowedApps(profileId),
   setAllowedApps: (profileId, appIds) => native.setAllowedApps(profileId, appIds),
+  setUnlockGuard: (mode) => native.setUnlockGuard(mode),
   setSchedules: (items) => native.setSchedules(items),
   drainBlockedAttempts: () => native.drainBlockedAttempts(),
   startFocus: (profileId, durationMs) => native.startFocus(profileId, durationMs),

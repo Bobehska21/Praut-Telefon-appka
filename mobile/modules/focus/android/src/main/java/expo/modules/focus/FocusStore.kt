@@ -39,6 +39,7 @@ class FocusStore private constructor(context: Context) {
     private const val K_SUPPRESS_UNTIL = "suppressUntil"
     private const val K_ATTEMPTS = "attempts"
     private const val K_ATTEMPT_COUNT = "attemptCount"
+    private const val K_UNLOCK_GUARD = "unlockGuard"
     private const val ALLOWED_PREFIX = "allowed_"
     private const val MAX_ATTEMPTS = 2000
 
@@ -157,4 +158,13 @@ class FocusStore private constructor(context: Context) {
   }
 
   fun attemptCount(): Int = prefs.getInt(K_ATTEMPT_COUNT, 0)
+
+  // --- stop protection ----------------------------------------------------
+
+  /** "none", "countdown" or "sentence". Mirrored from the JS setting so the launcher can enforce it natively. */
+  var unlockGuard: String
+    get() = prefs.getString(K_UNLOCK_GUARD, "none") ?: "none"
+    set(value) {
+      prefs.edit().putString(K_UNLOCK_GUARD, value).apply()
+    }
 }

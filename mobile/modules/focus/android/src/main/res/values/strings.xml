@@ -10,4 +10,12 @@
   <string name="focus_inactive">All apps</string>
   <string name="focus_until">Focus mode until %1$s</string>
   <string name="focus_a11y_description">Optional. Lets Focus notice which app has just opened so it can be blocked more reliably during focus mode. It does not read or store anything shown on screen.</string>
+  <string name="focus_stop">Stop</string>
+  <string name="focus_unlock_title">Really stop?</string>
+  <string name="focus_unlock_countdown">Wait %1$d s and think about whether you really need to.</string>
+  <string name="focus_unlock_ready">You can stop focus mode now.</string>
+  <string name="focus_unlock_type">To stop, type this sentence:\n\n%1$s</string>
+  <string name="focus_unlock_sentence">I want to interrupt my focus now.</string>
+  <string name="focus_confirm_stop">Stop focus mode</string>
+  <string name="focus_keep">Keep focusing</string>
 </resources>

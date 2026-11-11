@@ -16,6 +16,14 @@
   <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
   <!--
+    Xiaomi (MIUI/HyperOS) hides the list of installed apps unless this vendor permission is declared
+    and the user allows it. Harmless on other devices (unknown permissions are ignored).
+  -->
+  <uses-permission
+    android:name="com.android.permission.GET_INSTALLED_APPS"
+    tools:ignore="ProtectedPermissions" />
+
+  <!--
     Package visibility (Android 11+). Deliberately NOT QUERY_ALL_PACKAGES, which Google Play
     restricts: launcher apps, home apps, dialers and keyboards are enough for this app.
   -->

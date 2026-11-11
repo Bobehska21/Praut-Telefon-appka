@@ -5,11 +5,13 @@ import { AppState } from 'react-native';
 
 import i18n, { resolveLanguage } from '@/i18n';
 import { syncSchedules, syncWithNative } from '@/features/session';
+import { FocusModule } from '@/modules/focus';
 import { useAppStore } from '@/store';
 
 export default function RootLayout() {
   const language = useAppStore((s) => s.settings.language);
   const schedules = useAppStore((s) => s.schedules);
+  const unlockGuard = useAppStore((s) => s.settings.unlockGuard);
 
   useEffect(() => {
     void i18n.changeLanguage(resolveLanguage(language));
@@ -22,6 +24,10 @@ export default function RootLayout() {
     });
     return () => sub.remove();
   }, []);
+
+  useEffect(() => {
+    void FocusModule.setUnlockGuard(unlockGuard);
+  }, [unlockGuard]);
 
   useEffect(() => {
     void syncSchedules();

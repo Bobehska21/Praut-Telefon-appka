@@ -10,4 +10,12 @@
   <string name="focus_inactive">Všechny aplikace</string>
   <string name="focus_until">Režim soustředění do %1$s</string>
   <string name="focus_a11y_description">Volitelné. Umožní aplikaci Soustředění poznat, která aplikace se právě otevřela, aby ji v režimu soustředění mohla spolehlivěji zablokovat. Nečte ani neukládá nic, co je na obrazovce.</string>
+  <string name="focus_stop">Vypnout</string>
+  <string name="focus_unlock_title">Opravdu vypnout?</string>
+  <string name="focus_unlock_countdown">Počkej %1$d s a zvaž, jestli to opravdu potřebuješ.</string>
+  <string name="focus_unlock_ready">Režim soustředění můžeš vypnout.</string>
+  <string name="focus_unlock_type">Pro vypnutí opiš větu:\n\n%1$s</string>
+  <string name="focus_unlock_sentence">Chci teď přerušit soustředění.</string>
+  <string name="focus_confirm_stop">Vypnout režim</string>
+  <string name="focus_keep">Pokračovat v soustředění</string>
 </resources>

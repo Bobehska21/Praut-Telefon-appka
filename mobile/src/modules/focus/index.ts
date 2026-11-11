@@ -29,6 +29,7 @@ export const FocusModule: FocusModuleApi = {
     return { selectionId: 'mock-selection', appCount: 0 };
   },
   async setAllowedApps() {},
+  async setUnlockGuard() {},
   async setSchedules() {},
   async drainBlockedAttempts() {
     return [];
