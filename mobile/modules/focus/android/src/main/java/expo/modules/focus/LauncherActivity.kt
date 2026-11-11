@@ -106,7 +106,12 @@ class LauncherActivity : Activity() {
     shownActive = state.active
     stopButton.visibility = if (state.active) View.VISIBLE else View.GONE
 
-    if (!state.active && forwardToOtherLauncher()) return
+    // Not the default home app: nothing to show once focus mode is over, so just close. (Forwarding
+    // to another launcher caused an endless ping-pong on HyperOS, which showed a black screen.)
+    if (!state.active && !Permissions.isGranted(this, "defaultLauncher")) {
+      finish()
+      return
+    }
 
     val all = AppCatalog.launchableApps(this)
     if (state.active) {
@@ -123,23 +128,6 @@ class LauncherActivity : Activity() {
       header.text = getString(R.string.focus_inactive)
     }
     adapter.notifyDataSetChanged()
-  }
-
-  /** Returns true if another launcher was started and this activity finished. */
-  private fun forwardToOtherLauncher(): Boolean {
-    val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
-    // Skip ourselves and the system's placeholder home (Settings' FallbackHome is a blank black
-    // screen, which left users stuck). With no real launcher left we show the full app grid instead.
-    val other = packageManager.queryIntentActivities(home, 0)
-      .firstOrNull {
-        it.activityInfo.packageName != packageName &&
-          it.activityInfo.packageName != "com.android.settings" &&
-          !it.activityInfo.name.contains("FallbackHome", ignoreCase = true)
-      } ?: return false
-    val intent = Intent(home)
-      .setClassName(other.activityInfo.packageName, other.activityInfo.name)
-      .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    return runCatching { startActivity(intent) }.isSuccess.also { if (it) finish() }
   }
 
   private fun requestStop() {

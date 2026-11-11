@@ -56,6 +56,23 @@ object AppCatalog {
     return set
   }
 
+  /**
+   * Packages that act as a home screen (other than ours). While focus mode is on, reaching one of
+   * them means "the user pressed Home", so we show our own grid instead. Settings' FallbackHome is
+   * excluded: it is a placeholder, not a launcher, and sits in the Settings package.
+   */
+  fun homePackages(context: Context): Set<String> {
+    val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+    return context.packageManager.queryIntentActivities(home, 0)
+      .filter {
+        it.activityInfo.packageName != context.packageName &&
+          it.activityInfo.packageName != "com.android.settings" &&
+          !it.activityInfo.name.contains("FallbackHome", ignoreCase = true)
+      }
+      .map { it.activityInfo.packageName }
+      .toSet()
+  }
+
   /** Every app that has a launcher entry, one per package, sorted by label. */
   fun launchableApps(context: Context): List<LaunchableApp> {
     val pm = context.packageManager

@@ -64,8 +64,11 @@ installed apps (Apple only exposes opaque tokens through a system picker).
 
 ### How it works
 
-- **Launcher:** the app registers as a HOME app. While focus mode runs it shows a grid of the allowed
-  apps (plus phone and messages); while it is off it forwards to your normal launcher.
+- **Focus grid:** the app does not need to be your default home app. Starting focus mode opens a
+  grid of the allowed apps (plus phone and messages) with a Stop button. If you press Home or open
+  Recents, the regular launcher counts as a non-allowed app and the grid is shown again right away.
+  Android cannot set a default launcher silently, so you may *optionally* choose this app as home
+  in system settings; it then shows all apps while focus mode is off.
 - **Blocking:** a foreground service polls `UsageStatsManager` (~0.7 s). If the app in front is not
   allowed, a full-screen overlay (`SYSTEM_ALERT_WINDOW`) says
   "Tato aplikace je v režimu soustředění vypnutá" with a Back button that returns to the launcher.
@@ -84,7 +87,6 @@ installed apps (Apple only exposes opaque tokens through a system picker).
 | Foreground service, special use | keep focus mode alive | manifest |
 | Receive boot completed | resume after reboot | manifest |
 | Exact alarms (`SCHEDULE_EXACT_ALARM`) | start schedules on time (Android 14+ needs the user to allow it) | Settings screen |
-| Default home app | show the grid of allowed apps | Settings screen |
 | Battery optimization exemption | stop the system from killing the service | Settings screen |
 | Accessibility service (optional) | more reliable detection of the opened app | Settings screen, off by default |
 

@@ -16,6 +16,7 @@ object BlockEngine {
   private var lastPackage: String? = null
   private var allowed: Set<String> = emptySet()
   private var allowedLoadedAt = 0L
+  private var homePackages: Set<String> = emptySet()
 
   private const val ALLOWED_TTL_MS = 30_000L
 
@@ -29,6 +30,13 @@ object BlockEngine {
     }
     if (pkg == lastPackage) return
     lastPackage = pkg
+
+    // Home pressed (or Recents opened): show the focus grid instead of the regular launcher.
+    // Not a blocked attempt, so no overlay and no statistics entry.
+    if (pkg in homeFor(app)) {
+      BlockOverlay.goHome(app)
+      return
+    }
 
     if (isAllowed(app, store, state, pkg)) {
       hideOverlay()
@@ -52,6 +60,13 @@ object BlockEngine {
     lastPackage = null
     allowedLoadedAt = 0L
     hideOverlay()
+  }
+
+  private fun homeFor(context: Context): Set<String> {
+    if (homePackages.isEmpty() || System.currentTimeMillis() - allowedLoadedAt > ALLOWED_TTL_MS) {
+      homePackages = AppCatalog.homePackages(context)
+    }
+    return homePackages
   }
 
   private fun isAllowed(context: Context, store: FocusStore, state: FocusState, pkg: String): Boolean {

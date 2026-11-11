@@ -12,7 +12,6 @@ const ANDROID_STEPS: PermissionName[] = [
   'overlay',
   'notifications',
   'batteryOptimization',
-  'defaultLauncher',
   'exactAlarm',
 ];
 const IOS_STEPS: PermissionName[] = ['screenTime'];

@@ -35,7 +35,6 @@ const REQUEST_ORDER: PermissionName[] = [
   'overlay',
   'notifications',
   'batteryOptimization',
-  'defaultLauncher',
   'exactAlarm',
 ];
 

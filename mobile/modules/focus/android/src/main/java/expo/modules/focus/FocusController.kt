@@ -19,6 +19,7 @@ object FocusController {
     BlockEngine.reset()
     startService(app)
     scheduleNextAlarm(app)
+    BlockOverlay.goHome(app) // show the grid of allowed apps immediately
   }
 
   fun stop(context: Context) {
