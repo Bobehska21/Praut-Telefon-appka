@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest';
 import type { SessionRecord } from '@/store/types';
 import { ACHIEVEMENTS } from './achievements';
 import { bonusForMinutes, dailyGoal, DAILY_GOAL_MIN, totalBonus } from './daily-goal';
+import { totalPoints, totalXp } from './totals';
 import { dailyQuests, questGoal, questValue, weeklyQuests } from './quests';
-import { levelForXp, levelProgress, rankKey, sessionXp, xpForLevel } from './xp';
+import { levelForXp, levelProgress, rankKey, sessionPoints, xpForLevel } from './xp';
 
 const MIN = 60_000;
 // Local time on purpose: quests and achievements use local days and hours.
@@ -24,20 +25,16 @@ const session = (
   ...extra,
 });
 
-describe('XP and levels', () => {
-  it('gives 1 XP per minute', () => {
-    expect(sessionXp(session(0, 25))).toBe(25);
+describe('points and XP', () => {
+  it('gives 1 point per focused minute and no completion bonus', () => {
+    expect(sessionPoints(session(0, 25))).toBe(25);
+    expect(sessionPoints(session(0, 25, { completed: true, plannedMs: 25 * MIN }))).toBe(25);
   });
-  it('adds a completion bonus only for finished sessions planned for 15+ minutes', () => {
-    expect(sessionXp(session(0, 25, { completed: true, plannedMs: 25 * MIN }))).toBe(35);
-    expect(sessionXp(session(0, 10, { completed: true, plannedMs: 10 * MIN }))).toBe(10);
-    expect(sessionXp(session(0, 25, { completed: false, plannedMs: 50 * MIN }))).toBe(25);
-  });
-  it('caps XP for one very long session', () => {
-    expect(sessionXp(session(0, 600))).toBe(120);
+  it('caps points for one very long session', () => {
+    expect(sessionPoints(session(0, 600))).toBe(120);
   });
   it('earns nothing below one minute', () => {
-    expect(sessionXp(session(0, 0.5))).toBe(0);
+    expect(sessionPoints(session(0, 0.5))).toBe(0);
   });
   it('maps XP to levels', () => {
     expect([xpForLevel(1), xpForLevel(2), xpForLevel(3), xpForLevel(4)]).toEqual([0, 100, 300, 600]);
@@ -174,5 +171,19 @@ describe('daily goal and bonus points', () => {
   it('sums bonus over days, each with its own goal', () => {
     const sessions = [session(at(10, 8), 100), session(at(11, 8), 95), session(at(9, 8), 80)];
     expect(totalBonus(sessions, now)).toBe(10 + 5);
+  });
+});
+
+describe('XP only comes from quests and achievements', () => {
+  const sessions = [session(at(11, 9), 100, { completed: true, plannedMs: 100 * MIN })];
+  it('gives no XP for focus minutes, however many', () => {
+    expect(totalXp({ claimed: {}, achievements: {} })).toBe(0);
+  });
+  it('adds claimed quests and unlocked achievements', () => {
+    expect(totalXp({ claimed: { 'd:2026-11-11:focus20': 20, 'd:2026-11-11:long50': 70 }, achievements: { first: { at: 1, xp: 25 } } })).toBe(115);
+  });
+  it('gives points for minutes plus the bonus beyond the daily goal, and keeps them out of XP', () => {
+    expect(totalPoints(sessions, now)).toBe(100 + 10);
+    expect(totalXp({ claimed: {}, achievements: {} })).toBe(0);
   });
 });

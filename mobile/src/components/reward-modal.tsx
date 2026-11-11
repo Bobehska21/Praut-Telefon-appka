@@ -45,6 +45,11 @@ export function RewardModal() {
               {t('progress.reward.xp', { xp: event.xp })}
             </AppText>
           )}
+          {(event.points ?? 0) > 0 && (
+            <AppText size={28} weight="700" accent>
+              {t('progress.reward.points', { points: event.points })}
+            </AppText>
+          )}
           <Button label={t('progress.reward.continue')} onPress={pop} />
         </View>
       </View>

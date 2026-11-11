@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
-import { AppText, Card, Heading, Screen } from '@/components/ui';
+import { AppText, Button, Card, Heading, Screen } from '@/components/ui';
 import {
   buildDayStats,
   computeStreaks,
@@ -20,6 +21,7 @@ const BAR_AREA = 96;
 export default function StatsScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
+  const router = useRouter();
   const sessions = useAppStore((s) => s.sessions);
   const attempts = useAppStore((s) => s.attempts);
   const active = useAppStore((s) => s.session);
@@ -46,6 +48,7 @@ export default function StatsScreen() {
 
   return (
     <Screen>
+      <Button label={`‹ ${t('progress.title')}`} variant="secondary" onPress={() => router.navigate('/progress')} />
       <Heading>{t('stats.title')}</Heading>
 
       <Card style={styles.streakCard}>

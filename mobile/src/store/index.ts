@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { mmkvStorage } from './storage';
-import { sessionMinutes, sessionXp } from '@/features/progress/xp';
+import { sessionMinutes, sessionPoints } from '@/features/progress/xp';
 import type { BlockedAttempt, Profile, RewardEvent, Schedule, SessionRecord, Settings } from './types';
 
 export * from './types';
@@ -159,7 +159,7 @@ export const useAppStore = create<AppState>()(
         set({ session: null, sessions: [...sessions, record].slice(-MAX_SESSIONS) });
         // Under a minute earns nothing, so there is nothing to celebrate.
         if (sessionMinutes(record) >= 1) {
-          get().pushReward({ kind: 'session', xp: sessionXp(record), params: { minutes: Math.floor(sessionMinutes(record)) }, ref: record.completed ? 'completed' : 'stopped' });
+          get().pushReward({ kind: 'session', xp: 0, points: sessionPoints(record), params: { minutes: Math.floor(sessionMinutes(record)) }, ref: record.completed ? 'completed' : 'stopped' });
         }
       },
       recordAttempt: (attempt) =>

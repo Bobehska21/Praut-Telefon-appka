@@ -1,22 +1,16 @@
 import { useAppStore } from '@/store';
 import type { SessionRecord } from '@/store/types';
 import { ACHIEVEMENTS, type AchievementDef } from './achievements';
-import { totalBonus } from './daily-goal';
 import { dailyQuests, questGoal, questKeys, questValue, weeklyQuests, type Quest } from './quests';
-import { levelForXp, levelProgress, rankKey, sessionXp, type LevelProgress, type RankKey } from './xp';
+import { totalPoints, totalXp } from './totals';
+import { levelForXp, levelProgress, rankKey, type LevelProgress, type RankKey } from './xp';
+
+export { totalPoints, totalXp };
 
 interface Totals {
   sessions: SessionRecord[];
   claimed: Record<string, number>;
   achievements: Record<string, { at: number; xp: number }>;
-}
-
-/** All XP ever earned: sessions + daily bonus points + claimed quests + unlocked achievements. */
-export function totalXp({ sessions, claimed, achievements }: Totals, now: number): number {
-  const fromSessions = sessions.reduce((sum, s) => sum + sessionXp(s), 0);
-  const fromQuests = Object.values(claimed).reduce((sum, xp) => sum + xp, 0);
-  const fromAchievements = Object.values(achievements).reduce((sum, a) => sum + a.xp, 0);
-  return fromSessions + totalBonus(sessions, now) + fromQuests + fromAchievements;
 }
 
 export interface QuestView {
@@ -34,6 +28,7 @@ export interface AchievementView {
 
 export interface ProgressSnapshot {
   xp: number;
+  points: number;
   level: LevelProgress;
   rank: RankKey;
   daily: QuestView[];
@@ -48,11 +43,12 @@ function questView(quest: Quest, state: Totals, now: number): QuestView {
 }
 
 export function snapshot(state: Totals, now: number): ProgressSnapshot {
-  const xp = totalXp(state, now);
+  const xp = totalXp(state);
   const keys = questKeys(now);
   const level = levelProgress(xp);
   return {
     xp,
+    points: totalPoints(state.sessions, now),
     level,
     rank: rankKey(level.level),
     daily: dailyQuests(keys.day).map((q) => questView(q, state, now)),
@@ -77,14 +73,14 @@ export function evaluateProgress(now = Date.now()): void {
   for (const def of ACHIEVEMENTS) {
     if (store.achievements[def.id]) continue;
     const current = useAppStore.getState();
-    const xp = totalXp(current, now);
+    const xp = totalXp(current);
     if (def.check({ sessions: current.sessions, totalXp: xp, now })) {
       useAppStore.getState().unlockAchievement(def.id, def.xp, now);
     }
   }
 
   const after = useAppStore.getState();
-  const level = levelForXp(totalXp(after, now));
+  const level = levelForXp(totalXp(after));
   if (level > after.lastLevelSeen) {
     after.pushReward({ kind: 'level', xp: 0, level });
     after.setLastLevelSeen(level);

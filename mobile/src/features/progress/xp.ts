@@ -1,20 +1,21 @@
 import type { SessionRecord } from '@/store/types';
 
-/** Up to this many minutes of one session earn XP, so a phone left on overnight is not a free level. */
-export const MAX_SESSION_XP_MINUTES = 120;
-export const COMPLETION_BONUS = 10;
-/** The completion bonus only applies to sessions that were meant to last at least this long. */
-export const MIN_BONUS_PLANNED_MS = 15 * 60_000;
+/**
+ * Two currencies:
+ * - XP: earned ONLY by completing quests (and achievements). It decides level and rank.
+ * - Points: earned by minutes spent in focus mode (and, with multiplayer, by kills). See `daily-goal.ts`.
+ */
+
+/** Up to this many minutes of one session earn points, so a phone left on overnight is not a free win. */
+export const MAX_SESSION_POINT_MINUTES = 120;
 
 export function sessionMinutes(s: Pick<SessionRecord, 'startedAt' | 'endedAt'>): number {
   return Math.max(0, (s.endedAt - s.startedAt) / 60_000);
 }
 
-/** 1 XP per focused minute, plus a bonus for finishing a planned session. */
-export function sessionXp(s: SessionRecord): number {
-  const minutes = Math.min(MAX_SESSION_XP_MINUTES, Math.floor(sessionMinutes(s)));
-  const bonus = s.completed === true && (s.plannedMs ?? 0) >= MIN_BONUS_PLANNED_MS ? COMPLETION_BONUS : 0;
-  return minutes + bonus;
+/** 1 point per focused minute (before the daily-goal bonus, which is added per day). */
+export function sessionPoints(s: SessionRecord): number {
+  return Math.min(MAX_SESSION_POINT_MINUTES, Math.floor(sessionMinutes(s)));
 }
 
 /** Total XP needed to reach `level` (level 1 starts at 0): 0, 100, 300, 600, 1000 ... */

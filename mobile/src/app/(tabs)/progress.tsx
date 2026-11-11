@@ -3,6 +3,7 @@ import * as Haptics from 'expo-haptics';
 import type { TFunction } from 'i18next';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useRouter } from 'expo-router';
 import { AppState, StyleSheet, View } from 'react-native';
 
 import { AppText, Button, Card, Heading, ProgressBar, Screen } from '@/components/ui';
@@ -16,6 +17,7 @@ import { radius, spacing, useTheme } from '@/theme';
 export default function ProgressScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
+  const router = useRouter();
   const sessions = useAppStore((s) => s.sessions);
   const claimed = useAppStore((s) => s.claimed);
   const achievements = useAppStore((s) => s.achievements);
@@ -50,6 +52,7 @@ export default function ProgressScreen() {
   return (
     <Screen>
       <Heading>{t('progress.title')}</Heading>
+      <Button label={t('stats.title')} variant="secondary" onPress={() => router.navigate('/stats')} />
 
       <Card>
         <View style={styles.levelRow}>
@@ -71,6 +74,12 @@ export default function ProgressScreen() {
         <AppText muted size={13}>
           {t('progress.xp', { into: snap.level.into, needed: snap.level.needed })}
         </AppText>
+        <View style={styles.pointsRow}>
+          <Ionicons name="diamond-outline" size={16} color={theme.accent} />
+          <AppText weight="600" size={14}>
+            {t('progress.points', { points: snap.points })}
+          </AppText>
+        </View>
       </Card>
 
       <Section title={t('progress.todayQuests')} />
@@ -195,6 +204,7 @@ const styles = StyleSheet.create({
   center: { textAlign: 'center' },
   section: { letterSpacing: 2, marginTop: spacing.sm },
   dim: { opacity: 0.6 },
+  pointsRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   levelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   levelBadge: {
     width: 56,

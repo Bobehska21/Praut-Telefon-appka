@@ -36,7 +36,10 @@ export interface SessionRecord {
 export interface RewardEvent {
   id: string;
   kind: 'session' | 'quest' | 'achievement' | 'level';
+  /** XP granted (quests and achievements only). */
   xp: number;
+  /** Points granted (focus minutes; kills later). */
+  points?: number;
   /** i18n key suffix and params for the title (quest key, achievement id). */
   ref?: string;
   params?: Record<string, string | number>;
