@@ -82,6 +82,7 @@ object Permissions {
     val ops = context.getSystemService(AppOpsManager::class.java) ?: return false
     val mode =
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        @Suppress("DEPRECATION")
         ops.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), context.packageName)
       } else {
         @Suppress("DEPRECATION")
