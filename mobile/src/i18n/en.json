@@ -117,6 +117,10 @@
       "screenTime": {
         "title": "Screen Time",
         "why": "Apple requires your consent before we can restrict apps. Your selection stays on the device."
+      },
+      "notificationAccess": {
+        "title": "Notification access",
+        "why": "While focus mode is on we dismiss notifications from apps that are not allowed, so the phone only shows what you permit. We read only the name of the app that sent a notification, never its text, and nothing is sent anywhere."
       }
     },
     "grant": "Allow",

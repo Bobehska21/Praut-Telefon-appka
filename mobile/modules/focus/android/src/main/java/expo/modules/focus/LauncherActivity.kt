@@ -17,6 +17,8 @@ import android.os.Looper
 import android.text.format.DateFormat
 import android.view.Gravity
 import android.view.View
+import android.view.WindowInsets
+import android.view.WindowInsetsController
 import android.view.ViewGroup
 import android.window.OnBackInvokedDispatcher
 import android.widget.BaseAdapter
@@ -124,6 +126,7 @@ class LauncherActivity : Activity() {
 
   override fun onResume() {
     super.onResume()
+    hideNavigationBar()
     refresh()
     handler.postDelayed(watcher, WATCH_MS)
   }
@@ -131,6 +134,30 @@ class LauncherActivity : Activity() {
   override fun onPause() {
     handler.removeCallbacks(watcher)
     super.onPause()
+  }
+
+  override fun onWindowFocusChanged(hasFocus: Boolean) {
+    super.onWindowFocusChanged(hasFocus)
+    if (hasFocus) hideNavigationBar()
+  }
+
+  /**
+   * Hides the bottom navigation bar (a swipe only reveals it briefly). The status bar is left alone:
+   * it must stay visible and pull-down-able. The buttons cannot be disabled outright without screen
+   * pinning, which would also lock the notification shade, so Home/Recents are instead neutralised by
+   * the accessibility service, which brings this screen straight back.
+   */
+  private fun hideNavigationBar() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      window.insetsController?.let {
+        it.hide(WindowInsets.Type.navigationBars())
+        it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+      }
+    } else {
+      @Suppress("DEPRECATION")
+      window.decorView.systemUiVisibility =
+        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+    }
   }
 
   // Android 12 and older: the same "Back does nothing" rule.

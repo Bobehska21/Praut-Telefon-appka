@@ -19,6 +19,7 @@ object FocusController {
     BlockEngine.reset()
     startService(app)
     scheduleNextAlarm(app)
+    FocusNotificationListener.sweepNow() // clear notifications from apps that are not allowed
     BlockOverlay.goHome(app) // show the grid of allowed apps immediately
   }
 

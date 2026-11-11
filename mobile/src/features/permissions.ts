@@ -8,7 +8,7 @@ import { FocusModule, type PermissionMap, type PermissionName } from '@/modules/
  * blocking immediate and reliable; notifications and the battery exemption keep it alive.
  */
 export const REQUIRED_PERMISSIONS: PermissionName[] =
-  FocusModule.platform === 'ios' ? ['screenTime'] : ['accessibility', 'notifications', 'batteryOptimization'];
+  FocusModule.platform === 'ios' ? ['screenTime'] : ['accessibility', 'notificationAccess', 'notifications', 'batteryOptimization'];
 
 /** Asked for during onboarding but not needed to start. */
 export const OPTIONAL_PERMISSIONS: PermissionName[] =

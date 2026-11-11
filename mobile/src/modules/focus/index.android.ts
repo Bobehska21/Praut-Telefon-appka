@@ -35,6 +35,7 @@ const native = requireNativeModule<NativeFocus>('Focus');
 const REQUEST_ORDER: PermissionName[] = [
   'usageAccess',
   'overlay',
+  'notificationAccess',
   'notifications',
   'batteryOptimization',
   'exactAlarm',

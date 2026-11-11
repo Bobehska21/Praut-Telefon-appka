@@ -117,6 +117,10 @@
       "screenTime": {
         "title": "Čas u obrazovky",
         "why": "Apple vyžaduje tvůj souhlas, abychom mohli omezit aplikace. Výběr zůstává v zařízení."
+      },
+      "notificationAccess": {
+        "title": "Přístup k oznámením",
+        "why": "Během režimu soustředění mažeme oznámení od aplikací, které nejsou povolené, aby telefon ukazoval jen to, co povolíš. Čteme pouze název aplikace, která oznámení poslala, nikdy jeho text, a nic neodesíláme."
       }
     },
     "grant": "Povolit",

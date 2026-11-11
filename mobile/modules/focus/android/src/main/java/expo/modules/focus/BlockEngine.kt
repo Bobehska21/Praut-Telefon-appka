@@ -60,6 +60,16 @@ object BlockEngine {
     }
   }
 
+  /** Packages allowed right now (profile whitelist + always-allowed). Empty when focus mode is off. */
+  fun allowedPackages(context: Context): Set<String> {
+    val app = context.applicationContext
+    val store = FocusStore.get(app)
+    val state = store.state()
+    if (!state.active) return emptySet()
+    refreshCachesIfStale(app, store, state)
+    return allowed
+  }
+
   /** Called when the user taps "back" on the overlay. Only hides it; `lastPackage` stays. */
   fun onLeftBlockedApp() {
     hideOverlay()

@@ -26,6 +26,7 @@ object Permissions {
     "defaultLauncher",
     "accessibility",
     "exactAlarm",
+    "notificationAccess",
   )
 
   private const val NOTIFICATION_REQUEST_CODE = 4102
@@ -39,6 +40,7 @@ object Permissions {
       context.getSystemService(PowerManager::class.java)?.isIgnoringBatteryOptimizations(context.packageName) == true
     "defaultLauncher" -> defaultLauncher(context)
     "accessibility" -> accessibility(context)
+    "notificationAccess" -> notificationAccess(context)
     "exactAlarm" ->
       Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
         context.getSystemService(AlarmManager::class.java)?.canScheduleExactAlarms() == true
@@ -80,6 +82,7 @@ object Permissions {
       "batteryOptimization" -> Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
       "defaultLauncher" -> Intent(Settings.ACTION_HOME_SETTINGS)
       "accessibility" -> Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+      "notificationAccess" -> Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
       "exactAlarm" ->
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, pkgUri)
         else null
@@ -113,6 +116,12 @@ object Permissions {
     val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
     val resolved = context.packageManager.resolveActivity(home, PackageManager.MATCH_DEFAULT_ONLY)
     return resolved?.activityInfo?.packageName == context.packageName
+  }
+
+  private fun notificationAccess(context: Context): Boolean {
+    val enabled = Settings.Secure.getString(context.contentResolver, "enabled_notification_listeners") ?: return false
+    val ours = ComponentName(context, FocusNotificationListener::class.java).flattenToString()
+    return enabled.split(':').any { it.equals(ours, ignoreCase = true) }
   }
 
   private fun accessibility(context: Context): Boolean {
