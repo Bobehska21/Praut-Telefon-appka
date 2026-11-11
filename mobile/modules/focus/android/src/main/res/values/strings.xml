@@ -18,4 +18,19 @@
   <string name="focus_unlock_sentence">I want to interrupt my focus now.</string>
   <string name="focus_confirm_stop">Stop focus mode</string>
   <string name="focus_keep">Keep focusing</string>
+  <string name="focus_nearby_channel">Nearby users</string>
+  <string name="focus_nearby_title">Another Focus user is nearby</string>
+  <string name="focus_nearby_text">Want to see who it is?</string>
+  <string name="focus_nearby_accept">Accept</string>
+  <string name="focus_nearby_decline">Decline</string>
+  <string name="focus_nearby_gone">That user is no longer in range.</string>
+  <string name="focus_nearby_failed">Could not read their details. Try again when you are close.</string>
+  <string name="focus_nearby_result_title">Focus user nearby</string>
+  <string name="focus_nearby_result">%1$s (level %2$d) · %3$d-day streak. Open Focus to see more.</string>
+  <string name="focus_rank_novice">Novice</string>
+  <string name="focus_rank_apprentice">Apprentice</string>
+  <string name="focus_rank_adept">Adept</string>
+  <string name="focus_rank_warden">Warden</string>
+  <string name="focus_rank_master">Master</string>
+  <string name="focus_rank_grandmaster">Grandmaster</string>
 </resources>

@@ -3,6 +3,7 @@ package expo.modules.focus
 import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
+import java.security.SecureRandom
 
 /** A schedule as pushed from JS. `days`: 0 = Sunday ... 6 = Saturday. */
 data class ScheduleItem(
@@ -22,6 +23,9 @@ data class FocusState(
 
 data class BlockedAttempt(val at: Long, val appId: String)
 
+/** Someone nearby who was accepted by the user, with what they chose to share. */
+data class Encounter(val at: Long, val nickname: String, val rank: String, val level: Int, val streak: Int)
+
 /**
  * Single source of truth for focus state. Lives in SharedPreferences so it
  * survives process death and reboot; the JS store only mirrors it.
@@ -40,6 +44,12 @@ class FocusStore private constructor(context: Context) {
     private const val K_ATTEMPTS = "attempts"
     private const val K_ATTEMPT_COUNT = "attemptCount"
     private const val K_UNLOCK_GUARD = "unlockGuard"
+    private const val K_NEARBY_ENABLED = "nearbyEnabled"
+    private const val K_NEARBY_PROFILE = "nearbyProfile"
+    private const val K_NEARBY_SECRET = "nearbySecret"
+    private const val K_NEARBY_SEEN = "nearbySeen"
+    private const val K_ENCOUNTERS = "encounters"
+    private const val MAX_ENCOUNTERS = 50
     private const val ALLOWED_PREFIX = "allowed_"
     private const val MAX_ATTEMPTS = 2000
 
@@ -158,6 +168,76 @@ class FocusStore private constructor(context: Context) {
   }
 
   fun attemptCount(): Int = prefs.getInt(K_ATTEMPT_COUNT, 0)
+
+  // --- nearby users (Bluetooth) ------------------------------------------
+
+  /** Whether this user takes part in nearby detection. On by default; it still needs the Bluetooth permission. */
+  var nearbyEnabled: Boolean
+    get() = prefs.getBoolean(K_NEARBY_ENABLED, true)
+    set(value) {
+      prefs.edit().putBoolean(K_NEARBY_ENABLED, value).apply()
+    }
+
+  /** Random per-install key. Never leaves the device; only a daily token derived from it is broadcast. */
+  @Synchronized
+  fun nearbySecret(): ByteArray {
+    val existing = prefs.getString(K_NEARBY_SECRET, null)
+    if (existing != null) return android.util.Base64.decode(existing, android.util.Base64.NO_WRAP)
+    val fresh = ByteArray(32).also { SecureRandom().nextBytes(it) }
+    prefs.edit().putString(K_NEARBY_SECRET, android.util.Base64.encodeToString(fresh, android.util.Base64.NO_WRAP)).apply()
+    return fresh
+  }
+
+  /** What other users see after they accept: a chosen nickname (optional), rank, level and streak. Nothing else. */
+  fun setNearbyProfile(nickname: String, rank: String, level: Int, streak: Int) {
+    val json = JSONObject()
+      .put("n", nickname.trim().take(20))
+      .put("r", rank)
+      .put("l", level)
+      .put("s", streak)
+    prefs.edit().putString(K_NEARBY_PROFILE, json.toString()).apply()
+  }
+
+  fun nearbyProfileBytes(): ByteArray =
+    (prefs.getString(K_NEARBY_PROFILE, null) ?: JSONObject().put("n", "").put("r", "novice").put("l", 1).put("s", 0).toString())
+      .toByteArray(Charsets.UTF_8)
+
+  /** Returns true the first time a token is seen on `day` (a new day means a new token anyway). */
+  @Synchronized
+  fun markNearbySeen(token: String, day: String): Boolean {
+    val seen = try { JSONObject(prefs.getString(K_NEARBY_SEEN, "{}") ?: "{}") } catch (_: Exception) { JSONObject() }
+    if (seen.optString(token) == day) return false
+    // Keep only today's tokens so the list never grows.
+    val fresh = JSONObject()
+    for (key in seen.keys()) if (seen.optString(key) == day) fresh.put(key, day)
+    fresh.put(token, day)
+    prefs.edit().putString(K_NEARBY_SEEN, fresh.toString()).apply()
+    return true
+  }
+
+  @Synchronized
+  fun addEncounter(encounter: Encounter) {
+    val list = encounters().toMutableList()
+    list.add(0, encounter)
+    val arr = JSONArray()
+    for (e in list.take(MAX_ENCOUNTERS)) {
+      arr.put(JSONObject().put("at", e.at).put("n", e.nickname).put("r", e.rank).put("l", e.level).put("s", e.streak))
+    }
+    prefs.edit().putString(K_ENCOUNTERS, arr.toString()).apply()
+  }
+
+  fun encounters(): List<Encounter> {
+    val raw = prefs.getString(K_ENCOUNTERS, null) ?: return emptyList()
+    return try {
+      val arr = JSONArray(raw)
+      (0 until arr.length()).map {
+        val o = arr.getJSONObject(it)
+        Encounter(o.getLong("at"), o.optString("n"), o.optString("r", "novice"), o.optInt("l", 1), o.optInt("s", 0))
+      }
+    } catch (_: Exception) {
+      emptyList()
+    }
+  }
 
   // --- stop protection ----------------------------------------------------
 

@@ -24,6 +24,7 @@ export type PermissionName =
   | 'defaultLauncher' // Android: act as HOME app
   | 'accessibility' // Android: optional AccessibilityService
   | 'notificationAccess' // Android: NotificationListenerService, hides notifications of apps that are not allowed
+  | 'bluetooth' // Android: BLE scan/advertise/connect, for the nearby-users feature
   | 'exactAlarm' // Android 12+: SCHEDULE_EXACT_ALARM, needed to start schedules on time
   | 'screenTime'; // iOS: FamilyControls authorization
 
@@ -47,6 +48,25 @@ export interface PickResult {
   selectionId: string;
   /** Number of apps/categories chosen, for display only. */
   appCount: number;
+}
+
+export interface NearbyConfig {
+  /** User switch for the feature. It also needs the Bluetooth permission and focus mode to be on. */
+  enabled: boolean;
+  /** Optional, at most 20 characters; shown to people who accept the notification about you. */
+  nickname: string;
+  rank: string;
+  level: number;
+  streak: number;
+}
+
+/** Someone the user accepted when they were nearby, with what they chose to share. */
+export interface NearbyEncounter {
+  at: number;
+  nickname: string;
+  rank: string;
+  level: number;
+  streak: number;
 }
 
 export interface NativeSchedule {
@@ -73,6 +93,9 @@ export interface FocusModuleApi {
   setAllowedApps(profileId: string, appIds: string[]): Promise<void>;
   /** Mirrors the stop-protection setting so the native launcher can enforce it without JS. */
   setUnlockGuard(mode: 'none' | 'countdown' | 'sentence'): Promise<void>;
+  /** Android only. Tells the native layer what to share and whether to look for others. */
+  setNearby(config: NearbyConfig): Promise<void>;
+  getNearbyEncounters(): Promise<NearbyEncounter[]>;
   /** Native side runs the schedule (Android: alarms/service, iOS: DeviceActivityMonitor). */
   setSchedules(items: NativeSchedule[]): Promise<void>;
   /** Returns attempts recorded natively since the last call and clears them. */

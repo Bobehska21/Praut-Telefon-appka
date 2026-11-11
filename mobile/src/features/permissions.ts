@@ -12,7 +12,7 @@ export const REQUIRED_PERMISSIONS: PermissionName[] =
 
 /** Asked for during onboarding but not needed to start. */
 export const OPTIONAL_PERMISSIONS: PermissionName[] =
-  FocusModule.platform === 'ios' ? [] : ['defaultLauncher', 'exactAlarm'];
+  FocusModule.platform === 'ios' ? [] : ['bluetooth', 'defaultLauncher', 'exactAlarm'];
 
 /**
  * Current permission state, re-read whenever the app returns to the foreground (most permissions are

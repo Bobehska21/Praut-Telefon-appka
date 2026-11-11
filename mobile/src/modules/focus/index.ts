@@ -31,6 +31,10 @@ export const FocusModule: FocusModuleApi = {
   },
   async setAllowedApps() {},
   async setUnlockGuard() {},
+  async setNearby() {},
+  async getNearbyEncounters() {
+    return [];
+  },
   async setSchedules() {},
   async drainBlockedAttempts() {
     return [];

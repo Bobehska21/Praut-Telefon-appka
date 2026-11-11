@@ -23,6 +23,7 @@ class FocusService : Service() {
   private lateinit var detector: ForegroundDetector
   private var lastSeen: String? = null
   private var running = false
+  private var lastNearbyCheck = 0L
 
   private val tick = object : Runnable {
     override fun run() {
@@ -35,6 +36,12 @@ class FocusService : Service() {
       if (state.endsAt in 1..System.currentTimeMillis()) {
         FocusController.stop(this@FocusService)
         return
+      }
+      // Align Bluetooth with the current state a few times a minute (cheap; it only acts on changes).
+      val now = System.currentTimeMillis()
+      if (now - lastNearbyCheck > NEARBY_CHECK_MS) {
+        lastNearbyCheck = now
+        NearbyManager.ensure(this@FocusService)
       }
       detector.poll()?.let { pkg ->
         // Only react to changes: the detector keeps returning the last known package.
@@ -76,6 +83,7 @@ class FocusService : Service() {
 
   override fun onDestroy() {
     running = false
+    NearbyManager.stop()
     handler.removeCallbacks(tick)
     super.onDestroy()
   }
@@ -112,5 +120,6 @@ class FocusService : Service() {
     const val CHANNEL_ID = "focus_mode"
     const val NOTIFICATION_ID = 4100
     const val POLL_MS = 700L
+    const val NEARBY_CHECK_MS = 5_000L
   }
 }

@@ -18,4 +18,19 @@
   <string name="focus_unlock_sentence">Chci teď přerušit soustředění.</string>
   <string name="focus_confirm_stop">Vypnout režim</string>
   <string name="focus_keep">Pokračovat v soustředění</string>
+  <string name="focus_nearby_channel">Uživatelé v okolí</string>
+  <string name="focus_nearby_title">V okolí je další uživatel Focus</string>
+  <string name="focus_nearby_text">Chceš zjistit, kdo to je?</string>
+  <string name="focus_nearby_accept">Přijmout</string>
+  <string name="focus_nearby_decline">Odmítnout</string>
+  <string name="focus_nearby_gone">Tento uživatel už není v dosahu.</string>
+  <string name="focus_nearby_failed">Nepodařilo se načíst jeho údaje. Zkus to znovu, až budete blízko.</string>
+  <string name="focus_nearby_result_title">Uživatel Focus v okolí</string>
+  <string name="focus_nearby_result">%1$s (úroveň %2$d) · série %3$d dní. Další údaje uvidíš ve Focus.</string>
+  <string name="focus_rank_novice">Nováček</string>
+  <string name="focus_rank_apprentice">Učedník</string>
+  <string name="focus_rank_adept">Adept</string>
+  <string name="focus_rank_warden">Strážce</string>
+  <string name="focus_rank_master">Mistr</string>
+  <string name="focus_rank_grandmaster">Velmistr</string>
 </resources>

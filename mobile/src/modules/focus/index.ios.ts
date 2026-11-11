@@ -37,6 +37,9 @@ export const FocusModule: FocusModuleApi = {
     Promise.reject(Object.assign(new Error('getInstalledApps is Android only'), { code: 'UNSUPPORTED' })),
   pickAllowedApps: (profileId) => native.pickAllowedApps(profileId),
   setAllowedApps: (profileId, appIds) => native.setAllowedApps(profileId, appIds),
+  // Nearby detection is not implemented on iOS yet (see README), so these do nothing.
+  setNearby: () => Promise.resolve(),
+  getNearbyEncounters: () => Promise.resolve([]),
   setUnlockGuard: (mode) => native.setUnlockGuard(mode),
   setSchedules: (items) => native.setSchedules(items),
   drainBlockedAttempts: () => native.drainBlockedAttempts(),

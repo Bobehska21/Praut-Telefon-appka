@@ -24,6 +24,21 @@
     tools:ignore="ProtectedPermissions" />
 
   <!--
+    Nearby detection over Bluetooth Low Energy. Android 12+ has its own runtime permissions (scan with
+    "never for location": we do not derive the user's location); Android 11 and older need location to scan.
+  -->
+  <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+  <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
+  <uses-permission
+    android:name="android.permission.BLUETOOTH_SCAN"
+    android:usesPermissionFlags="neverForLocation"
+    tools:targetApi="s" />
+  <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+  <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+  <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+
+  <!--
     Package visibility (Android 11+). Deliberately NOT QUERY_ALL_PACKAGES, which Google Play
     restricts: launcher apps, home apps, dialers and keyboards are enough for this app.
   -->
@@ -86,6 +101,10 @@
         <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
       </intent-filter>
     </receiver>
+
+    <receiver
+      android:name="expo.modules.focus.NearbyActionReceiver"
+      android:exported="false" />
 
     <receiver
       android:name="expo.modules.focus.ScheduleReceiver"

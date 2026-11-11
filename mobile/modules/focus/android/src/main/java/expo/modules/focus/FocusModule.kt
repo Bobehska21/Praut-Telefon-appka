@@ -93,6 +93,17 @@ class FocusModule : Module() {
       store.unlockGuard = if (mode == "countdown" || mode == "sentence") mode else "none"
     }
 
+    AsyncFunction("setNearby") { enabled: Boolean, nickname: String, rank: String, level: Int, streak: Int ->
+      store.nearbyEnabled = enabled
+      store.setNearbyProfile(nickname, rank, level, streak)
+    }
+
+    AsyncFunction("getNearbyEncounters") {
+      store.encounters().map {
+        mapOf("at" to it.at, "nickname" to it.nickname, "rank" to it.rank, "level" to it.level, "streak" to it.streak)
+      }
+    }
+
     AsyncFunction("drainBlockedAttempts") {
       store.drainAttempts().map { mapOf("at" to it.at, "appId" to it.appId) }
     }

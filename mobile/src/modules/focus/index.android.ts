@@ -5,6 +5,7 @@ import type {
   FocusModuleApi,
   FocusStatus,
   InstalledApp,
+  NearbyEncounter,
   NativeSchedule,
   PermissionMap,
   PermissionName,
@@ -20,6 +21,8 @@ declare class NativeFocus extends NativeModule<FocusEvents> {
   getInstalledApps(): Promise<InstalledApp[]>;
   setAllowedApps(profileId: string, appIds: string[]): Promise<void>;
   setUnlockGuard(mode: 'none' | 'countdown' | 'sentence'): Promise<void>;
+  setNearby(enabled: boolean, nickname: string, rank: string, level: number, streak: number): Promise<void>;
+  getNearbyEncounters(): Promise<NearbyEncounter[]>;
   setSchedules(items: NativeSchedule[]): Promise<void>;
   drainBlockedAttempts(): Promise<BlockedAttemptRecord[]>;
   startFocus(profileId: string, durationMs: number | null): Promise<FocusStatus>;
@@ -52,6 +55,8 @@ export const FocusModule: FocusModuleApi = {
     Promise.reject(Object.assign(new Error('pickAllowedApps is iOS only'), { code: 'UNSUPPORTED' })),
   setAllowedApps: (profileId, appIds) => native.setAllowedApps(profileId, appIds),
   setUnlockGuard: (mode) => native.setUnlockGuard(mode),
+  setNearby: (c) => native.setNearby(c.enabled, c.nickname, c.rank, c.level, c.streak),
+  getNearbyEncounters: () => native.getNearbyEncounters(),
   setSchedules: (items) => native.setSchedules(items),
   drainBlockedAttempts: () => native.drainBlockedAttempts(),
   startFocus: (profileId, durationMs) => native.startFocus(profileId, durationMs),
