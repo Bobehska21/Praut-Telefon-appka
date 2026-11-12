@@ -330,7 +330,11 @@
       "leaveConfirm": "Smaže se tvůj účet, fotka i statistiky na serveru. Pokračovat?",
       "server": "Server",
       "serverReset": "Obnovit výchozí adresu"
-    }
+    },
+    "shields": "Štíty: {{count}} ze 3",
+    "shieldsHint": "Jeden štít za 5 hodin soustředění v jedné relaci. Pohltí jedno zabití, když jsi wasteman.",
+    "shieldBlockedTitle": "{{name}} měl štít",
+    "shieldBlockedText": "Štít pohltil tvůj útok. Žádné body se nepřesunuly."
   },
   "auth": {
     "title": "Přihlášení",

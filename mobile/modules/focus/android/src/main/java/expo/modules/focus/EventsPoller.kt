@@ -54,7 +54,22 @@ class EventsPoller(private val context: Context) : Thread("focus-events") {
     for (i in 0 until events.length()) {
       val event = events.optJSONObject(i) ?: continue
       store.lastEventId = maxOf(store.lastEventId, event.optLong("id"))
-      if (event.optString("kind") == "killed") notifyKilled(event.optJSONObject("payload") ?: JSONObject())
+      val payload = event.optJSONObject("payload") ?: JSONObject()
+      when (event.optString("kind")) {
+        "killed" -> notifyKilled(payload)
+        "shield_earned" -> notifyShield(
+          context.getString(R.string.focus_shield_earned_title),
+          context.getString(R.string.focus_shield_earned_text, payload.optInt("shields")),
+        )
+        "shield_blocked" -> notifyShield(
+          context.getString(R.string.focus_shield_blocked_title),
+          context.getString(
+            R.string.focus_shield_blocked_text,
+            payload.optString("killerNickname").ifBlank { context.getString(R.string.focus_nearby_anonymous_player) },
+            payload.optInt("shields"),
+          ),
+        )
+      }
     }
   }
 
@@ -76,6 +91,19 @@ class EventsPoller(private val context: Context) : Thread("focus-events") {
       .build()
     manager.notify(System.currentTimeMillis().toInt(), notification)
     Log.i("FocusEvents", "killed notification shown")
+  }
+
+  private fun notifyShield(title: String, text: String) {
+    val manager = context.getSystemService(NotificationManager::class.java)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      manager.createNotificationChannel(NotificationChannel(CHANNEL_ID, context.getString(R.string.focus_killed_channel), NotificationManager.IMPORTANCE_HIGH))
+    }
+    val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(context, CHANNEL_ID)
+    else @Suppress("DEPRECATION") Notification.Builder(context)
+    manager.notify(
+      System.currentTimeMillis().toInt(),
+      builder.setContentTitle(title).setContentText(text).setSmallIcon(android.R.drawable.ic_dialog_info).setAutoCancel(true).build(),
+    )
   }
 
   private fun sleepQuietly(ms: Long) {

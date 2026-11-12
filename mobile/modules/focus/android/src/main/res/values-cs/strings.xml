@@ -39,4 +39,8 @@
   <string name="focus_killed_title">Byl jsi zabit</string>
   <string name="focus_killed_text">%1$s tě zabil. Přišel jsi o %2$d bodů.</string>
   <string name="focus_nearby_anonymous_player">Jiný hráč</string>
+  <string name="focus_shield_earned_title">Získal jsi štít</string>
+  <string name="focus_shield_earned_text">5 hodin soustředění v jedné relaci. Máš %1$d štít(ů).</string>
+  <string name="focus_shield_blocked_title">Zachránil tě štít</string>
+  <string name="focus_shield_blocked_text">%1$s na tebe zaútočil, štít útok pohltil. Zbývá štítů: %2$d.</string>
 </resources>

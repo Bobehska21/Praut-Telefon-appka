@@ -32,6 +32,8 @@ export interface MyProfile {
   timezone: string;
   state: 'idle' | 'focus' | 'wasteman';
   immuneUntil: string | null;
+  /** Shields earned by 5 hours of uninterrupted focus (0-3). Only the owner sees this. */
+  shields: number;
 }
 
 export interface MyStats {
@@ -71,6 +73,8 @@ export interface KillResult {
   victimPointsLost: number;
   victimImmuneUntil: string;
   killedAt: string;
+  /** The victim had a shield: it was used up and no points moved. */
+  shieldBlocked: boolean;
 }
 
 export type ReportKind = 'nickname' | 'photo' | 'player';

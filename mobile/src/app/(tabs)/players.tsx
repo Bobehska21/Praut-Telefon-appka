@@ -97,7 +97,9 @@ function NearbyTab() {
     setKilling(player.playerId);
     try {
       const result = await killPlayer(player);
-      Alert.alert(t('players.killed', { name: player.nickname || t('players.anonymous') }), t('players.killedPoints', { points: result.pointsGained }));
+      const name = player.nickname || t('players.anonymous');
+      if (result.shieldBlocked) Alert.alert(t('players.shieldBlockedTitle', { name }), t('players.shieldBlockedText'));
+      else Alert.alert(t('players.killed', { name }), t('players.killedPoints', { points: result.pointsGained }));
     } catch (e) {
       Alert.alert(t('players.killFailed'), errorText(t, e));
     } finally {
@@ -362,6 +364,19 @@ function MeTab() {
               {me ? `${t(`progress.rank.${me.rankKey}`)} · ${t('progress.level', { level: me.level })}` : ''}
             </AppText>
           </View>
+        </View>
+        <View style={styles.row} accessibilityLabel={t('players.shields', { count: me?.shields ?? 0 })}>
+          {[0, 1, 2].map((i) => (
+            <Ionicons
+              key={i}
+              name={i < (me?.shields ?? 0) ? 'shield' : 'shield-outline'}
+              size={26}
+              color={i < (me?.shields ?? 0) ? theme.accent : theme.textMuted}
+            />
+          ))}
+          <AppText muted size={12} style={styles.flex}>
+            {t('players.shieldsHint')}
+          </AppText>
         </View>
         <AppText weight="600" size={13} muted>
           {t('players.me.photo').toLocaleUpperCase()}

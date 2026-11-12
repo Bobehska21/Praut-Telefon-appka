@@ -326,7 +326,11 @@
       "leaveConfirm": "Your account, photo and statistics on the server will be deleted. Continue?",
       "server": "Server",
       "serverReset": "Reset to default address"
-    }
+    },
+    "shields": "Shields: {{count}} of 3",
+    "shieldsHint": "One shield for 5 hours of focus in a single session. It absorbs one kill while you are a wasteman.",
+    "shieldBlockedTitle": "{{name}} was protected",
+    "shieldBlockedText": "A shield absorbed your attack. No points moved."
   },
   "auth": {
     "title": "Sign in",
