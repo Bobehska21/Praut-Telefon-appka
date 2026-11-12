@@ -56,6 +56,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      # The lock file is written by npm 11; npm 10 (bundled with Node 22) reports it as out of sync.
+      - run: npm install -g npm@11
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
