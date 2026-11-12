@@ -13,7 +13,7 @@ import {
   fetchLeaderboard,
   fetchMe,
   fetchStats,
-  joinMultiplayer,
+  logoutAccount,
   killPlayer,
   leaveMultiplayer,
   listBlocked,
@@ -23,7 +23,7 @@ import {
   syncProfile,
   unblockPlayer,
 } from '@/features/multiplayer/service';
-import { ApiError } from '@/features/multiplayer/api';
+import { errorText } from '@/features/multiplayer/errors';
 import { useMultiplayerStore } from '@/features/multiplayer/store';
 import type { BlockedPlayer, Leaderboard, MyProfile, MyStats, NearbyPlayer, ReportKind } from '@/features/multiplayer/types';
 import { usePermissions } from '@/features/permissions';
@@ -34,7 +34,6 @@ type Tab = 'nearby' | 'leaderboard' | 'me';
 
 export default function PlayersScreen() {
   const { t } = useTranslation();
-  const joined = useMultiplayerStore((s) => s.joined);
   const [tab, setTab] = useState<Tab>('nearby');
 
   if (FocusModule.platform !== 'android') {
@@ -49,52 +48,15 @@ export default function PlayersScreen() {
   return (
     <Screen>
       <Heading>{t('players.title')}</Heading>
-      {!joined ? (
-        <JoinCard />
-      ) : (
-        <>
-          <View style={styles.tabs}>
-            {(['nearby', 'leaderboard', 'me'] as const).map((key) => (
-              <Chip key={key} label={t(`players.tabs.${key}`)} selected={tab === key} onPress={() => setTab(key)} />
-            ))}
-          </View>
-          {tab === 'nearby' && <NearbyTab />}
-          {tab === 'leaderboard' && <LeaderboardTab />}
-          {tab === 'me' && <MeTab />}
-        </>
-      )}
+      <View style={styles.tabs}>
+        {(['nearby', 'leaderboard', 'me'] as const).map((key) => (
+          <Chip key={key} label={t(`players.tabs.${key}`)} selected={tab === key} onPress={() => setTab(key)} />
+        ))}
+      </View>
+      {tab === 'nearby' && <NearbyTab />}
+      {tab === 'leaderboard' && <LeaderboardTab />}
+      {tab === 'me' && <MeTab />}
     </Screen>
-  );
-}
-
-// ------------------------------------------------------------------------------------- join
-
-function JoinCard() {
-  const { t } = useTranslation();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function join() {
-    setBusy(true);
-    setError(null);
-    try {
-      await joinMultiplayer();
-    } catch (e) {
-      setError(errorText(t, e));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <Card>
-      <AppText size={18} weight="700">
-        {t('players.joinTitle')}
-      </AppText>
-      <AppText muted>{t('players.joinBody')}</AppText>
-      {error && <AppText size={13} style={{ color: '#FF5A5A' }}>{error}</AppText>}
-      <Button label={busy ? t('players.joining') : t('players.join')} onPress={join} disabled={busy} />
-    </Card>
   );
 }
 
@@ -451,6 +413,7 @@ function MeTab() {
         <ServerUrlField onSaved={() => void syncProfile().then(load).catch(() => undefined)} />
       </Card>
 
+      <Button label={t('auth.logout')} variant="secondary" onPress={() => void logoutAccount()} />
       <Button label={t('players.me.leave')} variant="secondary" onPress={leave} />
     </>
   );
@@ -489,12 +452,6 @@ function ServerUrlField({ onSaved }: { onSaved: () => void }) {
 }
 
 // ------------------------------------------------------------------------------------- helpers
-
-function errorText(t: (key: string) => string, e: unknown): string {
-  const code = e instanceof ApiError ? e.code : 'unknown';
-  const known = ['needs_minutes', 'immune', 'not_wasteman', 'already_killed', 'expired', 'out_of_range', 'blocked', 'multiplayer_off', 'network', 'unauthorized', 'rate_limited', 'camera_denied', 'validation'];
-  return t(`players.errors.${known.includes(code) ? code : 'unknown'}`);
-}
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },

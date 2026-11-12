@@ -295,7 +295,10 @@
       "rate_limited": "Příliš mnoho pokusů, chvíli počkej.",
       "camera_denied": "Přístup k foťáku není povolen.",
       "validation": "Neplatné údaje.",
-      "unknown": "Něco se nepovedlo."
+      "unknown": "Něco se nepovedlo.",
+      "username_taken": "Toto jméno je obsazené.",
+      "invalid_credentials": "Špatné jméno nebo heslo.",
+      "forbidden": "Tento účet nemůže hrát."
     },
     "block": "Blokovat",
     "unblock": "Odblokovat",
@@ -328,5 +331,27 @@
       "server": "Server",
       "serverReset": "Obnovit výchozí adresu"
     }
+  },
+  "auth": {
+    "title": "Přihlášení",
+    "registerTitle": "Vytvořit účet",
+    "intro": "Jeden účet pro multiplayerovou hru. Bez e-mailu, jen uživatelské jméno a heslo. Uživatelské jméno je soukromé: ostatní vidí jen tvou přezdívku.",
+    "username": "Uživatelské jméno",
+    "password": "Heslo",
+    "password2": "Heslo znovu",
+    "usernameHint": "3–20 znaků: písmena, číslice, . _ -",
+    "passwordHint": "Alespoň 8 znaků.",
+    "login": "Přihlásit se",
+    "register": "Vytvořit účet",
+    "working": "Moment…",
+    "toRegister": "Nemáš účet? Vytvoř si ho",
+    "toLogin": "Už máš účet? Přihlas se",
+    "mismatch": "Hesla se neshodují.",
+    "badUsername": "Jméno musí mít 3–20 znaků: písmena, číslice, . _ -",
+    "badPassword": "Heslo musí mít alespoň 8 znaků.",
+    "noReset": "Bez e-mailu nelze zapomenuté heslo obnovit.",
+    "logout": "Odhlásit se",
+    "server": "Adresa serveru",
+    "serverSave": "Uložit"
   }
 }

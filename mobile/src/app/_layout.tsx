@@ -56,6 +56,7 @@ export default function RootLayout() {
         }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
+        <Stack.Screen name="auth" options={{ gestureEnabled: false }} />
         <Stack.Screen name="unlock" options={{ presentation: 'modal' }} />
         <Stack.Screen name="blocked" options={{ gestureEnabled: false }} />
         <Stack.Screen name="profile/[id]" options={{ headerShown: true, title: '' }} />

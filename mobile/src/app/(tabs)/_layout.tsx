@@ -3,6 +3,8 @@ import { Redirect, Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useMultiplayerStore } from '@/features/multiplayer/store';
+import { FocusModule } from '@/modules/focus';
 import { useAppStore } from '@/store';
 import { useTheme } from '@/theme';
 
@@ -24,7 +26,12 @@ export default function TabsLayout() {
   const theme = useTheme();
   const onboardingDone = useAppStore((s) => s.settings.onboardingDone);
 
+  const signedIn = useMultiplayerStore((s) => s.joined);
+
   if (!onboardingDone) return <Redirect href="/onboarding" />;
+  // An account (username + password) is required after the first steps. Multiplayer is Android-only for now,
+  // so iOS has nothing to sign in to.
+  if (FocusModule.platform === 'android' && !signedIn) return <Redirect href="/auth" />;
 
   const screen = (name: keyof typeof ICONS, title: string) => (
     <Tabs.Screen

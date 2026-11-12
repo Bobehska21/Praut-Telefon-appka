@@ -291,7 +291,10 @@
       "rate_limited": "Too many attempts, please wait a moment.",
       "camera_denied": "Camera access is not allowed.",
       "validation": "Invalid data.",
-      "unknown": "Something went wrong."
+      "unknown": "Something went wrong.",
+      "username_taken": "This username is taken.",
+      "invalid_credentials": "Wrong username or password.",
+      "forbidden": "This account is not allowed to play."
     },
     "block": "Block",
     "unblock": "Unblock",
@@ -324,5 +327,27 @@
       "server": "Server",
       "serverReset": "Reset to default address"
     }
+  },
+  "auth": {
+    "title": "Sign in",
+    "registerTitle": "Create an account",
+    "intro": "One account for the multiplayer game. No e-mail, only a username and a password. Your username is private: others see only your nickname.",
+    "username": "Username",
+    "password": "Password",
+    "password2": "Repeat password",
+    "usernameHint": "3-20 characters: letters, digits, . _ -",
+    "passwordHint": "At least 8 characters.",
+    "login": "Sign in",
+    "register": "Create account",
+    "working": "Please wait…",
+    "toRegister": "No account yet? Create one",
+    "toLogin": "Already have an account? Sign in",
+    "mismatch": "The passwords do not match.",
+    "badUsername": "The username must be 3-20 characters: letters, digits, . _ -",
+    "badPassword": "The password must have at least 8 characters.",
+    "noReset": "There is no e-mail, so a forgotten password cannot be reset.",
+    "logout": "Sign out",
+    "server": "Server address",
+    "serverSave": "Save"
   }
 }

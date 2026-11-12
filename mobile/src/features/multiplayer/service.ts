@@ -2,7 +2,7 @@ import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 
 import { FocusModule } from '@/modules/focus';
-import { safeNickname } from '@/features/nickname';
+import { isNicknameAllowed, safeNickname } from '@/features/nickname';
 import { totalXp } from '@/features/progress/totals';
 import { levelForXp, rankKey } from '@/features/progress/xp';
 import { useAppStore } from '@/store';
@@ -43,20 +43,64 @@ function publicProfile() {
 
 // ---------------------------------------------------------------------------------- account
 
-/** Creates the anonymous account: a device key pair (private half stays in the Keystore) and a bearer token. */
-export async function joinMultiplayer(): Promise<void> {
-  const publicKey = await FocusModule.getDevicePublicKey();
-  const { playerId, token } = await request<{ playerId: string; token: string }>('/v1/register', {
-    method: 'POST',
-    body: { publicKey },
-    anonymous: true,
-  });
+interface AuthResponse {
+  playerId: string;
+  token: string;
+  profile?: MyProfile;
+}
+
+/** Shared tail of register and login: keep the token, tell the native side, publish the profile. */
+async function finishAuth({ playerId, token }: AuthResponse, username: string): Promise<void> {
   await saveToken(token);
   useMultiplayerStore.getState().setJoined(playerId);
   await FocusModule.setPlayerId(playerId);
   await FocusModule.setServer(useMultiplayerStore.getState().serverUrl, token);
-  await syncProfile();
-  await publishToken();
+  // The login name is private. It becomes the first public nickname only if it passes the nickname rules
+  // and the user has not chosen one yet; it can be changed in Settings.
+  const app = useAppStore.getState();
+  if (!app.settings.nickname && isNicknameAllowed(username)) app.updateSettings({ nickname: username });
+  await syncProfile().catch(() => undefined);
+  await publishToken().catch(() => undefined);
+}
+
+/** Creates an account (username + password, no e-mail). The device key pair stays in the Keystore. */
+export async function registerAccount(username: string, password: string): Promise<void> {
+  const publicKey = await FocusModule.getDevicePublicKey();
+  const response = await request<AuthResponse>('/v1/auth/register', {
+    method: 'POST',
+    body: { username, password, publicKey, timezone: timezone() },
+    anonymous: true,
+  });
+  await finishAuth(response, username);
+}
+
+/** Signs in. The server replaces the stored device key with this phone's key and signs other devices out. */
+export async function loginAccount(username: string, password: string): Promise<void> {
+  const publicKey = await FocusModule.getDevicePublicKey();
+  const response = await request<AuthResponse>('/v1/auth/login', {
+    method: 'POST',
+    body: { username, password, publicKey },
+    anonymous: true,
+  });
+  await finishAuth(response, username);
+}
+
+async function forgetLocalSession(): Promise<void> {
+  await clearToken();
+  useMultiplayerStore.getState().leave();
+  await FocusModule.setPlayerId('');
+  await FocusModule.setServer('', '');
+}
+
+/** Signs out on this phone (the account stays on the server). */
+export async function logoutAccount(): Promise<void> {
+  try {
+    await request('/v1/auth/logout', { method: 'POST' });
+  } catch {
+    // Offline or already invalid: the local session is dropped either way.
+  } finally {
+    await forgetLocalSession();
+  }
 }
 
 /** Deletes the account and all its data on the server (GDPR erasure), then forgets it locally. */
@@ -64,10 +108,7 @@ export async function leaveMultiplayer(): Promise<void> {
   try {
     await request('/v1/me', { method: 'DELETE' });
   } finally {
-    await clearToken();
-    useMultiplayerStore.getState().leave();
-    await FocusModule.setPlayerId('');
-    await FocusModule.setServer('', '');
+    await forgetLocalSession();
   }
 }
 
