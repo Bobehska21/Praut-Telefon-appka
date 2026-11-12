@@ -19,8 +19,14 @@
     "custom": "Custom",
     "minutes": "{{count}} min",
     "bet": "Bet",
-    "betHint": "{{multiplier}}× points if you stay focused at least {{minutes}} min. Stop earlier and you lose as many points as the session earned.",
-    "betTooShort": "A {{multiplier}}× bet needs a timer of at least {{minutes}} min (or no timer).",
+    "betStake": "Points to stake (up to {{max}}, your points today)",
+    "betHint": "Stay focused for the whole timer and win {{win}} points ({{multiplier}}× your {{stake}}). Leave earlier and you lose the {{stake}} staked points.",
+    "betProblem": {
+      "timer_required": "A bet needs a timer (not \"until I stop it\").",
+      "timer_too_short": "A {{minutes}} min or longer timer is needed for this multiplier.",
+      "stake_missing": "Enter how many points you stake (at least 1).",
+      "stake_too_high": "You can stake at most {{max}} points, what you have earned today."
+    },
     "profile": "Profile",
     "noAppsWarning": "This profile has no allowed apps. Phone, messages and emergency calls always stay available.",
     "missingTitle": "Allow these before starting",

@@ -26,10 +26,16 @@ object FocusSync {
     return store.nearbyEnabled && ServerClient.configured(context)
   }
 
-  /** `multiplier` > 1 is a session bet (the server validates 1, 2, 5, 10 and the required duration). */
-  fun onStarted(context: Context, multiplier: Int = 1) {
+  /** `multiplier` > 1 is a session bet: the staked points and the timer length are sent with it, the server validates all three. */
+  fun onStarted(context: Context, multiplier: Int = 1, stakePoints: Int = 0, durationMs: Long = 0L) {
     if (!enabled(context)) return
-    enqueue(context, "/v1/focus/start", JSONObject().apply { if (multiplier > 1) put("multiplier", multiplier) })
+    enqueue(context, "/v1/focus/start", JSONObject().apply {
+      if (multiplier > 1) {
+        put("multiplier", multiplier)
+        put("stakePoints", stakePoints)
+        put("durationMs", durationMs)
+      }
+    })
   }
 
   fun onStopped(context: Context, manual: Boolean) {

@@ -158,9 +158,9 @@ class FocusModule : Module() {
       store.drainAttempts().map { mapOf("at" to it.at, "appId" to it.appId) }
     }
 
-    AsyncFunction("startFocus") { profileId: String, durationMs: Double?, multiplier: Int? ->
+    AsyncFunction("startFocus") { profileId: String, durationMs: Double?, multiplier: Int?, stakePoints: Int? ->
       val endsAt = durationMs?.let { System.currentTimeMillis() + it.toLong() }
-      FocusController.start(ctx, profileId, endsAt, multiplier ?: 1)
+      FocusController.start(ctx, profileId, endsAt, multiplier ?: 1, stakePoints ?: 0, durationMs?.toLong() ?: 0L)
       FocusController.status(ctx)
     }
 

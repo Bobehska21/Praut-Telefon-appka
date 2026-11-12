@@ -19,8 +19,14 @@
     "custom": "Vlastní",
     "minutes": "{{count}} min",
     "bet": "Sázka",
-    "betHint": "{{multiplier}}× body, když vydržíš soustředěný alespoň {{minutes}} min. Skončíš dřív a přijdeš o tolik bodů, kolik relace vydělala.",
-    "betTooShort": "Sázka {{multiplier}}× vyžaduje časovač alespoň {{minutes}} min (nebo žádný časovač).",
+    "betStake": "Kolik bodů vsadíš (nejvýš {{max}}, tvé dnešní body)",
+    "betHint": "Vydrž soustředěný celý časovač a vyhraješ {{win}} bodů ({{multiplier}}× tvých {{stake}}). Odejdeš dřív a přijdeš o {{stake}} vsazených bodů.",
+    "betProblem": {
+      "timer_required": "Sázka potřebuje časovač (ne „dokud nezastavím“).",
+      "timer_too_short": "Pro tento násobič je potřeba časovač alespoň {{minutes}} min.",
+      "stake_missing": "Zadej, kolik bodů vsadíš (alespoň 1).",
+      "stake_too_high": "Můžeš vsadit nejvýš {{max}} bodů, co jsi dnes vydělal."
+    },
     "profile": "Profil",
     "noAppsWarning": "Tento profil nemá žádné povolené aplikace. Telefon, SMS a nouzová volání zůstanou dostupné vždy.",
     "missingTitle": "Před zapnutím je potřeba povolit",

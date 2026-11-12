@@ -1,3 +1,4 @@
+import type { Bet } from '@/features/bets';
 import { FocusModule } from '@/modules/focus';
 import { evaluateProgress } from '@/features/progress/engine';
 import { useAppStore } from '@/store';
@@ -8,7 +9,7 @@ import { useAppStore } from '@/store';
  * the store mirrors it for the UI and keeps history.
  */
 
-export async function startFocus(profileId: string, durationMs: number | null, multiplier = 1): Promise<void> {
+export async function startFocus(profileId: string, durationMs: number | null, bet?: Bet): Promise<void> {
   const state = useAppStore.getState();
   const profile = state.profiles.find((p) => p.id === profileId);
   if (!profile) throw new Error(`Unknown profile: ${profileId}`);
@@ -16,7 +17,7 @@ export async function startFocus(profileId: string, durationMs: number | null, m
   if (FocusModule.platform === 'android') {
     await FocusModule.setAllowedApps(profile.id, profile.allowedAppIds);
   }
-  const status = await FocusModule.startFocus(profile.id, durationMs, multiplier);
+  const status = await FocusModule.startFocus(profile.id, durationMs, bet?.multiplier ?? 1, bet?.stakePoints ?? 0);
   state.beginSession({
     profileId: profile.id,
     startedAt: status.startedAt ?? Date.now(),
