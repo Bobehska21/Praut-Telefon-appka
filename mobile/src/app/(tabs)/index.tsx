@@ -6,6 +6,7 @@ import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, TextInput, 
 
 import { AppText, Button, Card, Chip, ProgressBar, Screen } from '@/components/ui';
 import { FocusRing } from '@/components/focus-ring';
+import { BET_MULTIPLIERS, betAllowed, betRequiredMinutes, type BetMultiplier } from '@/features/bets';
 import { usePermissions } from '@/features/permissions';
 import { dailyGoal } from '@/features/progress/daily-goal';
 import { snapshot } from '@/features/progress/engine';
@@ -45,6 +46,8 @@ export default function HomeScreen() {
 
   const [choice, setChoice] = useState<Choice>(25);
   const [customMin, setCustomMin] = useState('45');
+  const [bet, setBet] = useState<BetMultiplier>(1);
+  const nearbyEnabled = useAppStore((s) => s.settings.nearbyEnabled !== false);
   const [busy, setBusy] = useState(false);
   const { perms, loaded, missing } = usePermissions();
 
@@ -104,6 +107,11 @@ export default function HomeScreen() {
     durationMs = Number.isFinite(minutes) && minutes > 0 ? minutes * 60_000 : undefined;
   }
 
+  // Bets are an Android multiplayer feature: the server settles them.
+  const betsVisible = FocusModule.platform === 'android' && nearbyEnabled;
+  const betActive = betsVisible ? bet : 1;
+  const betTooShort = !betAllowed(betActive, durationMs) && durationMs !== undefined;
+
   async function onToggle() {
     if (busy) return;
     if (active) {
@@ -120,10 +128,10 @@ export default function HomeScreen() {
       return;
     }
     // Focus mode must not start without the permissions that make it hold.
-    if (durationMs === undefined || missing.length > 0) return;
+    if (durationMs === undefined || missing.length > 0 || !betAllowed(betActive, durationMs)) return;
     setBusy(true);
     try {
-      await startFocus(profile.id, durationMs);
+      await startFocus(profile.id, durationMs, betActive);
     } finally {
       setBusy(false);
     }
@@ -165,7 +173,7 @@ export default function HomeScreen() {
                 backgroundColor: active ? theme.background : theme.primary,
                 borderColor: theme.primary,
                 shadowColor: theme.primary,
-                opacity: busy || (!active && missing.length > 0) ? 0.45 : 1,
+                opacity: busy || (!active && (missing.length > 0 || betTooShort)) ? 0.45 : 1,
               },
             ]}>
             <Ionicons name={active ? 'stop-circle-outline' : 'power'} size={54} color={active ? theme.accent : theme.onPrimary} />
@@ -285,6 +293,23 @@ export default function HomeScreen() {
               <Chip label={t('home.custom')} selected={choice === 'custom'} onPress={() => setChoice('custom')} />
               <Chip label={t('home.untilStopped')} selected={choice === 'open'} onPress={() => setChoice('open')} />
             </View>
+            {betsVisible && (
+              <>
+                <AppText muted size={14}>
+                  {t('home.bet')}
+                </AppText>
+                <View style={styles.row}>
+                  {BET_MULTIPLIERS.map((m) => (
+                    <Chip key={m} label={`${m}×`} selected={bet === m} onPress={() => setBet(m)} />
+                  ))}
+                </View>
+                {bet > 1 && (
+                  <AppText muted size={12}>
+                    {t(betTooShort ? 'home.betTooShort' : 'home.betHint', { minutes: betRequiredMinutes(bet), multiplier: bet })}
+                  </AppText>
+                )}
+              </>
+            )}
             {choice === 'custom' && (
               <TextInput
                 value={customMin}

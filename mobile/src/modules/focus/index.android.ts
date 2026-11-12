@@ -33,7 +33,7 @@ declare class NativeFocus extends NativeModule<FocusEvents> {
   requestKillProof(token: string, payload: string): Promise<string>;
   setSchedules(items: NativeSchedule[]): Promise<void>;
   drainBlockedAttempts(): Promise<BlockedAttemptRecord[]>;
-  startFocus(profileId: string, durationMs: number | null): Promise<FocusStatus>;
+  startFocus(profileId: string, durationMs: number | null, multiplier: number): Promise<FocusStatus>;
   stopFocus(): Promise<FocusStatus>;
   getStatus(): Promise<FocusStatus>;
   getPermissions(): Promise<PermissionMap>;
@@ -74,7 +74,7 @@ export const FocusModule: FocusModuleApi = {
   requestKillProof: (token, payload) => native.requestKillProof(token, payload),
   setSchedules: (items) => native.setSchedules(items),
   drainBlockedAttempts: () => native.drainBlockedAttempts(),
-  startFocus: (profileId, durationMs) => native.startFocus(profileId, durationMs),
+  startFocus: (profileId, durationMs, multiplier = 1) => native.startFocus(profileId, durationMs, multiplier),
   stopFocus: () => native.stopFocus(),
   getStatus: () => native.getStatus(),
   getPermissions: () => native.getPermissions(),

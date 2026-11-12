@@ -8,7 +8,7 @@ import { useAppStore } from '@/store';
  * the store mirrors it for the UI and keeps history.
  */
 
-export async function startFocus(profileId: string, durationMs: number | null): Promise<void> {
+export async function startFocus(profileId: string, durationMs: number | null, multiplier = 1): Promise<void> {
   const state = useAppStore.getState();
   const profile = state.profiles.find((p) => p.id === profileId);
   if (!profile) throw new Error(`Unknown profile: ${profileId}`);
@@ -16,7 +16,7 @@ export async function startFocus(profileId: string, durationMs: number | null): 
   if (FocusModule.platform === 'android') {
     await FocusModule.setAllowedApps(profile.id, profile.allowedAppIds);
   }
-  const status = await FocusModule.startFocus(profile.id, durationMs);
+  const status = await FocusModule.startFocus(profile.id, durationMs, multiplier);
   state.beginSession({
     profileId: profile.id,
     startedAt: status.startedAt ?? Date.now(),

@@ -16,12 +16,12 @@ object FocusController {
   const val ACTION_TICK = "expo.modules.focus.TICK"
   private const val ALARM_REQUEST_CODE = 4101
 
-  fun start(context: Context, profileId: String, endsAt: Long?) {
+  fun start(context: Context, profileId: String, endsAt: Long?, multiplier: Int = 1) {
     val app = context.applicationContext
     val store = FocusStore.get(app)
     store.setActive(profileId, System.currentTimeMillis(), endsAt ?: 0L)
     store.wasteman = false // starting focus again saves a wasteman
-    FocusSync.onStarted(app)
+    FocusSync.onStarted(app, multiplier)
     BlockEngine.reset()
     startService(app)
     scheduleNextAlarm(app)

@@ -128,7 +128,8 @@ export interface FocusModuleApi {
   setSchedules(items: NativeSchedule[]): Promise<void>;
   /** Returns attempts recorded natively since the last call and clears them. */
   drainBlockedAttempts(): Promise<BlockedAttemptRecord[]>;
-  startFocus(profileId: string, durationMs: number | null): Promise<FocusStatus>;
+  /** `multiplier` is a session bet (1, 2, 5, 10); Android only, ignored elsewhere. */
+  startFocus(profileId: string, durationMs: number | null, multiplier?: number): Promise<FocusStatus>;
   stopFocus(): Promise<FocusStatus>;
   getStatus(): Promise<FocusStatus>;
   getPermissions(): Promise<PermissionMap>;
