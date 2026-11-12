@@ -21,6 +21,7 @@ const schema = z.object({
   RATE_LIMIT_CHALLENGE_PER_MIN: int(20),
   RATE_LIMIT_REPORT_PER_HOUR: int(10),
   RATE_LIMIT_LOGIN_PER_MIN: int(10),
+  DEV_FAKE_MINUTES: z.enum(['true', 'false']).default('false'),
   PASSWORD_SCRYPT_LOG2N: z.coerce.number().int().min(10).max(18).default(15),
 });
 
@@ -39,6 +40,8 @@ export interface Config {
   shutdownTimeoutMs: number;
   eventsPollMs: number;
   passwordScryptLog2N: number;
+  /** Development only: enables POST /v1/dev/focus-minutes. Refused in production. */
+  devFakeMinutes: boolean;
   rateLimit: { globalPerMin: number; registerPerHour: number; challengePerMin: number; reportPerHour: number; loginPerMin: number };
 }
 
@@ -50,6 +53,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     throw new Error(`Invalid configuration: ${problems}`);
   }
   const e = r.data;
+  if (e.DEV_FAKE_MINUTES === 'true' && e.NODE_ENV === 'production') {
+    throw new Error('Invalid configuration: DEV_FAKE_MINUTES=true is not allowed when NODE_ENV=production');
+  }
   return {
     databaseUrl: e.DATABASE_URL,
     adminToken: e.ADMIN_TOKEN,
@@ -65,6 +71,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     shutdownTimeoutMs: e.SHUTDOWN_TIMEOUT_MS,
     eventsPollMs: 1000,
     passwordScryptLog2N: e.PASSWORD_SCRYPT_LOG2N,
+    devFakeMinutes: e.DEV_FAKE_MINUTES === 'true',
     rateLimit: {
       globalPerMin: e.RATE_LIMIT_GLOBAL_PER_MIN,
       registerPerHour: e.RATE_LIMIT_REGISTER_PER_HOUR,

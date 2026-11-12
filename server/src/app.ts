@@ -16,6 +16,7 @@ import { focusRoutes } from './routes/focus';
 import { killRoutes } from './routes/kills';
 import { eventRoutes } from './routes/events';
 import { statsRoutes } from './routes/stats';
+import { devRoutes } from './routes/dev';
 import { blockRoutes } from './routes/blocks';
 import { nearbyRoutes } from './routes/nearby';
 import { leaderboardRoutes } from './routes/leaderboard';
@@ -55,6 +56,9 @@ export async function buildApp(deps: Deps): Promise<FastifyInstance> {
     bodyLimit: 32 * 1024,
   });
   app.shuttingDown = false;
+  if (config.devFakeMinutes) {
+    app.log.warn('DEV_FAKE_MINUTES is ENABLED: POST /v1/dev/focus-minutes lets any player grant themselves focus minutes. Development only.');
+  }
   app.addHook('onClose', async () => {
     app.shuttingDown = true;
   });
@@ -113,6 +117,7 @@ export async function buildApp(deps: Deps): Promise<FastifyInstance> {
       await v1.register(killRoutes, { deps });
       await v1.register(eventRoutes, { deps });
       await v1.register(statsRoutes, { deps });
+      if (config.devFakeMinutes) await v1.register(devRoutes, { deps });
       await v1.register(blockRoutes, { deps });
       await v1.register(nearbyRoutes, { deps });
       await v1.register(leaderboardRoutes, { deps });
