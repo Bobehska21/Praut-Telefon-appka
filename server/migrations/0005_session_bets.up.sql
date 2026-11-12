@@ -9,10 +9,12 @@ SET lock_timeout = '5s';
 -- NOTE: until 0006 has run, the old points_ledger_kind_check is still enforced, so the new ledger kinds can only be
 -- inserted once 0006 is applied. Deploy 0005 and 0006 before the code that writes them.
 
--- Bet multiplier chosen when the session starts (1 = no bet, the previous behaviour) and the points the session
--- earned from heartbeats (the base of the bonus / penalty).
+-- The bet chosen when the session starts: multiplier (1 = no bet, the previous behaviour), the staked points and
+-- the timer length the session must reach.
 ALTER TABLE focus_sessions ADD COLUMN bet_multiplier smallint NOT NULL DEFAULT 1;
-ALTER TABLE focus_sessions ADD COLUMN points_earned integer NOT NULL DEFAULT 0;
+ALTER TABLE focus_sessions ADD COLUMN bet_stake integer NOT NULL DEFAULT 0;
+ALTER TABLE focus_sessions ADD COLUMN bet_required_ms bigint NOT NULL DEFAULT 0;
+ALTER TABLE focus_sessions ADD CONSTRAINT focus_sessions_bet_stake_check CHECK (bet_stake >= 0) NOT VALID;
 ALTER TABLE focus_sessions ADD CONSTRAINT focus_sessions_bet_multiplier_check CHECK (bet_multiplier IN (1, 2, 5, 10)) NOT VALID;
 
 -- New ledger kinds 'bet_bonus' and 'bet_penalty'. Added under a NEW name and NOT VALID; the old constraint stays in
