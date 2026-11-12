@@ -2,7 +2,10 @@
 
 A calm app that helps you concentrate. When focus mode is on, only the apps you allowed in advance
 (a whitelist) stay available; everything else is hidden or blocked until you turn the mode off.
-No account, no backend, no ads: all data stays on the phone.
+Focus mode itself, progress and statistics need no account and stay on the phone. The optional
+multiplayer part (Android) uses an account with a username and password (no e-mail) on the server in
+[`../server`](../server). A full description of what the app does is in
+[`docs/what-the-app-does.md`](docs/what-the-app-does.md).
 
 - React Native + TypeScript on Expo SDK 58 (**development build, not Expo Go**)
 - Native module `Focus`: Kotlin on Android, Swift on iOS (`modules/focus`)
@@ -13,7 +16,8 @@ No account, no backend, no ads: all data stays on the phone.
 | Part | State |
 |---|---|
 | Shared TypeScript (store, scheduler, unlock guard, stats, UI) | done, unit-tested (`npm test`) |
-| Android native module | compiles and passes Android lint; **not yet run on a device** |
+| Android native module | compiles, passes Android lint, **runs on two Xiaomi phones** (HyperOS 1.0 / Android 14 and HyperOS 3.0 / Android 16): blocking, focus grid, boot/schedule restore, Bluetooth nearby detection |
+| Multiplayer client (Android) and server | server tested (automated, real PostgreSQL); client compiles; the full kill flow between two phones is **not yet tested end to end** |
 | iOS native module and 3 extensions | written; `expo prebuild` generates the Xcode project with all targets; Swift syntax-checked and the pure logic unit-tested on macOS; **never compiled against the iOS SDK or run** (no Xcode was available) |
 
 Read "Known limitations" before relying on it.
@@ -191,6 +195,20 @@ Screen Time API (`FamilyControls`, `ManagedSettings`, `DeviceActivity`):
     you find a gap.
   **Test it with two Android phones that both have focus mode on and Bluetooth on.**
 
+## Multiplayer ("Ulov wastemana") and accounts
+
+Android only. After onboarding the app asks for an account (username + password, no e-mail; the username
+is private, others see only the filtered nickname). A player who **manually stops a running focus mode**
+becomes a *wasteman*, stays visible over Bluetooth, and a nearby player with at least 90 focus minutes that
+day can kill them (+50 points; the victim loses 25% of the day's points and is immune for 1 hour). The
+server verifies every rule and a signed proximity proof from the victim's phone. Rules, API and the limits
+of server-side verification: [`../docs/multiplayer-api.md`](../docs/multiplayer-api.md); running the server:
+[`../server/README.md`](../server/README.md).
+
+Development setup: start the server (see its README), then `adb reverse tcp:3000 tcp:3000` (and
+`tcp:8081` for Metro) for every connected phone. The default server address is `http://localhost:3000`;
+it can be changed on the sign-in screen. Plain HTTP is allowed only in debug builds.
+
 ## Known limitations
 
 ### Both platforms
@@ -201,7 +219,7 @@ Screen Time API (`FamilyControls`, `ManagedSettings`, `DeviceActivity`):
   its status (the system will not monitor shorter intervals).
 
 ### Android
-- **Never run on a device.** The Kotlin module compiles and passes Android lint, nothing more.
+- Tested on two Xiaomi phones only. Other manufacturers (Samsung, Huawei, ...) may behave differently.
 - Detection polls UsageStats every ~0.7 s, so a blocked app is visible for a moment before the overlay.
 - The overlay needs "Display over other apps"; without it blocking cannot show the block screen.
 - Android 12+ may refuse to start the foreground service from the background (scheduled start while the
@@ -235,7 +253,7 @@ Screen Time API (`FamilyControls`, `ManagedSettings`, `DeviceActivity`):
 ### Nearby users
 - **iOS is not implemented** (CoreBluetooth advertising/scanning, background modes and local
   notifications with actions are not written). Android phones cannot find iPhones yet.
-- **Not tested with two phones yet.** Compiles and passes lint, nothing more.
+- Bluetooth detection and the Accept flow were tested with two phones; the multiplayer kill proof over Bluetooth was not yet.
 - BLE advertising/scanning in the background depends on the manufacturer: Xiaomi/HyperOS, Samsung and
   others may throttle scans or kill the service; the foreground service and battery exemption help.
 - The token changes at midnight, so someone met before and after midnight counts as two people. Within a
