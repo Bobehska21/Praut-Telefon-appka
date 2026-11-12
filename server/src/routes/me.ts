@@ -39,8 +39,14 @@ export const meRoutes: FastifyPluginAsync<{ deps: Deps }> = async (app, { deps }
   });
 
   app.delete('/me', async (req, reply) => {
+    // Deleting the player cascades to the account row, tokens, ledger, blocks and notifications.
+    const acc = await db.query<{ username_lower: string }>('SELECT username_lower FROM accounts WHERE player_id = $1', [req.player.id]);
     const r = await db.query<{ photo_key: string | null }>('DELETE FROM players WHERE id = $1 RETURNING photo_key', [req.player.id]);
     if (r.rowCount === 0) throw new AppError('not_found', 'Player not found');
+    if (acc.rows[0]) {
+      const name = acc.rows[0].username_lower;
+      await db.query('DELETE FROM login_attempts WHERE key = $1 OR starts_with(key, $2)', [`u:${name}`, `p:${name}|`]);
+    }
     if (r.rows[0]!.photo_key) await storage.delete(r.rows[0]!.photo_key);
     return reply.status(204).send();
   });

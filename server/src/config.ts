@@ -20,6 +20,8 @@ const schema = z.object({
   RATE_LIMIT_REGISTER_PER_HOUR: int(20),
   RATE_LIMIT_CHALLENGE_PER_MIN: int(20),
   RATE_LIMIT_REPORT_PER_HOUR: int(10),
+  RATE_LIMIT_LOGIN_PER_MIN: int(10),
+  PASSWORD_SCRYPT_LOG2N: z.coerce.number().int().min(10).max(18).default(15),
 });
 
 export interface Config {
@@ -36,7 +38,8 @@ export interface Config {
   trustProxy: boolean;
   shutdownTimeoutMs: number;
   eventsPollMs: number;
-  rateLimit: { globalPerMin: number; registerPerHour: number; challengePerMin: number; reportPerHour: number };
+  passwordScryptLog2N: number;
+  rateLimit: { globalPerMin: number; registerPerHour: number; challengePerMin: number; reportPerHour: number; loginPerMin: number };
 }
 
 /** Reads configuration from the environment only; throws (fail fast) listing every problem. */
@@ -61,11 +64,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     trustProxy: e.TRUST_PROXY === 'true',
     shutdownTimeoutMs: e.SHUTDOWN_TIMEOUT_MS,
     eventsPollMs: 1000,
+    passwordScryptLog2N: e.PASSWORD_SCRYPT_LOG2N,
     rateLimit: {
       globalPerMin: e.RATE_LIMIT_GLOBAL_PER_MIN,
       registerPerHour: e.RATE_LIMIT_REGISTER_PER_HOUR,
       challengePerMin: e.RATE_LIMIT_CHALLENGE_PER_MIN,
       reportPerHour: e.RATE_LIMIT_REPORT_PER_HOUR,
+      loginPerMin: e.RATE_LIMIT_LOGIN_PER_MIN,
     },
   };
 }

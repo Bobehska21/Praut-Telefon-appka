@@ -77,13 +77,13 @@ export const ADMIN_TOKEN = 'test-admin-token-0123456789abcdef0123456789';
 export async function createEnv(overrides: Partial<Omit<Config, 'rateLimit'>> & { rateLimit?: Partial<Config['rateLimit']> } = {}): Promise<Env> {
   const t = await createTestDb();
   const photoDir = await mkdtemp(join(tmpdir(), 'focus-photos-'));
-  const base = loadConfig({ DATABASE_URL: TEST_DATABASE_URL, ADMIN_TOKEN, LOG_LEVEL: 'silent', PHOTO_DIR: photoDir });
+  const base = loadConfig({ DATABASE_URL: TEST_DATABASE_URL, ADMIN_TOKEN, LOG_LEVEL: 'silent', PHOTO_DIR: photoDir, PASSWORD_SCRYPT_LOG2N: '10' });
   const { rateLimit, ...rest } = overrides;
   const config: Config = {
     ...base,
     eventsPollMs: 20,
     ...rest,
-    rateLimit: { globalPerMin: 100000, registerPerHour: 100000, challengePerMin: 100000, reportPerHour: 100000, ...rateLimit },
+    rateLimit: { globalPerMin: 100000, registerPerHour: 100000, challengePerMin: 100000, reportPerHour: 100000, loginPerMin: 100000, ...rateLimit },
   };
   const clock = new TestClock(new Date(T0).getTime());
   const app = await buildApp({ config, db: t.db, clock, storage: new LocalDiskStorage(photoDir) });
@@ -104,6 +104,8 @@ export async function createEnv(overrides: Partial<Omit<Config, 'rateLimit'>> & 
 
 export interface Player {
   id: string;
+  username: string;
+  password: string;
   token: string;
   privateKey: KeyObject;
   publicKey: string;
@@ -116,10 +118,19 @@ export function newKeyPair() {
 
 export async function registerPlayer(env: Env, profile: Record<string, unknown> | null = {}): Promise<Player> {
   const kp = newKeyPair();
-  const res = await env.app.inject({ method: 'POST', url: '/v1/register', payload: { publicKey: kp.publicKey } });
-  if (res.statusCode !== 201) throw new Error(`register failed ${res.statusCode} ${res.body}`);
+  const password = 'correct horse battery';
+  // A random name can, by chance, look like a word the nickname blocklist rejects (it also reads leetspeak),
+  // so draw another one in that case instead of making the suite flaky.
+  let username = '';
+  let res;
+  for (let attempt = 0; attempt < 50; attempt++) {
+    username = `u${randomBytes(6).toString('hex')}`;
+    res = await env.app.inject({ method: 'POST', url: '/v1/auth/register', payload: { username, password, publicKey: kp.publicKey } });
+    if (res.statusCode !== 400 || !res.body.includes('username is not allowed')) break;
+  }
+  if (!res || res.statusCode !== 201) throw new Error(`register failed ${res?.statusCode} ${res?.body}`);
   const { playerId, token } = res.json();
-  const p: Player = { id: playerId, token, privateKey: kp.privateKey, publicKey: kp.publicKey };
+  const p: Player = { id: playerId, username, password, token, privateKey: kp.privateKey, publicKey: kp.publicKey };
   if (profile !== null) {
     const r = await call(env, p, 'PUT', '/v1/me', {
       nickname: '', rankKey: 'novice', level: 1, multiplayerEnabled: true, timezone: 'UTC', ...profile,

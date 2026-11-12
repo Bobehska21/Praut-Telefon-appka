@@ -31,25 +31,26 @@ describe('register and auth', () => {
     const p = await registerPlayer(env);
     expect(p.id).toMatch(/^[0-9a-f-]{36}$/);
     expect(p.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
-    const row = (await env.db.query('SELECT token_hash FROM players WHERE id = $1', [p.id])).rows[0];
-    expect(row.token_hash.toString('base64url')).not.toBe(p.token);
-    expect(row.token_hash).toHaveLength(32);
+    const rows = (await env.db.query('SELECT token_hash FROM auth_tokens WHERE player_id = $1', [p.id])).rows;
+    expect(rows).toHaveLength(1);
+    expect(rows[0].token_hash.toString('base64url')).not.toBe(p.token);
+    expect(rows[0].token_hash).toHaveLength(32);
   });
 
   it('rejects bad public keys', async () => {
     for (const publicKey of ['x'.repeat(100), Buffer.from('not a key'.repeat(20)).toString('base64')]) {
-      const r = await env.app.inject({ method: 'POST', url: '/v1/register', payload: { publicKey } });
+      const r = await env.app.inject({ method: 'POST', url: '/v1/auth/register', payload: { username: 'someone', password: 'password123', publicKey } });
       expect(r.statusCode).toBe(400);
       expect(r.json().error.code).toBe('validation');
     }
-    const r = await env.app.inject({ method: 'POST', url: '/v1/register', payload: {} });
+    const r = await env.app.inject({ method: 'POST', url: '/v1/auth/register', payload: {} });
     expect(r.json().error.code).toBe('validation');
   });
 
   it('rejects a non-P256 key', async () => {
     const { generateKeyPairSync } = await import('node:crypto');
     const k = generateKeyPairSync('ec', { namedCurve: 'secp256k1' }).publicKey.export({ type: 'spki', format: 'der' }).toString('base64');
-    const r = await env.app.inject({ method: 'POST', url: '/v1/register', payload: { publicKey: k } });
+    const r = await env.app.inject({ method: 'POST', url: '/v1/auth/register', payload: { username: 'someone', password: 'password123', publicKey: k } });
     expect(r.statusCode).toBe(400);
   });
 
@@ -68,13 +69,13 @@ describe('register and auth', () => {
   });
 
   it('bad JSON gives a validation error without internals', async () => {
-    const r = await env.app.inject({ method: 'POST', url: '/v1/register', payload: '{bad', headers: { 'content-type': 'application/json' } });
+    const r = await env.app.inject({ method: 'POST', url: '/v1/auth/register', payload: '{bad', headers: { 'content-type': 'application/json' } });
     expect(r.statusCode).toBe(400);
     expect(r.json().error.code).toBe('validation');
   });
 
   it('limits body size', async () => {
-    const r = await env.app.inject({ method: 'POST', url: '/v1/register', payload: { publicKey: 'a'.repeat(40_000) } });
+    const r = await env.app.inject({ method: 'POST', url: '/v1/auth/register', payload: { publicKey: 'a'.repeat(40_000) } });
     expect(r.statusCode).toBe(413);
   });
 });

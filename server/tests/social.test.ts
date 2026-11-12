@@ -165,8 +165,8 @@ describe('leaderboard', () => {
     try {
       const me = await registerPlayer(e2, { nickname: 'me' });
       await e2.db.query(
-        `INSERT INTO players (token_hash, public_key, multiplayer_enabled)
-         SELECT sha256(convert_to(gen_random_uuid()::text, 'UTF8')), 'k', true FROM generate_series(1, 55)`,
+        `INSERT INTO players (public_key, multiplayer_enabled)
+         SELECT 'k', true FROM generate_series(1, 55)`,
       );
       await e2.db.query(
         `INSERT INTO kills (killer_id, victim_id, killer_points, victim_points_lost, created_at)

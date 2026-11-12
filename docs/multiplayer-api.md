@@ -3,7 +3,7 @@
 Authoritative backend for the multiplayer part of the focus app (`server/`). The phone is never trusted: every rule below is enforced on the server.
 
 - Base: `/v1` (players), `/admin` (moderation), `/healthz`, `/readyz`.
-- Auth: `Authorization: Bearer <token>` on every `/v1` route except `POST /v1/register`. `/admin/*` uses `Authorization: Bearer <ADMIN_TOKEN>`.
+- Auth: `Authorization: Bearer <token>` on every `/v1` route except `POST /v1/auth/register` and `POST /v1/auth/login`. `/admin/*` uses `Authorization: Bearer <ADMIN_TOKEN>`.
 - Bodies are JSON (`application/json`), max 32 KB, except `PUT /v1/me/photo` (raw image, max 1 MB). CORS is off.
 - Compatibility: old app versions stay in the field. Changes only add fields or endpoints; clients must ignore unknown fields.
 - Timestamps are ISO 8601 UTC. Days are `YYYY-MM-DD`.
@@ -19,7 +19,9 @@ Every error has the same shape and never contains stack traces or SQL:
 | code | HTTP | Meaning |
 |---|---|---|
 | `validation` | 400 (413 body too large, 415 media type) | input failed its schema; `issues: [{path, message}]` when applicable |
-| `unauthorized` | 401 | missing/invalid token |
+| `unauthorized` | 401 | missing/invalid/revoked token |
+| `invalid_credentials` | 401 | wrong username or password (identical for both) |
+| `username_taken` | 409 | username already used (case-insensitive) |
 | `forbidden` | 403 | not allowed (self target, banned player, ...) |
 | `multiplayer_off` | 403 | killer or victim has multiplayer disabled |
 | `blocked` | 403 | one of the players blocked the other |
@@ -31,7 +33,7 @@ Every error has the same shape and never contains stack traces or SQL:
 | `conflict` | 409 | duplicate/state conflict (BLE token taken, report already resolved) |
 | `expired` | 410 | kill challenge older than 20 s |
 | `bad_signature` | 400 | proximity signature does not verify |
-| `rate_limited` | 429 | too many requests |
+| `rate_limited` | 429 | too many requests, or a login lock; `retryAfterSeconds` and a `Retry-After` header on login locks |
 | `unavailable` | 503 | readiness failed / shutting down |
 | `internal` | 500 | unexpected; details only in server logs (with the `x-request-id` response header) |
 
@@ -42,8 +44,34 @@ Every error has the same shape and never contains stack traces or SQL:
 - `GET /readyz` (no auth) -> `200 {status:"ready"}` or `503 unavailable`. Readiness, checks the database.
 
 ### Account
-- `POST /v1/register` (no auth, rate limited). Body `{publicKey}`: base64 SPKI DER of an ECDSA P-256 key. -> `201 {playerId, token}`. `token` is 32 random bytes base64url and is shown once; only its SHA-256 is stored. Errors: `validation` (not a P-256 SPKI key), `rate_limited`.
-- `DELETE /v1/me` -> `204`. Erases the player (profile, ledger, tokens, notifications, blocks, challenges) and the photo. Kill rows are kept with the player reference set to null. Moderation reports keep their evidence snapshot (nickname text and photo copy) with the reference nulled.
+
+Accounts are a private username plus a password. There is no e-mail. The username is only a login name: it is never shown to other players and never returned by player-facing endpoints (the public name is the separate, filtered `nickname`).
+
+- `POST /v1/auth/register` (no auth, rate limited per IP). Body `{username, password, publicKey, timezone?}` -> `201 {playerId, token}`.
+  - `username`: 3-20 characters from `A-Za-z0-9._-`, unique case-insensitively (the display case is kept), and it must pass the nickname blocklist (in case it is shown by mistake).
+  - `password`: 8-128 characters, no other rules. It is normalised (Unicode NFKC) and hashed; it is never logged or returned.
+  - `publicKey`: base64 SPKI DER of the device's ECDSA P-256 key (used for kill proofs). `timezone`: optional IANA name (default `UTC`).
+  - `token` is 32 random bytes base64url, shown once; only its SHA-256 is stored.
+  - Errors: `validation`, `username_taken`, `rate_limited`.
+- `POST /v1/auth/login` (no auth). Body `{username, password, publicKey}` -> `200 {playerId, token, profile}`; `profile` has the shape of `GET /v1/me`.
+  - The new `publicKey` replaces the stored device key (kill proofs need the key of the device that is in use) and **every earlier token of the player is revoked** (one active device).
+  - Wrong password and unknown username give the same `401 invalid_credentials` and take about the same time (a dummy hash is verified for unknown names). A banned player with the right password gets `403 forbidden`.
+  - Brute-force protection: see below. Errors: `invalid_credentials`, `forbidden`, `rate_limited`, `validation`.
+- `POST /v1/auth/logout` -> `204`. Revokes the token used for the call.
+- `POST /v1/auth/password` body `{oldPassword, newPassword}` -> `204`. Revokes all other tokens (the current one stays valid). The old password is checked with the same lock/backoff as login. Errors: `invalid_credentials`, `rate_limited`, `validation`.
+- `DELETE /v1/me` -> `204`. Erases the player: profile, account row (username, password hash), tokens, login throttle rows, ledger, BLE tokens, notifications, blocks, challenges and the photo. Kill rows are kept with the player reference set to null. Moderation reports keep their evidence snapshot (nickname text and photo copy) with the reference nulled.
+- The anonymous `POST /v1/register` no longer exists (404).
+
+#### Passwords and brute-force protection
+
+- Hash: scrypt from `node:crypto` (no native dependency; Node's built-in argon2 only exists from Node 24 and the service supports Node 22), random 16-byte salt per user, 32-byte key, default cost N=2^15, r=8, p=3 (about 32 MiB and ~100 ms, an OWASP-listed configuration). The stored string is `scrypt$<log2N>$<r>$<p>$<salt>$<hash>`, so the cost can be raised later (`PASSWORD_SCRYPT_LOG2N`); weaker hashes are upgraded transparently on the next successful login. Hashes live in their own `accounts` table and are never selected by player or admin queries.
+- Per-IP rate limits on `register` and `login` are **in memory, per replica** (`@fastify/rate-limit`), on top of the global limit.
+- Failed logins are counted **durably in PostgreSQL** (shared by all replicas) under two keys, by the typed username whether or not the account exists, so the answer never reveals which names exist:
+  - username + client IP: locks after 5 failures;
+  - username from any source: locks after 20 failures (distributed guessing).
+  A lock starts at 15 s and doubles with every further failure, capped at **5 minutes**. While locked, attempts get `429 rate_limited` (even with the right password) and are not counted, so hammering does not extend a lock. The counter restarts after 15 quiet minutes and after a successful login.
+- Why a guesser cannot lock the owner out for good: the per-source lock hits only the guesser's address; the per-username lock needs 20 failures and ends within 5 minutes. A determined attacker with many addresses can still make an account hard to reach by repeating this every 5 minutes; that is the price of having no second factor, and the per-IP limits and the 5-minute cap bound the damage.
+- **No e-mail means no password reset.** A player who forgets the password cannot recover the account (an operator can only ban or erase it). The client should say so at sign-up.
 
 ### Profile
 - `GET /v1/me` -> `{playerId, nickname, rankKey, level, multiplayerEnabled, timezone, photoUrl, state, immuneUntil, banned}`. `state` is `idle|focus|wasteman` (a stale `focus` shows as `idle`).
@@ -90,8 +118,8 @@ All return `{state, focusMinutesToday}` (plus `lost: true` when the server found
 ### Admin (`/admin/*`, `ADMIN_TOKEN`, constant-time compare)
 - `GET /admin/reports?status=open|resolved|all&limit&offset`; `GET /admin/reports/:id` (with snapshot and current target state); `GET /admin/reports/:id/photo` (snapshot JPEG).
 - `POST /admin/reports/:id/resolve {action: "dismiss"|"remove_photo"|"reset_nickname"|"ban", note?}`. Resolving twice gives `409`. Actions other than `dismiss` need the target to still exist.
-- `GET /admin/players?search=&banned=&limit&offset` (nickname substring or exact player id); `POST /admin/players/:playerId/unban`.
-- Every admin action is written to `admin_audit`. Admin routes expose the internal ids players do not see.
+- `GET /admin/players?search=&banned=&limit&offset` (nickname or username substring, or exact player id); `POST /admin/players/:playerId/unban`.
+- Every admin action is written to `admin_audit`. Admin routes expose the internal ids players do not see, and the private login name in the player list (searchable) so moderators can find an account; password hashes are never selected.
 
 ## Focus state machine
 
@@ -141,8 +169,9 @@ The server enforces rules over the data it receives; it cannot see the real worl
 - **Physical proximity is not proven.** A valid signature shows that the victim's key signed this challenge, not that the phones were close. A relay attack (forwarding the challenge to a remote victim phone, or a compromised victim device signing anything) defeats it. The key can also be extracted from a rooted device.
 - **Focus mode is not verified.** Heartbeats come from the client. A modified client can send heartbeats without being in focus mode, or run a script on a PC. Only the 90 s cap per heartbeat limits the rate: credit can never exceed wall-clock time, but wall-clock time is all that is needed.
 - **Offline avoidance of wasteman.** A player can avoid becoming wasteman by never sending the manual stop (kill the app, stay offline): the server sees only a lost heartbeat and sets `idle`.
-- **Collusion and farming.** Two accounts of one person can kill each other to farm +50 (the penalty is only 25% of the victim's gross, immunity is 1 hour). Registration is anonymous and free, so sybil accounts cannot be prevented. A player can also change the profile timezone to move day boundaries (for example to get the 90-minute bonus twice).
+- **Collusion and farming.** Two accounts of one person can kill each other to farm +50 (the penalty is only 25% of the victim's gross, immunity is 1 hour). Registration needs only a username and password (no e-mail, no phone), so sybil accounts cannot be prevented. A player can also change the profile timezone to move day boundaries (for example to get the 90-minute bonus twice).
 - **Nickname and photo** are filtered (nickname rules, re-encoded images) but the filter is not exhaustive; reports and moderation are the backstop.
-- **Rate limiting** is per replica in memory (reports also have a durable DB limit); IP-based limits are weak behind shared NATs.
+- **Rate limiting** is per replica in memory (reports and failed logins have durable DB counters); IP-based limits are weak behind shared NATs and mobile carrier NAT.
+- **Accounts:** with no e-mail there is no password recovery and no way to prove ownership of an account; a forgotten password means a new account. A stolen token or a phished password gives full control, and logging in on a new device revokes the old one by design.
 
 Mitigations in place: heartbeat cap, 20 s single-use challenges bound to killer, victim and nonce, per-route rate limits, immunity, symmetric blocking, ban, audit log. Planned: Play Integrity / App Attest attestation of the app and device on register and on kill, anomaly detection on kill pairs, a limit on timezone changes, a shared rate-limit store.

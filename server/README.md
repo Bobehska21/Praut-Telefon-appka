@@ -44,12 +44,20 @@ Config comes from the environment only; the process exits at startup with a mess
 | `PHOTO_DIR` | ./data/photos | local-disk photo storage (dev only, git-ignored) |
 | `TRUST_PROXY` | false | set `true` behind an ingress so rate limits see client IPs |
 | `SHUTDOWN_TIMEOUT_MS` | 20000 | keep below the pod termination grace period |
-| `RATE_LIMIT_GLOBAL_PER_MIN` / `_REGISTER_PER_HOUR` / `_CHALLENGE_PER_MIN` / `_REPORT_PER_HOUR` | 300 / 20 / 20 / 10 | per client (IP, or token for authenticated routes) |
+| `RATE_LIMIT_GLOBAL_PER_MIN` / `_REGISTER_PER_HOUR` / `_CHALLENGE_PER_MIN` / `_REPORT_PER_HOUR` / `_LOGIN_PER_MIN` | 300 / 20 / 20 / 10 / 10 | per client (IP, or token for authenticated routes) |
+| `PASSWORD_SCRYPT_LOG2N` | 15 | scrypt cost exponent for new password hashes (10-18; r=8, p=3). Raise it as hardware allows; old hashes are upgraded on login. Tests use 10 |
 | `TEST_DATABASE_URL` | local compose DB | tests only |
+
+## Accounts and passwords
+
+Players sign up with a private username and a password (`POST /v1/auth/register`); there is no e-mail. Passwords are hashed with **scrypt** (`node:crypto`, per-user salt, parameters stored in the hash so the cost can be raised; N=2^15, r=8, p=3 by default) and live in the `accounts` table, never in `players`. Tokens are random, stored only as SHA-256 in `auth_tokens`, and revocable (logout, password change, a new login revokes the old ones).
+
+Failed logins are throttled durably in PostgreSQL (exponential lock per username+IP and per username, capped at 5 minutes); the per-IP rate limits are in memory per replica. **Because there is no e-mail there is no password reset**: a forgotten password means a new account. Details: [`docs/multiplayer-api.md`](../docs/multiplayer-api.md).
 
 ## Operational notes
 
 - Liveness `GET /healthz` has no dependencies; readiness `GET /readyz` checks the database and turns 503 while shutting down.
 - SIGTERM stops accepting connections, lets in-flight requests finish (long polls end early), closes the pool and exits.
+- `players.token_hash` is a legacy column (nullable since migration 0002, no longer read); a later release drops it.
 - Stateless except for two things that must change before running more than one replica in production: photo storage (`PhotoStorage` has only a local-disk implementation, an S3 one is still to write) and the in-memory rate-limit counters (per replica; reports additionally have a durable per-reporter DB limit).
 - Schema changes are made only through new migration files; migrations are reviewed by `migration-reviewer` before they are committed or applied anywhere.

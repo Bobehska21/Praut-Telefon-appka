@@ -1,7 +1,7 @@
 export type ErrorCode =
   | 'needs_minutes' | 'immune' | 'not_wasteman' | 'already_killed' | 'expired' | 'bad_signature'
   | 'blocked' | 'multiplayer_off' | 'forbidden' | 'not_found' | 'validation' | 'rate_limited'
-  | 'unauthorized' | 'conflict' | 'internal' | 'unavailable';
+  | 'unauthorized' | 'username_taken' | 'invalid_credentials' | 'conflict' | 'internal' | 'unavailable';
 
 export const STATUS_BY_CODE: Record<ErrorCode, number> = {
   needs_minutes: 403,
@@ -17,6 +17,8 @@ export const STATUS_BY_CODE: Record<ErrorCode, number> = {
   validation: 400,
   rate_limited: 429,
   unauthorized: 401,
+  username_taken: 409,
+  invalid_credentials: 401,
   conflict: 409,
   internal: 500,
   unavailable: 503,

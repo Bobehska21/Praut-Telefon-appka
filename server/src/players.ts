@@ -2,7 +2,7 @@ import type { Queryable } from './db/pool';
 
 export interface PlayerRow {
   id: string;
-  token_hash: Buffer;
+  token_hash: Buffer | null; // legacy column, no longer used for auth (see auth_tokens)
   public_key: string;
   nickname: string;
   rank_key: string;

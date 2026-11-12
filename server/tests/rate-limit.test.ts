@@ -12,9 +12,9 @@ afterAll(async () => {
 describe('rate limits', () => {
   it('limits registration per client', async () => {
     const codes: number[] = [];
-    for (let i = 0; i < 5; i++) codes.push((await env.app.inject({ method: 'POST', url: '/v1/register', payload: { publicKey: newKeyPair().publicKey } })).statusCode);
+    for (let i = 0; i < 5; i++) codes.push((await env.app.inject({ method: 'POST', url: '/v1/auth/register', payload: { username: `user${Math.random().toString(36).slice(2, 10)}`, password: 'password123', publicKey: newKeyPair().publicKey } })).statusCode);
     expect(codes).toEqual([201, 201, 201, 429, 429]);
-    const r = await env.app.inject({ method: 'POST', url: '/v1/register', payload: { publicKey: newKeyPair().publicKey } });
+    const r = await env.app.inject({ method: 'POST', url: '/v1/auth/register', payload: { username: `user${Math.random().toString(36).slice(2, 10)}`, password: 'password123', publicKey: newKeyPair().publicKey } });
     expect(r.json()).toEqual({ error: { code: 'rate_limited', message: expect.any(String) } });
   });
 

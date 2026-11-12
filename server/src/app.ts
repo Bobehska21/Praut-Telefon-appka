@@ -10,7 +10,7 @@ import { AppError } from './errors';
 import { hashToken } from './crypto';
 import type { PlayerRow } from './players';
 import { healthRoutes } from './routes/health';
-import { registerRoutes } from './routes/register';
+import { authRoutes, authedAuthRoutes } from './routes/auth';
 import { meRoutes } from './routes/me';
 import { focusRoutes } from './routes/focus';
 import { killRoutes } from './routes/kills';
@@ -33,6 +33,7 @@ export interface Deps {
 declare module 'fastify' {
   interface FastifyRequest {
     player: PlayerRow;
+    tokenHash: Buffer;
   }
   interface FastifyInstance {
     shuttingDown: boolean;
@@ -62,7 +63,10 @@ export async function buildApp(deps: Deps): Promise<FastifyInstance> {
   });
 
   app.setErrorHandler((err, req, reply) => {
-    if (err instanceof AppError) return reply.status(err.status).send(err.body());
+    if (err instanceof AppError) {
+      if (typeof err.extra.retryAfterSeconds === 'number') reply.header('retry-after', String(err.extra.retryAfterSeconds));
+      return reply.status(err.status).send(err.body());
+    }
     if (err instanceof ZodError) {
       const issues = err.issues.map((i) => ({ path: i.path.join('.'), message: i.message, ...((i as { params?: object }).params ?? {}) }));
       return reply.status(400).send(new AppError('validation', 'Invalid request', { issues }).body());
@@ -86,18 +90,24 @@ export async function buildApp(deps: Deps): Promise<FastifyInstance> {
   });
 
   await app.register(healthRoutes, { db });
-  await app.register(registerRoutes, { deps });
+  await app.register(authRoutes, { deps });
 
   await app.register(
     async (v1) => {
       v1.addHook('preHandler', async (req: FastifyRequest) => {
         const m = /^Bearer ([A-Za-z0-9_-]{43})$/.exec(req.headers.authorization ?? '');
         if (!m) throw new AppError('unauthorized', 'Missing or invalid token');
-        const r = await db.query<PlayerRow>('SELECT * FROM players WHERE token_hash = $1', [hashToken(m[1]!)]);
+        const tokenHash = hashToken(m[1]!);
+        const r = await db.query<PlayerRow>(
+          'SELECT p.* FROM auth_tokens t JOIN players p ON p.id = t.player_id WHERE t.token_hash = $1',
+          [tokenHash],
+        );
         const player = r.rows[0];
         if (!player) throw new AppError('unauthorized', 'Missing or invalid token');
         req.player = player;
+        req.tokenHash = tokenHash;
       });
+      await v1.register(authedAuthRoutes, { deps });
       await v1.register(meRoutes, { deps });
       await v1.register(focusRoutes, { deps });
       await v1.register(killRoutes, { deps });

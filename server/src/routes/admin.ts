@@ -101,16 +101,17 @@ export const adminRoutes: FastifyPluginAsync<{ deps: Deps }> = async (app, { dep
     const q = z.object({ search: z.string().max(40).optional(), banned: z.enum(['true', 'false']).optional(), ...page }).parse(req.query);
     const like = q.search ? `%${q.search.replace(/[\\%_]/g, (m) => `\\${m}`)}%` : null;
     const exact = q.search && uuid.safeParse(q.search).success ? q.search : null;
-    const r = await db.query<PlayerRow>(
-      `SELECT * FROM players
-       WHERE ($1::text IS NULL OR nickname ILIKE $1 OR id = $2::uuid)
-         AND ($3::boolean IS NULL OR (banned_at IS NOT NULL) = $3)
-       ORDER BY created_at DESC, id LIMIT $4 OFFSET $5`,
+    // Only the login name is selected from `accounts`, never the password hash.
+    const r = await db.query<PlayerRow & { username: string | null }>(
+      `SELECT p.*, a.username FROM players p LEFT JOIN accounts a ON a.player_id = p.id
+       WHERE ($1::text IS NULL OR p.nickname ILIKE $1 OR a.username ILIKE $1 OR p.id = $2::uuid)
+         AND ($3::boolean IS NULL OR (p.banned_at IS NOT NULL) = $3)
+       ORDER BY p.created_at DESC, p.id LIMIT $4 OFFSET $5`,
       [like, exact, q.banned === undefined ? null : q.banned === 'true', q.limit, q.offset],
     );
     const now = clock.now();
     return r.rows.map((p) => ({
-      playerId: p.id, nickname: p.nickname, rankKey: p.rank_key, level: p.level, multiplayerEnabled: p.multiplayer_enabled,
+      playerId: p.id, username: p.username, nickname: p.nickname, rankKey: p.rank_key, level: p.level, multiplayerEnabled: p.multiplayer_enabled,
       state: effectiveState(p, now), banned: p.banned_at !== null, banReason: p.ban_reason, hasPhoto: p.photo_key !== null, createdAt: p.created_at,
     }));
   });
