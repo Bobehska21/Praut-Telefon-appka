@@ -1,0 +1,106 @@
+name: Android APK
+
+# Builds an installable release APK of the mobile app in the cloud (the JavaScript is bundled inside, so the
+# phone does not need the Mac or Metro).
+#
+# - Push to main or feat/**: signed with the PUBLIC debug key of the Expo template and published as the
+#   pre-release `android-latest` (a stable link). For testing on your own phone only: anyone could build an
+#   "update" signed the same way.
+# - Tag `android-v*` on a commit that is on main: signed with the project key from the secrets below and
+#   published as a release of that tag. Signing credentials are never used for any other ref.
+#     ANDROID_KEYSTORE_BASE64   base64 of the .jks file
+#     ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+# Android refuses to update an app over one signed with a different key, so moving from a test build to a
+# tag build needs one uninstall (this wipes the app's local data).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, "feat/**"]
+    tags: ["android-v*"]
+    paths: ["mobile/**", ".github/workflows/android-apk.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  apk:
+    name: Build and publish APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write # only to create or update the release that carries the APK
+    env:
+      IS_TAG: ${{ startsWith(github.ref, 'refs/tags/android-v') }}
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the tag build checks that the commit is on main
+      - name: A tag build must be on main
+        if: env.IS_TAG == 'true'
+        working-directory: .
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      # android/ is generated (gitignored), so it is created from app.json and the config plugins.
+      - run: npx expo prebuild --platform android --no-install
+
+      # Only a tag on main gets the project key. The values reach Gradle through a properties file, never
+      # through a command line or the log.
+      - name: Use the project signing key
+        if: env.IS_TAG == 'true'
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          test -n "$KEYSTORE_B64" || { echo "::error::ANDROID_KEYSTORE_BASE64 is not set"; exit 1; }
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          mkdir -p ~/.gradle
+          {
+            echo "android.injected.signing.store.file=$RUNNER_TEMP/release.jks"
+            echo "android.injected.signing.store.password=$STORE_PASSWORD"
+            echo "android.injected.signing.key.alias=$KEY_ALIAS"
+            echo "android.injected.signing.key.password=$KEY_PASSWORD"
+          } >> ~/.gradle/gradle.properties
+
+      - name: Build the release APK
+        working-directory: mobile/android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Publish the APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          cp "$(ls android/app/build/outputs/apk/release/*.apk | head -n1)" focus-mode.apk
+          if [ "$IS_TAG" = "true" ]; then
+            release="$REF_NAME"; key="the project key"; flags=""
+          else
+            release="android-latest"; key="the PUBLIC debug key (testing only)"; flags="--prerelease"
+          fi
+          notes="Branch or tag ${REF_NAME}, commit ${GITHUB_SHA::7}. Signed with ${key}."
+          if gh release view "$release" >/dev/null 2>&1; then
+            gh release edit "$release" --notes "$notes"
+          else
+            gh release create "$release" $flags --target "$GITHUB_SHA" --title "Android $release" --notes "$notes"
+          fi
+          gh release upload "$release" focus-mode.apk --clobber
