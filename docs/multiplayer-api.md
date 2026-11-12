@@ -74,7 +74,7 @@ Accounts are a private username plus a password. There is no e-mail. The usernam
 - **No e-mail means no password reset.** A player who forgets the password cannot recover the account (an operator can only ban or erase it). The client should say so at sign-up.
 
 ### Profile
-- `GET /v1/me` -> `{playerId, nickname, rankKey, level, multiplayerEnabled, timezone, photoUrl, state, immuneUntil, banned}`. `state` is `idle|focus|wasteman` (a stale `focus` shows as `idle`).
+- `GET /v1/me` -> `{playerId, nickname, rankKey, level, multiplayerEnabled, timezone, photoUrl, state, immuneUntil, banned, shields}`. `shields` (0..3) is visible to the owner only; it is in no other player's view (nearby, leaderboard, blocks, kill results). `state` is `idle|focus|wasteman` (a stale `focus` shows as `idle`).
 - `PUT /v1/me` body `{nickname, rankKey, level, multiplayerEnabled, timezone}` (all required) -> same as GET.
   - `nickname`: the app's rules (Latin letters, digits, space, `.`, `_`, `-`, max 20, blocklist); empty = anonymous. Whitespace is trimmed/collapsed. The server copy of the filter (`server/src/nickname.ts`, `nickname-blocklist.json`) must stay byte-identical to `mobile/src/features/`; a test enforces it. Rejection gives `validation` with `issues[].reason` in `length|chars|blocked`.
   - `rankKey`: `novice|apprentice|adept|warden|master|grandmaster`; `level` 1..999 (both cosmetic).
@@ -89,6 +89,9 @@ All return `{state, focusMinutesToday}` (plus `lost: true` when the server found
 - `POST /v1/focus/heartbeat` -> credits focus time (see below). In `idle`/`wasteman` it only reports the state.
 - `POST /v1/focus/stop` body `{reason: "manual"|"expired"}`.
 
+### Dev only: fake focus minutes
+- `POST /v1/dev/focus-minutes` body `{minutes: 1..600, creditSession?: boolean}` -> `{focusMinutesToday, shields}`. With `creditSession: true` and the caller in `focus`, the same minutes are also added to the open focus session's credited time and the shield check runs, so shields can be tested without waiting 5 hours. **Exists only when the server runs with `DEV_FAKE_MINUTES=true`** (otherwise 404); the server refuses to start with that flag when `NODE_ENV=production`. It adds a normal `minute` ledger row for the caller's local today (same points rules as heartbeats), so the 90-minute gate, stats and points are consistent. Never enable it on a shared or production environment: it defeats the focus-time requirement.
+
 ### Nearby (Bluetooth)
 - `PUT /v1/me/ble-token` body `{token, day}`: `token` 6 bytes hex (12 chars), `day` within one day of the player's local today. Replaces the player's token for that day. `(day, token)` is unique: `409 conflict` if taken (pick another).
 - `POST /v1/nearby` body `{tokens: string[<=50]}` -> array of `{token, playerId, nickname, rankKey, level, photoUrl, status, immuneUntil, canKill, killBlockedReason, missingMinutes}`.
@@ -98,7 +101,7 @@ All return `{state, focusMinutesToday}` (plus `lost: true` when the server found
 
 ### Kills
 - `POST /v1/kills/challenge` body `{targetPlayerId}` (rate limited) -> `201 {challengeId, nonce, expiresAt}`. Checks all preconditions; errors as in the table (`needs_minutes`, `not_wasteman`, `immune`, `multiplayer_off`, `blocked`, `forbidden`, `not_found`).
-- `POST /v1/kills` body `{challengeId, signature}` -> `201 {challengeId, victimPlayerId, pointsGained: 50, victimPointsLost, victimImmuneUntil, killedAt}`. Only the player who created the challenge can complete it.
+- `POST /v1/kills` body `{challengeId, signature}` -> `201 {challengeId, victimPlayerId, pointsGained: 50, victimPointsLost, victimImmuneUntil, killedAt, shieldBlocked}`. `shieldBlocked` is always present. When it is `true`, a shield absorbed the attack: `pointsGained` and `victimPointsLost` are 0, `victimImmuneUntil` is 10 minutes after `killedAt`, and it is **not a kill** (see Shields). Only the player who created the challenge can complete it.
   - Idempotent: repeating a succeeded challenge returns the same result with `201`; repeating a failed/expired one returns the stored error.
   - `bad_signature` does not consume the challenge.
 
@@ -110,7 +113,7 @@ All return `{state, focusMinutesToday}` (plus `lost: true` when the server found
 - `GET /v1/leaderboard?date=YYYY-MM-DD` (default: today in `LEADERBOARD_TZ`) -> `{date, top: [{rank, nickname, rankKey, level, photoUrl, kills, isMe}], me: {rank|null, kills}}`. Top 50 by kills that day, ties by earliest last kill; multiplayer-off and banned players are excluded. `me.rank` is the caller's real rank even below 50, `null` when unranked.
 
 ### Events (for the victim)
-- `GET /v1/events?after=<id>&wait=<0..25>` -> `[{id, kind: "killed", payload: {killerNickname, pointsLost}, createdAt}]`. Long poll: returns as soon as something is available, otherwise `[]` after `wait` seconds (default 0). With `after` it returns everything with `id > after`; without it only undelivered notifications. The wait polls the database briefly and holds no connection, so it works with any replica.
+- `GET /v1/events?after=<id>&wait=<0..25>` -> `[{id, kind, payload, createdAt}]`. Kinds: `killed` `{killerNickname, pointsLost}`; `shield_earned` `{shields}` (the new count); `shield_blocked` `{killerNickname, shields}` (the remaining count). Clients must ignore kinds they do not know. Long poll: returns as soon as something is available, otherwise `[]` after `wait` seconds (default 0). With `after` it returns everything with `id > after`; without it only undelivered notifications. The wait polls the database briefly and holds no connection, so it works with any replica.
 
 ### Reports
 - `POST /v1/reports` body `{targetPlayerId, kind: "nickname"|"photo"|"player", note?<=500}` (rate limited per reporter, plus a durable per-hour DB limit) -> `201 {status:"received"}`. Stores the reporter, target, kind, note and a snapshot of the target's nickname and a copy of the photo at that moment.
@@ -137,6 +140,13 @@ All return `{state, focusMinutesToday}` (plus `lost: true` when the server found
 - No heartbeat for more than 10 minutes while `focus` -> `idle` (`lost`). This is evaluated lazily on the next read/write of that player, so no background job is needed.
 - A player who was never in focus is `idle`. Manual stop from `idle` or `wasteman` changes nothing. A wasteman stays wasteman until they start focus.
 - Immunity (after being killed) is independent of the state; the victim stays wasteman afterwards unless they restarted focus.
+
+## Shields
+
+- A player earns **one shield** when a single focus session reaches **5 hours of credited focus time** (only heartbeat credit counts, each capped at 90 s, so a phone left on is not enough). Maximum **3**. The count is visible only to its owner (`GET/PUT /v1/me`).
+- The session must be uninterrupted by construction: a manual stop, a restart (`focus/start` while in focus) and a lost gap (no heartbeat for more than 10 minutes) close the session; the next one starts at 0. The credit of the final heartbeat or stop still counts for the session it closes. At most one shield per session: a session that reaches 5 h at the cap of 3 is marked awarded but grants nothing and sends no notification. A `shield_earned` notification is sent when the count actually increased.
+- Effect: when all kill preconditions pass (needs_minutes, not_wasteman, immune, blocks, ... are unchanged and checked first) and the victim has a shield, one shield is consumed instead of the kill. **No points move** (no killer gain, no victim penalty), it creates no `kills` row (so `killsToday`/`killsTotal`/`deathsToday`/`deathsTotal` and the leaderboard never count it), the victim is immune for **10 minutes** (instead of 1 hour) so shields cannot be sniped in a row, and gets a `shield_blocked` notification. The killer sees `shieldBlocked: true` with no points. Killers cannot tell in advance who has a shield (nearby shows nothing about it).
+- Replaying the same `challengeId` returns the identical shield-blocked result. Two killers racing on a shielded wasteman: exactly one consumes the shield, the other gets `immune`.
 
 ## Points
 

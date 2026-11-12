@@ -45,6 +45,7 @@ Config comes from the environment only; the process exits at startup with a mess
 | `TRUST_PROXY` | false | set `true` behind an ingress so rate limits see client IPs |
 | `SHUTDOWN_TIMEOUT_MS` | 20000 | keep below the pod termination grace period |
 | `RATE_LIMIT_GLOBAL_PER_MIN` / `_REGISTER_PER_HOUR` / `_CHALLENGE_PER_MIN` / `_REPORT_PER_HOUR` / `_LOGIN_PER_MIN` | 300 / 20 / 20 / 10 / 10 | per client (IP, or token for authenticated routes) |
+| `DEV_FAKE_MINUTES` | false | **development only.** `true` adds `POST /v1/dev/focus-minutes {minutes}` (grants focus minutes to the caller, to pass the 90-minute kill gate without waiting). The process refuses to start with it when `NODE_ENV=production`, logs a warning when enabled, and the route does not exist (404) when it is off |
 | `PASSWORD_SCRYPT_LOG2N` | 15 | scrypt cost exponent for new password hashes (10-18; r=8, p=3). Raise it as hardware allows; old hashes are upgraded on login. Tests use 10 |
 | `TEST_DATABASE_URL` | local compose DB | tests only |
 
@@ -53,6 +54,10 @@ Config comes from the environment only; the process exits at startup with a mess
 Players sign up with a private username and a password (`POST /v1/auth/register`); there is no e-mail. Passwords are hashed with **scrypt** (`node:crypto`, per-user salt, parameters stored in the hash so the cost can be raised; N=2^15, r=8, p=3 by default) and live in the `accounts` table, never in `players`. Tokens are random, stored only as SHA-256 in `auth_tokens`, and revocable (logout, password change, a new login revokes the old ones).
 
 Failed logins are throttled durably in PostgreSQL (exponential lock per username+IP and per username, capped at 5 minutes); the per-IP rate limits are in memory per replica. **Because there is no e-mail there is no password reset**: a forgotten password means a new account. Details: [`docs/multiplayer-api.md`](../docs/multiplayer-api.md).
+
+## Shields
+
+A player earns a shield (max 3, shown only to the owner) per focus session with 5 h of credited focus time; a shield absorbs one kill (no points, 10-minute immunity, not counted as a kill). Added by migrations `0003_shields` (expand) and `0004_shields_validate` (validate the constraints, drop the old one); both must be applied before the code that writes shield notifications. Rules and API: [`docs/multiplayer-api.md`](../docs/multiplayer-api.md). With `DEV_FAKE_MINUTES=true`, `POST /v1/dev/focus-minutes {minutes, creditSession: true}` fast-forwards session credit to test them.
 
 ## Operational notes
 
