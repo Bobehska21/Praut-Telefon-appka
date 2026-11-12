@@ -3,6 +3,7 @@ import type { Deps } from './app';
 import { newNonce, canonicalKillString, verifyKillSignature } from './crypto';
 import { withTx } from './db/pool';
 import { killBlocker, type KillBlocker } from './domain/kill-rules';
+import { SHIELD_BLOCK_IMMUNITY_MS, shieldAbsorbs } from './domain/shields';
 import { IMMUNITY_MS, KILL_POINTS, dayPoints, focusMsOnDay, killPenalty, minutesOf } from './domain/points';
 import { AppError, STATUS_BY_CODE, type ErrorCode } from './errors';
 import { getPlayer, isBlockedEitherWay, type PlayerRow } from './players';
@@ -19,6 +20,8 @@ interface ChallengeRow {
   status: 'pending' | 'succeeded' | 'failed';
   error_code: string | null;
   error_extra: { message: string; extra: Record<string, unknown> } | null;
+  shield_blocked: boolean;
+  resolved_at: Date | null;
 }
 
 export interface KillResult {
@@ -28,6 +31,8 @@ export interface KillResult {
   victimPointsLost: number;
   victimImmuneUntil: string;
   killedAt: string;
+  /** true when a shield absorbed the attack: no points moved, the victim is immune for 10 minutes. */
+  shieldBlocked: boolean;
 }
 
 function toError(b: { code: string; message: string; extra: Record<string, unknown> }): AppError {
@@ -67,6 +72,18 @@ export async function createChallenge(deps: Deps, killerId: string, targetId: st
 }
 
 async function resultFor(deps: Deps, ch: ChallengeRow): Promise<KillResult> {
+  if (ch.shield_blocked) {
+    const at = ch.resolved_at!;
+    return {
+      challengeId: ch.id,
+      victimPlayerId: ch.victim_id,
+      pointsGained: 0,
+      victimPointsLost: 0,
+      victimImmuneUntil: new Date(at.getTime() + SHIELD_BLOCK_IMMUNITY_MS).toISOString(),
+      killedAt: at.toISOString(),
+      shieldBlocked: true,
+    };
+  }
   const r = await deps.db.query<{ victim_points_lost: number; killer_points: number; created_at: Date }>(
     'SELECT victim_points_lost, killer_points, created_at FROM kills WHERE challenge_id = $1',
     [ch.id],
@@ -79,6 +96,7 @@ async function resultFor(deps: Deps, ch: ChallengeRow): Promise<KillResult> {
     victimPointsLost: k.victim_points_lost,
     victimImmuneUntil: new Date(k.created_at.getTime() + IMMUNITY_MS).toISOString(),
     killedAt: k.created_at.toISOString(),
+    shieldBlocked: false,
   };
 }
 
@@ -138,6 +156,30 @@ export async function completeKill(deps: Deps, killerId: string, challengeId: st
     const blocker = killBlocker({ killer, victim, blocked, killerMinutes: await killerMinutes(c, killer, now), now });
     if (blocker) return fail(blocker);
 
+    // All preconditions passed. A shield absorbs the attack: nothing counts as a kill (no kills row, no points,
+    // no penalty) and the victim gets a short immunity so shields cannot be sniped in a row.
+    const absorb = shieldAbsorbs(victim.shields);
+    if (absorb.blocked) {
+      const immuneUntil = new Date(now.getTime() + SHIELD_BLOCK_IMMUNITY_MS);
+      await c.query('UPDATE players SET shields = $2, immune_until = $3 WHERE id = $1', [victim.id, absorb.remaining, immuneUntil]);
+      await c.query("INSERT INTO notifications (player_id, kind, payload, created_at) VALUES ($1, 'shield_blocked', $2, $3)", [
+        victim.id, JSON.stringify({ killerNickname: killer.nickname, shields: absorb.remaining }), now,
+      ]);
+      await c.query("UPDATE kill_challenges SET status = 'succeeded', shield_blocked = true, resolved_at = $2 WHERE id = $1", [cur.id, now]);
+      return {
+        ok: true,
+        result: {
+          challengeId: cur.id,
+          victimPlayerId: victim.id,
+          pointsGained: 0,
+          victimPointsLost: 0,
+          victimImmuneUntil: immuneUntil.toISOString(),
+          killedAt: now.toISOString(),
+          shieldBlocked: true,
+        },
+      };
+    }
+
     const victimDay = localDay(now, victim.timezone);
     const { gross, net } = await dayPoints(c, victim.id, victimDay);
     const lost = killPenalty(gross, net);
@@ -168,6 +210,7 @@ export async function completeKill(deps: Deps, killerId: string, challengeId: st
         victimPointsLost: lost,
         victimImmuneUntil: immuneUntil.toISOString(),
         killedAt: killRow.rows[0]!.created_at.toISOString(),
+        shieldBlocked: false,
       },
     };
   });

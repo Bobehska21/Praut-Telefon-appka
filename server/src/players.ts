@@ -13,6 +13,7 @@ export interface PlayerRow {
   focus_started_at: Date | null;
   last_heartbeat_at: Date | null;
   immune_until: Date | null;
+  shields: number;
   banned_at: Date | null;
   ban_reason: string | null;
   photo_key: string | null;

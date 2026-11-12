@@ -16,6 +16,7 @@ export function profileView(p: PlayerRow, now: Date) {
     state: effectiveState(p, now),
     immuneUntil: p.immune_until && p.immune_until > now ? p.immune_until : null,
     banned: p.banned_at !== null,
+    shields: p.shields, // owner only: never part of any other player's view
   };
 }
 

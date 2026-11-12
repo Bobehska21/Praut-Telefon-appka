@@ -2,6 +2,7 @@ import type { PoolClient } from 'pg';
 import type { Db } from './db/pool';
 import { withTx } from './db/pool';
 import { HEARTBEAT_CAP_MS, focusMsOnDay, minutesOf, pointsForFocusMs } from './domain/points';
+import { shieldAward } from './domain/shields';
 import { LOST_AFTER_MS, type PlayerRow } from './players';
 import { localDay } from './time';
 
@@ -13,12 +14,36 @@ export interface FocusResult {
   lost?: true;
 }
 
-async function lockPlayer(c: PoolClient, id: string): Promise<PlayerRow> {
+export async function lockPlayer(c: PoolClient, id: string): Promise<PlayerRow> {
   return (await c.query<PlayerRow>('SELECT * FROM players WHERE id = $1 FOR UPDATE', [id])).rows[0]!;
 }
 
 async function closeSession(c: PoolClient, id: string, at: Date, reason: 'manual' | 'expired' | 'lost' | 'restart') {
   await c.query('UPDATE focus_sessions SET ended_at = $2, end_reason = $3 WHERE player_id = $1 AND ended_at IS NULL', [id, at, reason]);
+}
+
+/**
+ * Adds focus credit to the player's open session and awards a shield when the session reaches 5 h of credit.
+ * `p` must be the row locked FOR UPDATE by the caller (so `p.shields` is current). A session is uninterrupted by
+ * construction: stop, restart and a lost gap close it, and the next one starts at credited_ms = 0.
+ */
+export async function addSessionCredit(c: PoolClient, p: PlayerRow, creditMs: number, now: Date): Promise<void> {
+  if (creditMs <= 0) return;
+  const s = (
+    await c.query<{ id: number; credited_ms: number; shield_awarded: boolean }>(
+      'UPDATE focus_sessions SET credited_ms = credited_ms + $2 WHERE player_id = $1 AND ended_at IS NULL RETURNING id, credited_ms, shield_awarded',
+      [p.id, creditMs],
+    )
+  ).rows[0];
+  if (!s) return;
+  const award = shieldAward(s.credited_ms - creditMs, creditMs, s.shield_awarded, p.shields);
+  if (!award.markAwarded) return;
+  await c.query('UPDATE focus_sessions SET shield_awarded = true WHERE id = $1', [s.id]);
+  if (!award.granted) return;
+  await c.query('UPDATE players SET shields = $2 WHERE id = $1', [p.id, award.shields]);
+  await c.query("INSERT INTO notifications (player_id, kind, payload, created_at) VALUES ($1, 'shield_earned', $2, $3)", [
+    p.id, JSON.stringify({ shields: award.shields }), now,
+  ]);
 }
 
 /** Credits min(elapsed, 90 s) since the last heartbeat. Returns false when the player was lost (no credit, now idle). */
@@ -40,6 +65,7 @@ async function settle(c: PoolClient, p: PlayerRow, now: Date): Promise<'credited
     ]);
   }
   await c.query('UPDATE players SET last_heartbeat_at = $2 WHERE id = $1', [p.id, now]);
+  await addSessionCredit(c, p, credit, now);
   return 'credited';
 }
 
