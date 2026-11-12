@@ -85,7 +85,7 @@ Accounts are a private username plus a password. There is no e-mail. The usernam
 
 ### Focus
 All return `{state, focusMinutesToday}` (plus `lost: true` when the server found the player lost).
-- `POST /v1/focus/start` -> state `focus` from any state (this is how a wasteman saves themselves).
+- `POST /v1/focus/start` body optional `{multiplier?: 1|2|5|10}` (default 1, anything else is `400`) -> state `focus` from any state (this is how a wasteman saves themselves). A multiplier above 1 is a session bet, see Session bets.
 - `POST /v1/focus/heartbeat` -> credits focus time (see below). In `idle`/`wasteman` it only reports the state.
 - `POST /v1/focus/stop` body `{reason: "manual"|"expired"}`.
 
@@ -140,6 +140,13 @@ All return `{state, focusMinutesToday}` (plus `lost: true` when the server found
 - No heartbeat for more than 10 minutes while `focus` -> `idle` (`lost`). This is evaluated lazily on the next read/write of that player, so no background job is needed.
 - A player who was never in focus is `idle`. Manual stop from `idle` or `wasteman` changes nothing. A wasteman stays wasteman until they start focus.
 - Immunity (after being killed) is independent of the state; the victim stays wasteman afterwards unless they restarted focus.
+
+## Session bets
+
+- `multiplier` 2, 5 or 10 on `focus/start` makes the session a bet: it must reach **15 min x multiplier** of credited focus (30, 75, 150 min). 1 (or no body) is the old behaviour: no bonus, no penalty.
+- When the session ends (`stop` manual/expired, a restart, or a lost gap settled on the next start) the server writes one ledger row: reached the required time -> `bet_bonus` = (multiplier - 1) x the points the session earned; ended earlier -> `bet_penalty` = minus that amount, but never more than the day's net (the day never goes below 0). Nothing is written when the session earned no points.
+- `POST /v1/focus/stop` returns `bet: {multiplier, outcome: "bonus"|"penalty", points}` when a bet was settled in that call. Settlements on restart or lost gap are visible only in the points ledger / stats.
+- Shields and the 90-minute kill gate use real credited time, not the multiplier. Bets are an Android multiplayer feature (the native client sends the multiplier; iOS does not).
 
 ## Shields
 

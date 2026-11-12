@@ -18,22 +18,22 @@ const tables = async () =>
 it('applies, is idempotent, and rolls back cleanly', async () => {
   expect(await tables()).toEqual(expect.arrayContaining(['players', 'accounts', 'auth_tokens', 'login_attempts']));
   expect(await migrate(t.db, dir, 'up')).toEqual([]);
-  expect(await migrate(t.db, dir, 'down', 4)).toEqual(['0004_shields_validate', '0003_shields', '0002_accounts', '0001_init']);
+  expect(await migrate(t.db, dir, 'down', 6)).toEqual(['0006_session_bets_validate', '0005_session_bets', '0004_shields_validate', '0003_shields', '0002_accounts', '0001_init']);
   expect(await tables()).not.toContain('players');
-  expect(await migrate(t.db, dir, 'up')).toEqual(['0001_init', '0002_accounts', '0003_shields', '0004_shields_validate']);
+  expect(await migrate(t.db, dir, 'up')).toEqual(['0001_init', '0002_accounts', '0003_shields', '0004_shields_validate', '0005_session_bets', '0006_session_bets_validate']);
 });
 
 it('0002 backfills existing tokens, and its down migration restores players.token_hash NOT NULL', async () => {
-  await migrate(t.db, dir, 'down', 3); // revert 0004, 0003 and 0002
+  await migrate(t.db, dir, 'down', 5); // revert 0006, 0005, 0004, 0003 and 0002
   expect(await tables()).not.toContain('accounts');
   await t.db.query("INSERT INTO players (token_hash, public_key) VALUES (sha256('legacy'), 'k')");
-  await migrate(t.db, dir, 'up'); // 0002, 0003 and 0004
+  await migrate(t.db, dir, 'up'); // 0002 to 0006
   const legacy = await t.db.query("SELECT 1 FROM auth_tokens WHERE token_hash = sha256('legacy')");
   expect(legacy.rowCount).toBe(1);
 
   // A player created by the new code has no legacy hash; down must still succeed.
   await t.db.query('INSERT INTO players (public_key) VALUES (\'k2\')');
-  await migrate(t.db, dir, 'down', 3);
+  await migrate(t.db, dir, 'down', 5);
   const nulls = await t.db.query('SELECT 1 FROM players WHERE token_hash IS NULL');
   expect(nulls.rowCount).toBe(0);
   await migrate(t.db, dir, 'up');
@@ -51,13 +51,13 @@ it('0003 adds shield columns with safe defaults and its down migration removes t
   await expect(t.db.query('UPDATE players SET shields = 4 WHERE id = $1', [id])).rejects.toThrow(/players_shields_range/);
   await t.db.query("INSERT INTO notifications (player_id, kind, payload) VALUES ($1, 'shield_earned', '{}'), ($1, 'killed', '{}')", [id]);
 
-  expect(await migrate(t.db, dir, 'down', 2)).toEqual(['0004_shields_validate', '0003_shields']);
+  expect(await migrate(t.db, dir, 'down', 4)).toEqual(['0006_session_bets_validate', '0005_session_bets', '0004_shields_validate', '0003_shields']);
   expect(await cols('players')).not.toContain('shields');
   expect(await cols('focus_sessions')).not.toContain('credited_ms');
   const left = (await t.db.query('SELECT kind FROM notifications WHERE player_id = $1', [id])).rows.map((r) => r.kind);
   expect(left).toEqual(['killed']); // shield notifications deleted, the old kind kept
   await expect(t.db.query("INSERT INTO notifications (player_id, kind, payload) VALUES ($1, 'shield_earned', '{}')", [id])).rejects.toThrow();
-  expect(await migrate(t.db, dir, 'up')).toEqual(['0003_shields', '0004_shields_validate']);
+  expect(await migrate(t.db, dir, 'up')).toEqual(['0003_shields', '0004_shields_validate', '0005_session_bets', '0006_session_bets_validate']);
 });
 
 const constraints = async (table: string) =>
@@ -74,12 +74,28 @@ it('0003 is expand-only (NOT VALID, old constraint kept); 0004 validates and dro
 
   // down 0004 only: the state right after 0003 (old 'killed'-only constraint enforced, new one NOT VALID or valid, shield rows removed)
   await t.db.query("INSERT INTO notifications (player_id, kind, payload) VALUES ($1, 'shield_blocked', '{}'), ($1, 'killed', '{}')", [id]);
-  expect(await migrate(t.db, dir, 'down')).toEqual(['0004_shields_validate']);
+  expect(await migrate(t.db, dir, 'down', 3)).toEqual(['0006_session_bets_validate', '0005_session_bets', '0004_shields_validate']);
   expect((await constraints('notifications')).map((c) => c.n)).toEqual(['notifications_kind_check', 'notifications_kind_check2']);
   expect((await t.db.query('SELECT kind FROM notifications WHERE player_id = $1', [id])).rows.map((r) => r.kind)).toEqual(['killed']);
   await expect(t.db.query("INSERT INTO notifications (player_id, kind, payload) VALUES ($1, 'shield_earned', '{}')", [id])).rejects.toThrow(/notifications_kind_check/);
   await t.db.query("INSERT INTO notifications (player_id, kind, payload) VALUES ($1, 'killed', '{}')", [id]); // old kind still fine
 
-  expect(await migrate(t.db, dir, 'up')).toEqual(['0004_shields_validate']);
+  expect(await migrate(t.db, dir, 'up')).toEqual(['0004_shields_validate', '0005_session_bets', '0006_session_bets_validate']);
   await t.db.query("INSERT INTO notifications (player_id, kind, payload) VALUES ($1, 'shield_earned', '{}')", [id]);
+});
+
+it('0005 is expand-only (NOT VALID, old ledger constraint kept); 0006 validates and drops it; its down removes bet rows', async () => {
+  const id = (await t.db.query<{ id: string }>("INSERT INTO players (public_key) VALUES ('k5') RETURNING id")).rows[0]!.id;
+  expect(await constraints('points_ledger')).toEqual(expect.arrayContaining([{ n: 'points_ledger_kind_check2', v: true }]));
+  expect((await constraints('points_ledger')).map((c) => c.n)).not.toContain('points_ledger_kind_check');
+  await expect(t.db.query('INSERT INTO focus_sessions (player_id, started_at, bet_multiplier) VALUES ($1, now(), 3)', [id])).rejects.toThrow(/bet_multiplier_check/);
+
+  await t.db.query("INSERT INTO points_ledger (player_id, kind, day, points) VALUES ($1, 'bet_bonus', '2026-03-10', 10), ($1, 'minute', '2026-03-10', 1)", [id]);
+  expect(await migrate(t.db, dir, 'down')).toEqual(['0006_session_bets_validate']);
+  expect((await constraints('points_ledger')).map((c) => c.n)).toEqual(expect.arrayContaining(['points_ledger_kind_check', 'points_ledger_kind_check2']));
+  expect((await t.db.query('SELECT kind FROM points_ledger WHERE player_id = $1', [id])).rows.map((r) => r.kind)).toEqual(['minute']);
+  await expect(t.db.query("INSERT INTO points_ledger (player_id, kind, day, points) VALUES ($1, 'bet_bonus', '2026-03-10', 1)", [id])).rejects.toThrow(/points_ledger_kind_check/);
+
+  expect(await migrate(t.db, dir, 'down')).toEqual(['0005_session_bets']);
+  expect(await migrate(t.db, dir, 'up')).toEqual(['0005_session_bets', '0006_session_bets_validate']);
 });
