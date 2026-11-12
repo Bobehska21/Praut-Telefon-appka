@@ -1,0 +1,20 @@
+# Local development database only. Never point this at a shared environment.
+services:
+  focus-pg:
+    image: postgres:16
+    container_name: focus-pg
+    environment:
+      POSTGRES_USER: focus
+      POSTGRES_PASSWORD: ${FOCUS_PG_PASSWORD:-focus_local_dev}
+      POSTGRES_DB: focus_dev
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - focus-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U focus -d focus_dev"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  focus-pg-data:
