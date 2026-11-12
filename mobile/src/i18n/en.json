@@ -1,0 +1,353 @@
+{
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "continue": "Continue",
+    "search": "Search"
+  },
+  "home": {
+    "title": "Focus",
+    "start": "Start",
+    "stop": "Stop",
+    "active": "Focus mode is on",
+    "inactive": "Focus mode is off",
+    "until": "until {{time}}",
+    "duration": "Duration",
+    "untilStopped": "Until I stop it",
+    "custom": "Custom",
+    "minutes": "{{count}} min",
+    "profile": "Profile",
+    "noAppsWarning": "This profile has no allowed apps. Phone, messages and emergency calls always stay available.",
+    "missingTitle": "Allow these before starting",
+    "accessibilityLostTitle": "The accessibility service is off",
+    "accessibilityLostBody": "Without it non-allowed apps cannot be blocked. Turn it back on or focus mode will not hold.",
+    "goalTitle": "Daily goal",
+    "goalProgress": "{{minutes}} / {{goal}} min",
+    "goalLeft": "{{minutes}} min to go",
+    "goalReached": "Goal reached",
+    "bonus_one": "Bonus: {{count}} extra point",
+    "bonus_other": "Bonus: {{count}} extra points",
+    "bonusHint": "Every minute beyond the goal = 1 point. The counter resets at midnight."
+  },
+  "unlock": {
+    "title": "Really stop?",
+    "countdown": "Wait {{seconds}} s and think about whether you really need to.",
+    "sentence": "To stop, type this sentence:",
+    "sentenceText": "I want to interrupt my focus now.",
+    "confirm": "Stop focus mode",
+    "keepGoing": "Keep focusing"
+  },
+  "blocked": {
+    "message": "This app is turned off during focus mode",
+    "back": "Back"
+  },
+  "profiles": {
+    "title": "Profiles",
+    "new": "New profile",
+    "name": "Name",
+    "apps": "Allowed apps",
+    "appsCount": "{{count}} allowed",
+    "pickIos": "Choose apps in system picker",
+    "iosHint": "iOS does not expose a list of apps. You choose in the system picker and we never see app names.",
+    "alwaysAllowed": "Phone, messages and emergency calls are always allowed."
+  },
+  "schedule": {
+    "title": "Schedule",
+    "add": "Add schedule",
+    "empty": "No schedule yet. Focus mode will start by itself on the days and hours you choose.",
+    "from": "From",
+    "to": "To",
+    "days": "Days",
+    "enabled": "Enabled"
+  },
+  "stats": {
+    "title": "Statistics",
+    "week": "Last 7 days",
+    "today": "Today",
+    "focusTime": "Time in focus mode",
+    "blocked": "Blocked attempts",
+    "streakDays_one": "{{count}} day streak",
+    "streakDays_other": "{{count}} day streak",
+    "streakEmpty": "Start a focus session to begin a streak",
+    "best": "Longest streak: {{count}}"
+  },
+  "settings": {
+    "title": "Settings",
+    "guard": "Stop protection",
+    "guardNone": "None",
+    "guardCountdown": "30 s countdown",
+    "guardSentence": "Type a sentence",
+    "accessibility": "Extended blocking (Accessibility)",
+    "accessibilityHint": "Optional. More reliable blocking, but requires the Accessibility permission.",
+    "language": "Language",
+    "languageSystem": "System default",
+    "nearby": "Nearby users",
+    "nearbySwitch": "Look for nearby users",
+    "nearbyHint": "While focus mode is on, your phone announces over Bluetooth that it uses Focus and looks for others. No name or location is sent. If someone is found you get a notification, and you see their details only after you accept.",
+    "nickname": "Nickname (optional)",
+    "nicknameHint": "Nearby users who accept the notification about you see it, together with your rank and streak. Nothing else is shared.",
+    "bluetoothMissing": "Without the Bluetooth permission this does not work.",
+    "nicknameBlocked": "This nickname is not allowed. Please choose another.",
+    "nicknameChars": "Allowed: Latin letters, digits, space, dot, underscore and hyphen."
+  },
+  "days": {
+    "0": "Sun",
+    "1": "Mon",
+    "2": "Tue",
+    "3": "Wed",
+    "4": "Thu",
+    "5": "Fri",
+    "6": "Sat"
+  },
+  "onboarding": {
+    "welcomeTitle": "Focus on what matters",
+    "welcomeBody": "When focus mode is on, only the apps you allowed in advance stay available. Everything else is hidden or blocked. Your data stays on this phone: no account, no ads.",
+    "permissions": {
+      "usageAccess": {
+        "title": "Usage access",
+        "why": "We need to know which app is in the foreground so a non-allowed one can be blocked."
+      },
+      "overlay": {
+        "title": "Display over other apps",
+        "why": "This lets us show the blocking screen on top of a non-allowed app."
+      },
+      "notifications": {
+        "title": "Notifications",
+        "why": "Android requires a persistent notification while focus mode runs. We send no other notifications."
+      },
+      "batteryOptimization": {
+        "title": "Battery optimization exemption",
+        "why": "So the system does not stop focus mode while you are focusing."
+      },
+      "defaultLauncher": {
+        "title": "Default home app (optional)",
+        "why": "Optional. The Home button then goes straight to the focus screen. It also works without it, with a slightly longer flash."
+      },
+      "exactAlarm": {
+        "title": "Exact alarms",
+        "why": "So scheduled sessions start exactly on time, even when the app is closed."
+      },
+      "accessibility": {
+        "title": "Accessibility service",
+        "why": "We use it only to learn the name of the app that is in the foreground, so a non-allowed app can be replaced by the focus screen right away. We do not read screen content, text or passwords, and nothing is sent anywhere; it all stays on the phone. Focus mode cannot start without it."
+      },
+      "screenTime": {
+        "title": "Screen Time",
+        "why": "Apple requires your consent before we can restrict apps. Your selection stays on the device."
+      },
+      "notificationAccess": {
+        "title": "Notification access",
+        "why": "While focus mode is on we dismiss notifications from apps that are not allowed, so the phone only shows what you permit. We read only the name of the app that sent a notification, never its text, and nothing is sent anywhere."
+      },
+      "bluetooth": {
+        "title": "Bluetooth",
+        "why": "While focus mode is on, your phone broadcasts and looks for other Focus users. It does not send your name or location, only a random code that changes every midnight. If it finds someone you get a notification you can accept or decline, and you see their details only after accepting. Bluetooth is not used to find your location. Optional; you can turn it off in Settings."
+      }
+    },
+    "grant": "Allow",
+    "granted": "Allowed",
+    "skip": "Skip",
+    "finish": "Done"
+  },
+  "progress": {
+    "title": "Progress",
+    "level": "Level {{level}}",
+    "xp": "{{into}} / {{needed}} XP",
+    "total": "{{xp}} XP total",
+    "todayQuests": "Today's quests",
+    "weeklyQuests": "Weekly challenges",
+    "achievements": "Achievements",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "summary": "Today's quests {{done}}/{{total}}",
+    "rank": {
+      "novice": "Novice",
+      "apprentice": "Apprentice",
+      "adept": "Adept",
+      "warden": "Warden",
+      "master": "Master",
+      "grandmaster": "Grandmaster"
+    },
+    "quests": {
+      "focus20": "Focus for {{target}} minutes",
+      "session1": "Finish 1 session",
+      "focus45": "Focus for {{target}} minutes",
+      "sessions2": "Finish 2 sessions",
+      "early": "Early start: begin before 10:00",
+      "focus90": "Focus for {{target}} minutes",
+      "long50": "Stay focused {{target}} minutes in one session",
+      "week300": "Focus for 5 hours this week",
+      "days5": "Focus on {{target}} different days this week"
+    },
+    "ach": {
+      "first": {
+        "title": "First step",
+        "desc": "Focus for at least 5 minutes."
+      },
+      "sessions10": {
+        "title": "Habit",
+        "desc": "Finish 10 sessions."
+      },
+      "sessions50": {
+        "title": "Discipline",
+        "desc": "Finish 50 sessions."
+      },
+      "streak3": {
+        "title": "Getting going",
+        "desc": "3 days in a row."
+      },
+      "streak7": {
+        "title": "A week, no excuses",
+        "desc": "7 days in a row."
+      },
+      "streak30": {
+        "title": "Unshaken",
+        "desc": "30 days in a row."
+      },
+      "hours10": {
+        "title": "Ten hours",
+        "desc": "Focus for 10 hours in total."
+      },
+      "hours50": {
+        "title": "Fifty hours",
+        "desc": "Focus for 50 hours in total."
+      },
+      "marathon": {
+        "title": "Marathon",
+        "desc": "Finish a 90+ minute session."
+      },
+      "earlybird": {
+        "title": "Early bird",
+        "desc": "Start a session before 7:00."
+      },
+      "nightowl": {
+        "title": "Night shift",
+        "desc": "Finish a session after 22:00."
+      },
+      "level5": {
+        "title": "Adept",
+        "desc": "Reach level 5."
+      }
+    },
+    "reward": {
+      "completed": "Session complete",
+      "stopped": "Good work",
+      "minutes": "{{minutes}} min of focus",
+      "quest": "Quest complete",
+      "achievement": "New achievement",
+      "level": "Level up",
+      "xp": "+{{xp}} XP",
+      "continue": "Continue",
+      "points": "+{{points}} pts"
+    },
+    "nearbyTitle": "People met nearby",
+    "nearbyEmpty": "No one yet. When you are both in range with focus mode and Bluetooth on, you get a notification.",
+    "nearbyLine": "{{name}} · {{rank}} ({{level}}) · {{streak}}-day streak",
+    "anonymous": "Anonymous",
+    "points": "Points: {{points}}"
+  },
+  "players": {
+    "title": "Players",
+    "androidOnly": "Multiplayer is Android-only for now.",
+    "tabs": {
+      "nearby": "Nearby",
+      "leaderboard": "Leaderboard",
+      "me": "Me"
+    },
+    "joinTitle": "Play against others",
+    "joinBody": "Multiplayer needs a server. An anonymous account is created, with no name and no e-mail. Only your nickname, rank, photo, points and kills are stored there. Other players see your nickname, rank and photo. You can switch it off or delete the account and all its data at any time.",
+    "join": "Join",
+    "joining": "Joining…",
+    "anonymous": "Anonymous",
+    "more": "More options",
+    "nobody": "No one nearby. Players appear when they are within Bluetooth range.",
+    "needBluetooth": "Allow Bluetooth or you will not see anyone.",
+    "status": {
+      "focus": "In focus mode",
+      "wasteman": "Wasteman",
+      "immune": "Immune",
+      "idle": "Not in focus mode"
+    },
+    "immuneLeft": "Immune for {{time}}",
+    "kill": "Kill",
+    "killing": "Looking for signal…",
+    "killMissing": "{{minutes}} more min in focus mode needed",
+    "killed": "You killed {{name}}",
+    "killedPoints": "+{{points}} points",
+    "killFailed": "The kill failed",
+    "errors": {
+      "needs_minutes": "You have less than 90 minutes in focus mode today.",
+      "immune": "The player is immune, or someone just killed them.",
+      "not_wasteman": "The player saved themselves in the meantime.",
+      "already_killed": "The player was already killed.",
+      "expired": "Time ran out, try again.",
+      "out_of_range": "Signal lost, or the player is out of range.",
+      "blocked": "This player is not available.",
+      "multiplayer_off": "Multiplayer is switched off.",
+      "network": "Cannot reach the server.",
+      "unauthorized": "You are not signed in. Join again.",
+      "rate_limited": "Too many attempts, please wait a moment.",
+      "camera_denied": "Camera access is not allowed.",
+      "validation": "Invalid data.",
+      "unknown": "Something went wrong.",
+      "username_taken": "This username is taken.",
+      "invalid_credentials": "Wrong username or password.",
+      "forbidden": "This account is not allowed to play."
+    },
+    "block": "Block",
+    "unblock": "Unblock",
+    "report": "Report",
+    "reportTitle": "What do you want to report?",
+    "reportNickname": "The nickname",
+    "reportPhoto": "The photo",
+    "reportPlayer": "The player",
+    "reportThanks": "Thank you, your report has been saved.",
+    "blockedPlayers": "Blocked players",
+    "noBlocked": "You have not blocked anyone.",
+    "leaderboardTitle": "Daily hunters leaderboard",
+    "kills": "{{count}} kills",
+    "you": "You",
+    "empty": "No one has killed today yet.",
+    "me": {
+      "photo": "Profile photo",
+      "gallery": "From gallery",
+      "camera": "From camera",
+      "remove": "Remove",
+      "stats": "Statistics",
+      "killsToday": "Kills today",
+      "killsTotal": "Kills in total",
+      "deathsToday": "Deaths today",
+      "deathsTotal": "Deaths in total",
+      "pointsToday": "Points today",
+      "pointsTotal": "Points in total",
+      "leave": "Delete account and leave",
+      "leaveConfirm": "Your account, photo and statistics on the server will be deleted. Continue?",
+      "server": "Server",
+      "serverReset": "Reset to default address"
+    }
+  },
+  "auth": {
+    "title": "Sign in",
+    "registerTitle": "Create an account",
+    "intro": "One account for the multiplayer game. No e-mail, only a username and a password. Your username is private: others see only your nickname.",
+    "username": "Username",
+    "password": "Password",
+    "password2": "Repeat password",
+    "usernameHint": "3-20 characters: letters, digits, . _ -",
+    "passwordHint": "At least 8 characters.",
+    "login": "Sign in",
+    "register": "Create account",
+    "working": "Please wait…",
+    "toRegister": "No account yet? Create one",
+    "toLogin": "Already have an account? Sign in",
+    "mismatch": "The passwords do not match.",
+    "badUsername": "The username must be 3-20 characters: letters, digits, . _ -",
+    "badPassword": "The password must have at least 8 characters.",
+    "noReset": "There is no e-mail, so a forgotten password cannot be reset.",
+    "logout": "Sign out",
+    "server": "Server address",
+    "serverSave": "Save"
+  }
+}

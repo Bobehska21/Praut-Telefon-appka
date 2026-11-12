@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="focus_launcher_label">Soustředění</string>
+  <string name="focus_channel_name">Režim soustředění</string>
+  <string name="focus_notification_title">Režim soustředění běží</string>
+  <string name="focus_notification_text">Dostupné jsou jen aplikace, které sis povolil(a).</string>
+  <string name="focus_blocked_message">Tato aplikace je v režimu soustředění vypnutá</string>
+  <string name="focus_blocked_back">Zpět</string>
+  <string name="focus_active">Režim soustředění běží</string>
+  <string name="focus_inactive">Všechny aplikace</string>
+  <string name="focus_until">Režim soustředění do %1$s</string>
+  <string name="focus_a11y_description">Volitelné. Umožní aplikaci Soustředění poznat, která aplikace se právě otevřela, aby ji v režimu soustředění mohla spolehlivěji zablokovat. Nečte ani neukládá nic, co je na obrazovce.</string>
+  <string name="focus_stop">Vypnout</string>
+  <string name="focus_unlock_title">Opravdu vypnout?</string>
+  <string name="focus_unlock_countdown">Počkej %1$d s a zvaž, jestli to opravdu potřebuješ.</string>
+  <string name="focus_unlock_ready">Režim soustředění můžeš vypnout.</string>
+  <string name="focus_unlock_type">Pro vypnutí opiš větu:\n\n%1$s</string>
+  <string name="focus_unlock_sentence">Chci teď přerušit soustředění.</string>
+  <string name="focus_confirm_stop">Vypnout režim</string>
+  <string name="focus_keep">Pokračovat v soustředění</string>
+  <string name="focus_nearby_channel">Uživatelé v okolí</string>
+  <string name="focus_nearby_title">V okolí je další uživatel Focus</string>
+  <string name="focus_nearby_text">Chceš zjistit, kdo to je?</string>
+  <string name="focus_nearby_accept">Přijmout</string>
+  <string name="focus_nearby_decline">Odmítnout</string>
+  <string name="focus_nearby_gone">Tento uživatel už není v dosahu.</string>
+  <string name="focus_nearby_failed">Nepodařilo se načíst jeho údaje. Zkus to znovu, až budete blízko.</string>
+  <string name="focus_nearby_result_title">Uživatel Focus v okolí</string>
+  <string name="focus_nearby_result">%1$s (úroveň %2$d) · série %3$d dní. Další údaje uvidíš ve Focus.</string>
+  <string name="focus_rank_novice">Nováček</string>
+  <string name="focus_rank_apprentice">Učedník</string>
+  <string name="focus_rank_adept">Adept</string>
+  <string name="focus_rank_warden">Strážce</string>
+  <string name="focus_rank_master">Mistr</string>
+  <string name="focus_rank_grandmaster">Velmistr</string>
+  <string name="focus_wasteman_title">Jsi wasteman</string>
+  <string name="focus_wasteman_text">Zapni znovu režim soustředění a zachráníš se.</string>
+  <string name="focus_killed_channel">Zabití</string>
+  <string name="focus_killed_title">Byl jsi zabit</string>
+  <string name="focus_killed_text">%1$s tě zabil. Přišel jsi o %2$d bodů.</string>
+  <string name="focus_nearby_anonymous_player">Jiný hráč</string>
+</resources>
