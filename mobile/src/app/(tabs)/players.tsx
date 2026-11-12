@@ -258,16 +258,16 @@ function LeaderboardTab() {
         {t('players.leaderboardTitle').toLocaleUpperCase()}
       </AppText>
       {error && <AppText size={13}>{error}</AppText>}
-      {board && board.entries.length === 0 && <AppText muted>{t('players.empty')}</AppText>}
-      {board?.entries.map((e) => (
-        <Card key={e.playerId}>
+      {board && board.top.length === 0 && <AppText muted>{t('players.empty')}</AppText>}
+      {board?.top.map((e) => (
+        <Card key={e.rank}>
           <View style={styles.row}>
             <AppText accent weight="700" style={styles.place}>
               {e.rank}.
             </AppText>
             <Avatar photoUrl={e.photoUrl} size={40} />
             <View style={styles.flex}>
-              <AppText weight="600">{e.nickname || t('players.anonymous')}</AppText>
+              <AppText weight="600">{e.isMe ? t('players.you') : e.nickname || t('players.anonymous')}</AppText>
               <AppText muted size={12}>
                 {t(`progress.rank.${e.rankKey}`)}
               </AppText>
@@ -276,7 +276,7 @@ function LeaderboardTab() {
           </View>
         </Card>
       ))}
-      {board?.me && !board.entries.some((e) => e.playerId === board.me?.playerId) && (
+      {board && board.me.rank !== null && !board.top.some((e) => e.isMe) && (
         <Card>
           <View style={styles.row}>
             <AppText accent weight="700" style={styles.place}>
@@ -311,7 +311,7 @@ function MeTab() {
       if (!alive.current) return;
       setMe(m);
       setStats(s);
-      setBlocked(b.blocked);
+      setBlocked(b);
       setError(null);
     } catch (e) {
       if (alive.current) setError(errorText(t, e));

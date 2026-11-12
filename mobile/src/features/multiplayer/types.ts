@@ -45,25 +45,32 @@ export interface MyStats {
 }
 
 export interface LeaderboardEntry {
-  playerId: string;
+  rank: number;
   nickname: string;
   rankKey: RankKey;
   level: number;
   photoUrl: string | null;
   kills: number;
-  rank: number;
+  /** True for the caller's own row. Rows carry no player id. */
+  isMe: boolean;
 }
 
 export interface Leaderboard {
   date: string;
-  entries: LeaderboardEntry[];
-  me: LeaderboardEntry | null;
+  /** Top 50 by kills that day. */
+  top: LeaderboardEntry[];
+  /** The caller's real rank (null when unranked) and kills, even below the top 50. */
+  me: { rank: number | null; kills: number };
 }
 
+/** Result of `POST /v1/kills`. */
 export interface KillResult {
+  challengeId: string;
+  victimPlayerId: string;
   pointsGained: number;
-  victimNickname: string;
-  immuneUntil: string;
+  victimPointsLost: number;
+  victimImmuneUntil: string;
+  killedAt: string;
 }
 
 export type ReportKind = 'nickname' | 'photo' | 'player';
@@ -71,4 +78,7 @@ export type ReportKind = 'nickname' | 'photo' | 'player';
 export interface BlockedPlayer {
   playerId: string;
   nickname: string;
+  rankKey?: RankKey;
+  level?: number;
+  blockedAt?: string;
 }

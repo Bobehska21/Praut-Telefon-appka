@@ -140,11 +140,10 @@ export const fetchLeaderboard = (date?: string) =>
 export async function refreshNearby(): Promise<NearbyPlayer[]> {
   const seen = await FocusModule.getNearbyTokens();
   if (seen.length === 0) return [];
-  const { players } = await request<{ players: Omit<NearbyPlayer, 'token'>[] & { token: string }[] }>('/v1/nearby', {
+  return request<NearbyPlayer[]>('/v1/nearby', {
     method: 'POST',
     body: { tokens: seen.map((s) => s.token).slice(0, 50) },
   });
-  return players as NearbyPlayer[];
 }
 
 /**
@@ -173,7 +172,7 @@ export async function killPlayer(target: NearbyPlayer): Promise<KillResult> {
 
 export const blockPlayer = (playerId: string) => request('/v1/blocks', { method: 'POST', body: { playerId } });
 export const unblockPlayer = (playerId: string) => request(`/v1/blocks/${encodeURIComponent(playerId)}`, { method: 'DELETE' });
-export const listBlocked = () => request<{ blocked: BlockedPlayer[] }>('/v1/blocks');
+export const listBlocked = () => request<BlockedPlayer[]>('/v1/blocks');
 
 export const reportPlayer = (targetPlayerId: string, kind: ReportKind, note?: string) =>
   request('/v1/reports', { method: 'POST', body: { targetPlayerId, kind, note } });
