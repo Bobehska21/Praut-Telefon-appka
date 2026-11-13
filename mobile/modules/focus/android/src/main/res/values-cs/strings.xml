@@ -43,4 +43,8 @@
   <string name="focus_shield_earned_text">5 hodin soustředění v jedné relaci. Máš %1$d štít(ů).</string>
   <string name="focus_shield_blocked_title">Zachránil tě štít</string>
   <string name="focus_shield_blocked_text">%1$s na tebe zaútočil, štít útok pohltil. Zbývá štítů: %2$d.</string>
+  <string name="focus_admin_nickname_title">Tvoje přezdívka byla změněna</string>
+  <string name="focus_admin_nickname_text">Administrátor změnil tvoji přezdívku na %1$s.</string>
+  <string name="focus_admin_photo_title">Tvoje fotka byla odstraněna</string>
+  <string name="focus_admin_photo_text">Administrátor odstranil tvoji profilovou fotku. Místo ní se zobrazuje výchozí avatar.</string>
 </resources>

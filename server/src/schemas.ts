@@ -13,7 +13,8 @@ export const nicknameField = z.string().max(100).superRefine((v, ctx) => {
 });
 
 export const profileBody = z.object({
-  nickname: nicknameField,
+  // Optional: a client that has not edited its nickname omits it, so a name changed by an admin is not overwritten.
+  nickname: nicknameField.optional(),
   rankKey: z.enum(RANK_KEYS),
   level: z.number().int().min(1).max(999),
   multiplayerEnabled: z.boolean(),

@@ -1,7 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
+import { adminWhoami } from '@/features/admin';
 
 import { useMultiplayerStore } from '@/features/multiplayer/store';
 import { FocusModule } from '@/modules/focus';
@@ -19,6 +22,7 @@ const ICONS: Record<string, { idle: IconName; active: IconName }> = {
   schedule: { idle: 'calendar-outline', active: 'calendar' },
   stats: { idle: 'stats-chart-outline', active: 'stats-chart' },
   settings: { idle: 'settings-outline', active: 'settings' },
+  admin: { idle: 'shield-checkmark-outline', active: 'shield-checkmark' },
 };
 
 export default function TabsLayout() {
@@ -27,6 +31,16 @@ export default function TabsLayout() {
   const onboardingDone = useAppStore((s) => s.settings.onboardingDone);
 
   const signedIn = useMultiplayerStore((s) => s.joined);
+  // The server decides who is an admin; this only decides whether to show the tab.
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    if (!signedIn) return;
+    let alive = true;
+    adminWhoami().then(() => alive && setIsAdmin(true), () => alive && setIsAdmin(false));
+    return () => {
+      alive = false;
+    };
+  }, [signedIn]);
 
   if (!onboardingDone) return <Redirect href="/onboarding" />;
   // An account (username + password) is required after the first steps. Multiplayer is Android-only for now,
@@ -63,6 +77,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="schedule" options={{ href: null }} />
       <Tabs.Screen name="stats" options={{ href: null }} />
       {screen('settings', t('settings.title'))}
+      {isAdmin ? screen('admin', t('settings.adminTab')) : <Tabs.Screen name="admin" options={{ href: null }} />}
     </Tabs>
   );
 }

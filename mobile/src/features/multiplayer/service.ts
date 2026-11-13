@@ -32,13 +32,25 @@ function timezone(): string {
 function publicProfile() {
   const app = useAppStore.getState();
   const level = levelForXp(totalXp({ claimed: app.claimed, achievements: app.achievements }));
+  const local = safeNickname(app.settings.nickname);
+  const { syncedNickname } = useMultiplayerStore.getState();
   return {
-    nickname: safeNickname(app.settings.nickname),
+    // Sent only when the user changed it since the last sync (or never synced). Otherwise the server's value stands,
+    // so a nickname replaced by an admin is not overwritten by this phone's old one.
+    ...(syncedNickname === undefined || local !== syncedNickname ? { nickname: local } : {}),
     rankKey: rankKey(level),
     level,
     multiplayerEnabled: app.settings.nearbyEnabled !== false,
     timezone: timezone(),
   };
+}
+
+/** Takes the server's nickname as the new baseline; when it differs (an admin changed it), the phone adopts it. */
+function adoptServerNickname(nickname: string, submittedNickname: string) {
+  useMultiplayerStore.getState().setSyncedNickname(nickname);
+  const app = useAppStore.getState();
+  // An edit made while the request was in flight must remain pending for the next sync.
+  if (safeNickname(app.settings.nickname) === submittedNickname && submittedNickname !== nickname) app.updateSettings({ nickname });
 }
 
 // ---------------------------------------------------------------------------------- account
@@ -50,15 +62,24 @@ interface AuthResponse {
 }
 
 /** Shared tail of register and login: keep the token, tell the native side, publish the profile. */
-async function finishAuth({ playerId, token }: AuthResponse, username: string): Promise<void> {
+async function finishAuth({ playerId, token, profile }: AuthResponse, username: string): Promise<void> {
   await saveToken(token);
   useMultiplayerStore.getState().setJoined(playerId);
   await FocusModule.setPlayerId(playerId);
   await FocusModule.setServer(useMultiplayerStore.getState().serverUrl, token);
   // The login name is private. It becomes the first public nickname only if it passes the nickname rules
-  // and the user has not chosen one yet; it can be changed in Settings.
+  // and the account has none yet; it can be changed in Settings.
   const app = useAppStore.getState();
-  if (!app.settings.nickname && isNicknameAllowed(username)) app.updateSettings({ nickname: username });
+  const store = useMultiplayerStore.getState();
+  if (profile) {
+    // Signing in to an existing account: that account's own nickname wins over whatever the previous account left
+    // on this phone (otherwise it would be pushed to the server as this account's nickname).
+    const own = profile.nickname || (isNicknameAllowed(username) ? username : '');
+    store.setSyncedNickname(profile.nickname);
+    if (app.settings.nickname !== own) app.updateSettings({ nickname: own });
+  } else if (!app.settings.nickname && isNicknameAllowed(username)) {
+    app.updateSettings({ nickname: username });
+  }
   await syncProfile().catch(() => undefined);
   await publishToken().catch(() => undefined);
 }
@@ -112,8 +133,24 @@ export async function leaveMultiplayer(): Promise<void> {
   }
 }
 
-export async function syncProfile(): Promise<MyProfile> {
-  return request<MyProfile>('/v1/me', { method: 'PUT', body: publicProfile() });
+let profileSync: Promise<unknown> = Promise.resolve();
+
+export function syncProfile(): Promise<MyProfile> {
+  const { playerId, serverUrl } = useMultiplayerStore.getState();
+  // Preserve write order, including requests triggered by typing while a previous save is pending.
+  const next = profileSync.catch(() => undefined).then(async () => {
+    const current = useMultiplayerStore.getState();
+    if (!current.joined || current.playerId !== playerId || current.serverUrl !== serverUrl) {
+      throw new ApiError('unauthorized', 'Session changed', 401);
+    }
+    const local = safeNickname(useAppStore.getState().settings.nickname);
+    const me = await request<MyProfile>('/v1/me', { method: 'PUT', body: publicProfile() });
+    const session = useMultiplayerStore.getState();
+    if (session.joined && session.playerId === playerId && session.serverUrl === serverUrl) adoptServerNickname(me.nickname, local);
+    return me;
+  });
+  profileSync = next;
+  return next;
 }
 
 /** Registers today's rotating Bluetooth token so other phones can look this player up. */
@@ -123,7 +160,14 @@ export async function publishToken(): Promise<void> {
 }
 
 export async function fetchMe(): Promise<MyProfile> {
+  const before = useMultiplayerStore.getState();
+  const local = safeNickname(useAppStore.getState().settings.nickname);
   const me = await request<MyProfile>('/v1/me');
+  const session = useMultiplayerStore.getState();
+  if (!session.joined || session.playerId !== before.playerId || session.serverUrl !== before.serverUrl) return me;
+  // Only when the user has no unsent edit: an admin's change reaches the phone, a pending edit is not lost.
+  // A read started before a completed write must not roll that write back either.
+  if (before.syncedNickname !== undefined && local === before.syncedNickname && session.syncedNickname === before.syncedNickname) adoptServerNickname(me.nickname, local);
   // The server is authoritative for the wasteman state; keep the phone's Bluetooth presence in line with it.
   await FocusModule.setWasteman(me.state === 'wasteman');
   return me;

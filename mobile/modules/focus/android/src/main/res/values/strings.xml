@@ -43,4 +43,8 @@
   <string name="focus_shield_earned_text">5 hours of focus in one session. You now have %1$d shield(s).</string>
   <string name="focus_shield_blocked_title">A shield saved you</string>
   <string name="focus_shield_blocked_text">%1$s attacked you, your shield absorbed it. Shields left: %2$d.</string>
+  <string name="focus_admin_nickname_title">Your nickname was changed</string>
+  <string name="focus_admin_nickname_text">An administrator changed your nickname to %1$s.</string>
+  <string name="focus_admin_photo_title">Your photo was removed</string>
+  <string name="focus_admin_photo_text">An administrator removed your profile photo. The default avatar is shown instead.</string>
 </resources>

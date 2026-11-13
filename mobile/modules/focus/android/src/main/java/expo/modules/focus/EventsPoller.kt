@@ -69,6 +69,15 @@ class EventsPoller(private val context: Context) : Thread("focus-events") {
             payload.optInt("shields"),
           ),
         )
+        // An admin changed the player's nickname or removed their photo: say so, and what the nickname is now.
+        "admin_nickname" -> notifyShield(
+          context.getString(R.string.focus_admin_nickname_title),
+          context.getString(R.string.focus_admin_nickname_text, payload.optString("nickname")),
+        )
+        "admin_photo" -> notifyShield(
+          context.getString(R.string.focus_admin_photo_title),
+          context.getString(R.string.focus_admin_photo_text),
+        )
       }
     }
   }

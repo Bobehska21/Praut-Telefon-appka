@@ -107,7 +107,7 @@
     "bluetoothMissing": "Without the Bluetooth permission this does not work.",
     "nicknameBlocked": "This nickname is not allowed. Please choose another.",
     "nicknameChars": "Allowed: Latin letters, digits, space, dot, underscore and hyphen.",
-    "adminPoints": "Admin: player points",
+    "adminPoints": "All accounts",
     "adminSearch": "Search username or nickname",
     "adminSelected": "{{name}} (account {{username}}), total points {{points}}",
     "adminAmount": "Points (e.g. 50 or -20)",
@@ -115,7 +115,15 @@
     "adminApply": "Change points",
     "adminPointsDone": "{{name}}: {{today}} pts today",
     "adminOffline": "Server unreachable",
-    "adminShieldsN": "{{count}} shields"
+    "adminShieldsN": "{{count}} shields",
+    "adminPlayerLine": "account {{username}} · since {{date}}",
+    "adminNewName": "New nickname (replaces the inappropriate one)",
+    "adminRename": "Rename player",
+    "adminRemovePhoto": "Remove player's photo",
+    "adminRenamed": "Nickname changed to {{name}}",
+    "adminNameRejected": "That nickname is not allowed",
+    "adminPhotoRemoved": "Photo removed, the player has the default avatar",
+    "adminTab": "Admin"
   },
   "days": {
     "0": "Sun",

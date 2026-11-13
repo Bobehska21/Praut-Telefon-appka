@@ -63,8 +63,12 @@ export const photoRoutes: FastifyPluginAsync<{ deps: Deps }> = async (app, { dep
     const { playerId } = z.object({ playerId: uuid }).parse(req.params);
     const target = await getPlayer(db, playerId);
     const own = playerId === req.player.id;
-    const visible =
+    let visible =
       target && target.photo_key && (own || (target.multiplayer_enabled && !target.banned_at && !(await isBlockedEitherWay(db, req.player.id, playerId))));
+    // An admin reviewing players must see every photo, also of players who switched multiplayer off or are banned.
+    if (!visible && target?.photo_key) {
+      visible = (await db.query<{ is_admin: boolean }>('SELECT is_admin FROM accounts WHERE player_id = $1', [req.player.id])).rows[0]?.is_admin === true;
+    }
     if (!target || !visible) throw new AppError('not_found', 'Photo not found');
     const data = await storage.get(target.photo_key!);
     if (!data) throw new AppError('not_found', 'Photo not found');

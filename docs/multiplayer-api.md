@@ -75,7 +75,7 @@ Accounts are a private username plus a password. There is no e-mail. The usernam
 
 ### Profile
 - `GET /v1/me` -> `{playerId, nickname, rankKey, level, multiplayerEnabled, timezone, photoUrl, state, immuneUntil, banned, shields}`. `shields` (0..3) is visible to the owner only; it is in no other player's view (nearby, leaderboard, blocks, kill results). `state` is `idle|focus|wasteman` (a stale `focus` shows as `idle`).
-- `PUT /v1/me` body `{nickname, rankKey, level, multiplayerEnabled, timezone}` (all required) -> same as GET.
+- `PUT /v1/me` body `{nickname?, rankKey, level, multiplayerEnabled, timezone}` (all except `nickname` required) -> same as GET. Omitting `nickname` preserves the current server value, including an admin's replacement; an explicit empty string clears it.
   - `nickname`: the app's rules (Latin letters, digits, space, `.`, `_`, `-`, max 20, blocklist); empty = anonymous. Whitespace is trimmed/collapsed. The server copy of the filter (`server/src/nickname.ts`, `nickname-blocklist.json`) must stay byte-identical to `mobile/src/features/`; a test enforces it. Rejection gives `validation` with `issues[].reason` in `length|chars|blocked`.
   - `rankKey`: `novice|apprentice|adept|warden|master|grandmaster`; `level` 1..999 (both cosmetic).
   - `timezone`: IANA name; defines the player's local day.
@@ -113,7 +113,7 @@ All return `{state, focusMinutesToday}` (plus `lost: true` when the server found
 - `GET /v1/leaderboard?date=YYYY-MM-DD` (default: today in `LEADERBOARD_TZ`) -> `{date, top: [{rank, nickname, rankKey, level, photoUrl, kills, isMe}], me: {rank|null, kills}}`. Top 50 by kills that day, ties by earliest last kill; multiplayer-off and banned players are excluded. `me.rank` is the caller's real rank even below 50, `null` when unranked.
 
 ### Events (for the victim)
-- `GET /v1/events?after=<id>&wait=<0..25>` -> `[{id, kind, payload, createdAt}]`. Kinds: `killed` `{killerNickname, pointsLost}`; `shield_earned` `{shields}` (the new count); `shield_blocked` `{killerNickname, shields}` (the remaining count). Clients must ignore kinds they do not know. Long poll: returns as soon as something is available, otherwise `[]` after `wait` seconds (default 0). With `after` it returns everything with `id > after`; without it only undelivered notifications. The wait polls the database briefly and holds no connection, so it works with any replica.
+- `GET /v1/events?after=<id>&wait=<0..25>` -> `[{id, kind, payload, createdAt}]`. Kinds: `killed` `{killerNickname, pointsLost}`; `shield_earned` `{shields}` (the new count); `shield_blocked` `{killerNickname, shields}` (the remaining count); `admin_nickname` `{nickname}` (an admin changed the nickname); `admin_photo` `{}` (an admin removed the photo). Clients must ignore kinds they do not know. Long poll: returns as soon as something is available, otherwise `[]` after `wait` seconds (default 0). With `after` it returns everything with `id > after`; without it only undelivered notifications. The wait polls the database briefly and holds no connection, so it works with any replica.
 
 ### Reports
 - `POST /v1/reports` body `{targetPlayerId, kind: "nickname"|"photo"|"player", note?<=500}` (rate limited per reporter, plus a durable per-hour DB limit) -> `201 {status:"received"}`. Stores the reporter, target, kind, note and a snapshot of the target's nickname and a copy of the photo at that moment.
@@ -136,6 +136,14 @@ refused when `NODE_ENV=production`, or SQL). Anyone else, signed in or not, gets
 | `GET /v1/admin/whoami` | `{ admin: true }`; the app uses it to decide whether to show the admin screen |
 | `GET /v1/admin/players?q=&limit=&offset=` | all players: id, username, nickname, photoUrl, createdAt, pointsTotal, isAdmin; `q` searches username and nickname |
 | `POST /v1/admin/players/:id/points` | `{ points, note? }`, a non-zero integer up to 100000 in absolute value, positive or negative; writes a ledger row `admin_adjust` (so it counts in `/v1/me/stats`) |
+
+| `PUT /v1/admin/players/:id/nickname` | `{ nickname, note? }`; the new name must pass the nickname filter. The player gets an `admin_nickname` notification (`{ nickname }`) |
+| `DELETE /v1/admin/players/:id/photo` | `{ note? }` (optional body); removes the photo and its file (409 if there is none). The player gets an `admin_photo` notification |
+
+An admin can also open any player's photo (`GET /v1/photos/:id`), including players with multiplayer off, to review it.
+
+`PUT /v1/me` accepts the nickname as optional: a client that has not edited its nickname omits it, so a name replaced by
+an admin is not overwritten by the phone's old one. The app sends it only when the user changed it since the last sync.
 
 Every action writes an `admin_audit` row in the same transaction: action, actor (`actor_player_id`), target, note,
 details and time. Note: the daily leaderboard ranks by kills, so a points adjustment shows in the player's stats,

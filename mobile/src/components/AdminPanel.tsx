@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
-import { AppText, Button, Card, Chip } from '@/components/ui';
-import { adminAdjustPoints, adminListPlayers, adminWhoami, devAddMinutes, devSetShields, parsePoints, type AdminPlayer } from '@/features/admin';
+import { Avatar } from '@/components/avatar';
+import { AppText, Button, Card } from '@/components/ui';
+import { adminAdjustPoints, adminListPlayers, adminRemovePhoto, adminRenamePlayer, adminWhoami, devAddMinutes, devSetShields, parsePoints, type AdminPlayer } from '@/features/admin';
 import { ApiError } from '@/features/multiplayer/api';
 import { useMultiplayerStore } from '@/features/multiplayer/store';
 import { radius, spacing, useTheme } from '@/theme';
@@ -23,6 +24,8 @@ export function AdminPanel() {
   const [points, setPoints] = useState('');
   const [note, setNote] = useState('');
   const [message, setMessage] = useState('');
+  const [newName, setNewName] = useState('');
+  const [photoVersion, setPhotoVersion] = useState(0);
 
   useEffect(() => {
     if (!joined) return;
@@ -46,7 +49,8 @@ export function AdminPanel() {
   if (!joined || !admin) return null;
 
   const parsed = parsePoints(points);
-  const fail = (e: unknown) => setMessage(e instanceof ApiError && e.code === 'network' ? t('settings.adminOffline') : t('settings.adminFailed'));
+  const errorText = (e: unknown) => (e instanceof ApiError && e.code === 'network' ? t('settings.adminOffline') : t('settings.adminFailed'));
+  const fail = (e: unknown) => setMessage(errorText(e));
 
   async function submit() {
     if (!selected || parsed === null) return;
@@ -55,6 +59,32 @@ export function AdminPanel() {
       setMessage(t('settings.adminPointsDone', { name: selected.nickname || selected.username, today: r.pointsToday }));
       setPoints('');
       setNote('');
+      setSelected(null);
+      setPlayers(await adminListPlayers(query));
+    } catch (e) {
+      fail(e);
+    }
+  }
+
+  async function rename() {
+    if (!selected || newName.trim() === '') return;
+    try {
+      const r = await adminRenamePlayer(selected.id, newName, note);
+      setMessage(t('settings.adminRenamed', { name: r.nickname }));
+      setNewName('');
+      setSelected(null);
+      setPlayers(await adminListPlayers(query));
+    } catch (e) {
+      setMessage(e instanceof ApiError && e.code === 'validation' ? t('settings.adminNameRejected') : errorText(e));
+    }
+  }
+
+  async function removePhoto() {
+    if (!selected) return;
+    try {
+      await adminRemovePhoto(selected.id, note);
+      setMessage(t('settings.adminPhotoRemoved'));
+      setPhotoVersion((v) => v + 1);
       setSelected(null);
       setPlayers(await adminListPlayers(query));
     } catch (e) {
@@ -80,14 +110,24 @@ export function AdminPanel() {
       <Card>
         <AppText weight="600">{t('settings.adminPoints')}</AppText>
         {field(query, setQuery, t('settings.adminSearch'))}
-        <View style={styles.row}>
+        <View style={styles.list}>
           {players.map((p) => (
-            <Chip
+            <Pressable
               key={p.id}
-              label={`${p.nickname || p.username || '?'} · ${p.pointsTotal}`}
-              selected={selected?.id === p.id}
               onPress={() => setSelected(p)}
-            />
+              accessibilityRole="button"
+              accessibilityState={{ selected: selected?.id === p.id }}
+              style={[styles.player, { borderColor: selected?.id === p.id ? theme.accent : theme.border }]}
+            >
+              <Avatar photoUrl={p.photoUrl} size={36} version={photoVersion} />
+              <View style={styles.flex}>
+                <AppText weight="600">{p.nickname || p.username || '?'}</AppText>
+                <AppText muted size={12}>
+                  {t('settings.adminPlayerLine', { username: p.username ?? '-', date: new Date(p.createdAt).toLocaleDateString() })}
+                </AppText>
+              </View>
+              <AppText weight="700">{p.pointsTotal}</AppText>
+            </Pressable>
           ))}
         </View>
         {selected && (
@@ -98,6 +138,9 @@ export function AdminPanel() {
             {field(points, setPoints, t('settings.adminAmount'), { keyboardType: 'numbers-and-punctuation' })}
             {field(note, setNote, t('settings.adminNote'), { maxLength: 200 })}
             <Button label={t('settings.adminApply')} onPress={() => void submit()} disabled={parsed === null} />
+            {field(newName, setNewName, t('settings.adminNewName'), { maxLength: 20 })}
+            <Button label={t('settings.adminRename')} onPress={() => void rename()} disabled={newName.trim() === ''} />
+            <Button label={t('settings.adminRemovePhoto')} onPress={() => void removePhoto()} disabled={selected.photoUrl === null} />
           </>
         )}
         {message !== '' && <AppText size={13}>{message}</AppText>}
@@ -126,4 +169,7 @@ export function AdminPanel() {
 const styles = StyleSheet.create({
   input: { borderWidth: 1, borderRadius: radius.sm, paddingHorizontal: spacing.md, height: 44, fontSize: 16 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  list: { gap: spacing.sm },
+  flex: { flex: 1 },
+  player: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderWidth: 1, borderRadius: radius.sm, padding: spacing.sm },
 });

@@ -24,6 +24,18 @@ export const adminAdjustPoints = (playerId: string, points: number, note: string
     body: { points, ...(note.trim() ? { note: note.trim() } : {}) },
   });
 
+export const adminRenamePlayer = (playerId: string, nickname: string, note: string) =>
+  request<{ nickname: string }>(`/v1/admin/players/${encodeURIComponent(playerId)}/nickname`, {
+    method: 'PUT',
+    body: { nickname: nickname.trim(), ...(note.trim() ? { note: note.trim() } : {}) },
+  });
+
+export const adminRemovePhoto = (playerId: string, note: string) =>
+  request<{ photoUrl: null }>(`/v1/admin/players/${encodeURIComponent(playerId)}/photo`, {
+    method: 'DELETE',
+    body: note.trim() ? { note: note.trim() } : {},
+  });
+
 /** Dev server only (`/v1/dev/*` exists when DEV_FAKE_MINUTES=true): focus minutes that also count toward the running session. */
 export const devAddMinutes = (minutes: number, creditSession: boolean) =>
   request<{ focusMinutesToday: number; shields: number }>('/v1/dev/focus-minutes', { method: 'POST', body: { minutes, creditSession } });

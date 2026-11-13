@@ -30,9 +30,9 @@ export const meRoutes: FastifyPluginAsync<{ deps: Deps }> = async (app, { deps }
 
   app.put('/me', async (req) => {
     const b = profileBody.parse(req.body);
-    const nickname = b.nickname.trim().replace(/\s+/g, ' ');
+    const nickname = b.nickname === undefined ? null : b.nickname.trim().replace(/\s+/g, ' ');
     const r = await db.query<PlayerRow>(
-      `UPDATE players SET nickname = $2, rank_key = $3, level = $4, multiplayer_enabled = $5, timezone = $6
+      `UPDATE players SET nickname = COALESCE($2, nickname), rank_key = $3, level = $4, multiplayer_enabled = $5, timezone = $6
        WHERE id = $1 RETURNING *`,
       [req.player.id, nickname, b.rankKey, b.level, b.multiplayerEnabled, b.timezone],
     );

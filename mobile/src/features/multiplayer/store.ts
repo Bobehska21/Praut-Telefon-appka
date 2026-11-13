@@ -13,6 +13,9 @@ interface MultiplayerState {
   playerId: string | null;
   /** The user has read the explanation and joined. Nothing is sent to the server before this. */
   joined: boolean;
+  /** The nickname the server had after the last sync; tells an edit by the user from a change made by an admin. */
+  syncedNickname?: string;
+  setSyncedNickname: (nickname: string) => void;
   setServerUrl: (url: string) => void;
   setJoined: (playerId: string) => void;
   leave: () => void;
@@ -27,8 +30,9 @@ export const useMultiplayerStore = create<MultiplayerState>()(
       playerId: null,
       joined: false,
       setServerUrl: (serverUrl) => set({ serverUrl: serverUrl.trim().replace(/\/+$/, '') }),
+      setSyncedNickname: (syncedNickname) => set({ syncedNickname }),
       setJoined: (playerId) => set({ playerId, joined: true }),
-      leave: () => set({ playerId: null, joined: false }),
+      leave: () => set({ playerId: null, joined: false, syncedNickname: undefined }),
     }),
     { name: 'focus-mode-multiplayer', version: 1, storage: createJSONStorage(() => mmkvStorage) },
   ),

@@ -111,7 +111,7 @@
     "bluetoothMissing": "Bez oprávnění k Bluetooth funkce nefunguje.",
     "nicknameBlocked": "Tato přezdívka není povolená. Zvol jinou.",
     "nicknameChars": "Povolená jsou písmena latinky, číslice, mezera, tečka, podtržítko a pomlčka.",
-    "adminPoints": "Admin: body hráčů",
+    "adminPoints": "Všechny účty",
     "adminSearch": "Hledat jméno nebo přezdívku",
     "adminSelected": "{{name}} (účet {{username}}), body celkem {{points}}",
     "adminAmount": "Body (např. 50 nebo -20)",
@@ -119,7 +119,15 @@
     "adminApply": "Změnit body",
     "adminPointsDone": "{{name}}: dnes {{today}} b",
     "adminOffline": "Server není dostupný",
-    "adminShieldsN": "{{count}} štítů"
+    "adminShieldsN": "{{count}} štítů",
+    "adminPlayerLine": "účet {{username}} · od {{date}}",
+    "adminNewName": "Nová přezdívka (nahradí nevhodnou)",
+    "adminRename": "Přejmenovat hráče",
+    "adminRemovePhoto": "Smazat fotku hráče",
+    "adminRenamed": "Přezdívka změněna na {{name}}",
+    "adminNameRejected": "Takovou přezdívku nelze nastavit",
+    "adminPhotoRemoved": "Fotka smazána, hráč má výchozí avatar",
+    "adminTab": "Admin"
   },
   "days": {
     "0": "Ne",
