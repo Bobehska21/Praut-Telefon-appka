@@ -21,7 +21,6 @@ spec:
     metadata:
       labels:
         {{- include "app.labels" . | nindent 8 }}
-        app.kubernetes.io/component: api
       annotations:
         # roll the pods when non-secret configuration changes
         checksum/env: {{ .Values.env | toJson | sha256sum }}
@@ -29,7 +28,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      serviceAccountName: {{ include "app.serviceAccountName" . }}
+      serviceAccountName: {{ include "app.fullname" . }}
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       securityContext:
@@ -45,25 +44,6 @@ spec:
           labelSelector:
             matchLabels:
               {{- include "app.selectorLabels" . | nindent 14 }}
-      {{- if .Values.migrations.enabled }}
-      # Also handles first installation: Kubernetes retries while the new database starts.
-      # The migration runner uses a PostgreSQL advisory lock, so replicas cannot race migrations.
-      initContainers:
-        - name: migrate
-          image: {{ include "app.image" . | quote }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command:
-            {{- toYaml .Values.migrations.command | nindent 12 }}
-          securityContext:
-            {{- include "app.containerSecurityContext" . | nindent 12 }}
-          env:
-            {{- include "app.env" . | nindent 12 }}
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-          volumeMounts:
-            - name: tmp
-              mountPath: /tmp
-      {{- end }}
       containers:
         - name: app
           image: {{ include "app.image" . | quote }}

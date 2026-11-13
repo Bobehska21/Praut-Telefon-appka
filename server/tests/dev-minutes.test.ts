@@ -50,7 +50,7 @@ describe('DEV_FAKE_MINUTES', () => {
   });
 
   it('refuses to start in production', () => {
-    const base = { DATABASE_URL: TEST_DATABASE_URL, ADMIN_TOKEN, PHOTO_STORAGE: 's3', RATE_LIMIT_STORE: 'postgres', S3_BUCKET: 'test-photos', S3_ACCESS_KEY_ID: 'test', S3_SECRET_ACCESS_KEY: 'test' };
+    const base = { DATABASE_URL: TEST_DATABASE_URL, ADMIN_TOKEN };
     expect(() => loadConfig({ ...base, NODE_ENV: 'production', DEV_FAKE_MINUTES: 'true' })).toThrow(/DEV_FAKE_MINUTES.*production/);
     expect(loadConfig({ ...base, NODE_ENV: 'production', DEV_FAKE_MINUTES: 'false' }).devFakeMinutes).toBe(false);
     expect(loadConfig({ ...base, NODE_ENV: 'production' }).devFakeMinutes).toBe(false);

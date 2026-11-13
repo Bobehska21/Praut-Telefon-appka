@@ -57,7 +57,6 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
       name: {{ include "app.dbSecretName" . }}
       key: uri
 {{- end }}
-
 {{- range $key, $value := .Values.env }}
 - name: {{ $key }}
   value: {{ $value | quote }}
@@ -86,13 +85,4 @@ runAsGroup: 10001
 fsGroup: 10001
 seccompProfile:
   type: RuntimeDefault
-{{- end }}
-
-{{/* Service account used by the API pods. */}}
-{{- define "app.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- include "app.fullname" . }}
-{{- else }}
-default
-{{- end }}
 {{- end }}

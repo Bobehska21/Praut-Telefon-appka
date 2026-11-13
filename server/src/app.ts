@@ -24,7 +24,6 @@ import { photoRoutes } from './routes/photos';
 import { reportRoutes } from './routes/reports';
 import { adminRoutes } from './routes/admin';
 import { adminPlayerRoutes } from './routes/admin-players';
-import { postgresRateLimitStore, pruneRateLimits } from './rate-limit-store';
 
 export interface Deps {
   config: Config;
@@ -89,21 +88,11 @@ export async function buildApp(deps: Deps): Promise<FastifyInstance> {
   app.setNotFoundHandler((_req, reply) => reply.status(404).send(new AppError('not_found', 'Not found').body()));
 
   await app.register(rateLimit, {
-    ...(config.rateLimitStore === 'postgres' ? { store: postgresRateLimitStore(db) } : {}),
-    skipOnError: false,
     global: true,
     max: config.rateLimit.globalPerMin,
     timeWindow: '1 minute',
     errorResponseBuilder: () => new AppError('rate_limited', 'Too many requests'),
   });
-
-  if (config.rateLimitStore === 'postgres') {
-    const cleanup = setInterval(() => {
-      void pruneRateLimits(db).catch(() => app.log.warn('Rate limit cleanup failed'));
-    }, 60_000);
-    cleanup.unref();
-    app.addHook('onClose', async () => clearInterval(cleanup));
-  }
 
   await app.register(healthRoutes, { db });
   await app.register(authRoutes, { deps });

@@ -21,7 +21,7 @@ export const reportRoutes: FastifyPluginAsync<{ deps: Deps }> = async (app, { de
       const b = body.parse(req.body);
       const now = clock.now();
       if (b.targetPlayerId === req.player.id) throw new AppError('forbidden', 'You cannot report yourself');
-      // Durable per-reporter limit (the request limiter above can use a shared store).
+      // Durable per-reporter limit (the in-memory limiter above is per replica).
       const recent = await db.query<{ n: number }>(
         "SELECT COUNT(*)::int AS n FROM reports WHERE reporter_id = $1 AND created_at > $2",
         [req.player.id, new Date(now.getTime() - 3_600_000)],

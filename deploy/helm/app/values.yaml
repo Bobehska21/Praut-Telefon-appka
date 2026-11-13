@@ -17,29 +17,12 @@ replicaCount: 1
 containerPort: 3000
 
 # Non-secret environment variables.
-env:
-  NODE_ENV: production
-  LOG_LEVEL: info
-  PHOTO_STORAGE: s3
-  RATE_LIMIT_STORE: postgres
-  S3_REGION: us-east-1
+env: {}
 #  LOG_LEVEL: info
 
 # Environment variables read from existing Secrets (created outside this chart,
 # e.g. from a SOPS-encrypted file in deploy/secrets/).
-envFromSecrets:
-  - name: ADMIN_TOKEN
-    secretName: focus-server
-    key: admin-token
-  - name: S3_BUCKET
-    secretName: focus-server
-    key: s3-bucket
-  - name: S3_ACCESS_KEY_ID
-    secretName: focus-server
-    key: s3-access-key-id
-  - name: S3_SECRET_ACCESS_KEY
-    secretName: focus-server
-    key: s3-secret-access-key
+envFromSecrets: []
 #  - name: SESSION_SECRET
 #    secretName: app-secrets
 #    key: session-secret
@@ -96,8 +79,6 @@ networkPolicy:
   ingressNamespace: ingress-nginx
   # Extra egress rules (raw NetworkPolicy egress entries), e.g. to an external API.
   extraEgress: []
-  # HTTPS to S3. Restrict destinations with extraEgress when the provider has fixed CIDRs.
-  allowObjectStorageHttps: true
 
 serviceAccount:
   create: true
@@ -134,10 +115,10 @@ database:
   # Use instead of the managed cluster: name of an existing Secret with key "uri".
   existingSecret: ""
 
-# Runs migrations in pod init containers and a pre-upgrade hook with the app image.
+# Runs migrations as a Helm hook Job (after install, before upgrade) with the app image.
 # Migrations must be backwards compatible: old pods keep serving during the rollout.
 migrations:
-  enabled: true
-  command: ["node", "dist/migrate.js"]
+  enabled: false
+  command: ["npm", "run", "db:migrate"]
   backoffLimit: 1
   activeDeadlineSeconds: 600

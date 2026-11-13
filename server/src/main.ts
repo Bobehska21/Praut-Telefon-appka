@@ -2,7 +2,6 @@ import { loadConfig } from './config';
 import { createPool } from './db/pool';
 import { systemClock } from './clock';
 import { LocalDiskStorage } from './storage';
-import { S3Storage } from './s3-storage';
 import { buildApp } from './app';
 
 let config: ReturnType<typeof loadConfig>;
@@ -17,8 +16,8 @@ const db = createPool({
   max: config.dbPoolMax,
   statementTimeoutMs: config.dbStatementTimeoutMs,
 });
-const storage = config.photoStorage === 's3' ? new S3Storage(config.s3!) : new LocalDiskStorage(config.photoDir);
-const app = await buildApp({ config, db, clock: systemClock, storage });
+const app = await buildApp({ config, db, clock: systemClock, storage: new LocalDiskStorage(config.photoDir) });
+if (config.nodeEnv === 'production') app.log.warn('LocalDiskStorage is in use: not safe with multiple replicas');
 
 let closing = false;
 async function shutdown(signal: string): Promise<void> {
