@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 
 /**
  * Foreground service that keeps focus mode alive (persistent notification is
@@ -26,6 +27,7 @@ class FocusService : Service() {
   private var lastNearbyCheck = 0L
   private var lastHeartbeat = 0L
   private var poller: EventsPoller? = null
+  private var wakeLock: PowerManager.WakeLock? = null
 
   private val tick = object : Runnable {
     override fun run() {
@@ -56,6 +58,7 @@ class FocusService : Service() {
       // One heartbeat a minute: the server credits focus minutes from these, not from the phone's claim.
       if (now - lastHeartbeat > HEARTBEAT_MS) {
         lastHeartbeat = now
+        holdCpu()
         FocusSync.heartbeat(this@FocusService)
       }
       detector.poll()?.let { pkg ->
@@ -99,8 +102,21 @@ class FocusService : Service() {
     return START_STICKY
   }
 
+  /**
+   * Keeps the CPU awake for a while so the once-a-minute heartbeat is sent on time with the screen off. The server
+   * credits at most 90 s per heartbeat, so a late heartbeat is lost focus time. The lock expires by itself
+   * (and is renewed by the next heartbeat) so it can never be leaked.
+   */
+  private fun holdCpu() {
+    val lock = wakeLock ?: getSystemService(PowerManager::class.java)
+      ?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "focusmode:heartbeat")?.also { it.setReferenceCounted(false); wakeLock = it }
+    lock?.acquire(WAKE_LOCK_MS)
+  }
+
   override fun onDestroy() {
     running = false
+    wakeLock?.let { if (it.isHeld) it.release() }
+    wakeLock = null
     NearbyManager.stop()
     poller?.finish()
     poller = null
@@ -144,5 +160,6 @@ class FocusService : Service() {
     const val NEARBY_CHECK_MS = 5_000L
     const val WASTEMAN_POLL_MS = 3_000L
     const val HEARTBEAT_MS = 60_000L
+    const val WAKE_LOCK_MS = 3 * 60_000L
   }
 }

@@ -38,7 +38,9 @@ export default function AuthScreen() {
 
   function validate(): string | null {
     if (!USERNAME_RE.test(username)) return t('auth.badUsername');
-    if (password.length < PASSWORD_MIN || password.length > PASSWORD_MAX) return t('auth.badPassword');
+    // The minimum applies to new passwords only; the server accepts any existing password at sign-in.
+    const min = register ? PASSWORD_MIN : 1;
+    if (password.length < min || password.length > PASSWORD_MAX) return t('auth.badPassword');
     if (register && password !== password2) return t('auth.mismatch');
     return null;
   }

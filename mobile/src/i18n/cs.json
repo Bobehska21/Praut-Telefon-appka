@@ -8,6 +8,8 @@
     "search": "Hledat"
   },
   "home": {
+    "serverMinutes": "Server dnes započítal {{count}} min",
+    "serverOffline": "Server není dostupný, minuty a štíty se nepočítají. Zkontroluj adresu serveru a Wi-Fi.",
     "title": "Soustředění",
     "start": "Zapnout",
     "stop": "Vypnout",
@@ -87,6 +89,11 @@
     "best": "Nejdelší série: {{count}}"
   },
   "settings": {
+    "adminTitle": "Test: minuty a štíty (jen vývojový server)",
+    "adminHint": "Zkratky pro test sázek a štítů. Fungují jen na vývojovém serveru. Minuty se počítají i do běžící relace.",
+    "adminDone": "Dnes {{minutes}} min, štítů {{shields}}",
+    "adminNoDev": "Server nemá zapnuté vývojové zkratky (DEV_FAKE_MINUTES)",
+    "adminFailed": "Nepovedlo se (spusť soustředění a zkontroluj server)",
     "title": "Nastavení",
     "guard": "Ochrana proti vypnutí",
     "guardNone": "Žádná",
@@ -103,7 +110,16 @@
     "nicknameHint": "Uvidí ji uživatelé v okolí, kteří přijmou oznámení o tobě, spolu s hodností a sérií. Nic víc se nesdílí.",
     "bluetoothMissing": "Bez oprávnění k Bluetooth funkce nefunguje.",
     "nicknameBlocked": "Tato přezdívka není povolená. Zvol jinou.",
-    "nicknameChars": "Povolená jsou písmena latinky, číslice, mezera, tečka, podtržítko a pomlčka."
+    "nicknameChars": "Povolená jsou písmena latinky, číslice, mezera, tečka, podtržítko a pomlčka.",
+    "adminPoints": "Admin: body hráčů",
+    "adminSearch": "Hledat jméno nebo přezdívku",
+    "adminSelected": "{{name}} (účet {{username}}), body celkem {{points}}",
+    "adminAmount": "Body (např. 50 nebo -20)",
+    "adminNote": "Důvod (nepovinné)",
+    "adminApply": "Změnit body",
+    "adminPointsDone": "{{name}}: dnes {{today}} b",
+    "adminOffline": "Server není dostupný",
+    "adminShieldsN": "{{count}} štítů"
   },
   "days": {
     "0": "Ne",

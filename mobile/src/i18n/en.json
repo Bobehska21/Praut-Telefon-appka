@@ -8,6 +8,8 @@
     "search": "Search"
   },
   "home": {
+    "serverMinutes": "Server credited {{count}} min today",
+    "serverOffline": "Server unreachable: minutes and shields are not being credited. Check the server address and Wi-Fi.",
     "title": "Focus",
     "start": "Start",
     "stop": "Stop",
@@ -83,6 +85,11 @@
     "best": "Longest streak: {{count}}"
   },
   "settings": {
+    "adminTitle": "Test: minutes and shields (dev server only)",
+    "adminHint": "Shortcuts for testing bets and shields. They work only on a development server. Minutes also count toward the running session.",
+    "adminDone": "Today {{minutes}} min, shields {{shields}}",
+    "adminNoDev": "The server has dev shortcuts off (DEV_FAKE_MINUTES)",
+    "adminFailed": "Failed (start focus mode and check the server)",
     "title": "Settings",
     "guard": "Stop protection",
     "guardNone": "None",
@@ -99,7 +106,16 @@
     "nicknameHint": "Nearby users who accept the notification about you see it, together with your rank and streak. Nothing else is shared.",
     "bluetoothMissing": "Without the Bluetooth permission this does not work.",
     "nicknameBlocked": "This nickname is not allowed. Please choose another.",
-    "nicknameChars": "Allowed: Latin letters, digits, space, dot, underscore and hyphen."
+    "nicknameChars": "Allowed: Latin letters, digits, space, dot, underscore and hyphen.",
+    "adminPoints": "Admin: player points",
+    "adminSearch": "Search username or nickname",
+    "adminSelected": "{{name}} (account {{username}}), total points {{points}}",
+    "adminAmount": "Points (e.g. 50 or -20)",
+    "adminNote": "Reason (optional)",
+    "adminApply": "Change points",
+    "adminPointsDone": "{{name}}: {{today}} pts today",
+    "adminOffline": "Server unreachable",
+    "adminShieldsN": "{{count}} shields"
   },
   "days": {
     "0": "Sun",

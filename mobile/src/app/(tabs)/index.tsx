@@ -6,6 +6,7 @@ import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, TextInput, 
 
 import { AppText, Button, Card, Chip, ProgressBar, Screen } from '@/components/ui';
 import { FocusRing } from '@/components/focus-ring';
+import { ServerStatusCard } from '@/components/ServerStatusCard';
 import { BET_MULTIPLIERS, betMinMinutes, betProblem, type BetMultiplier } from '@/features/bets';
 import { fetchStats } from '@/features/multiplayer/service';
 import { usePermissions } from '@/features/permissions';
@@ -206,6 +207,8 @@ export default function HomeScreen() {
           </Animated.View>
         </View>
       </View>
+
+      {betsVisible && <ServerStatusCard />}
 
       <Card>
         <View style={styles.between}>

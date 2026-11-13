@@ -50,7 +50,8 @@ object FocusSync {
     io.execute {
       flush(app) // deliver anything queued first, so the server sees events in order
       val response = ServerClient.request(app, "POST", "/v1/focus/heartbeat", JSONObject())
-      if (!response.ok && response.status != 0) Log.w(TAG, "heartbeat rejected: ${response.status}")
+      if (response.status == 0) Log.w(TAG, "heartbeat not delivered: server unreachable")
+      else if (!response.ok) Log.w(TAG, "heartbeat rejected: ${response.status}")
     }
   }
 

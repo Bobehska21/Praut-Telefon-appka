@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, TextInput, View } from 'react-native';
 
+import { AdminPanel } from '@/components/AdminPanel';
 import { AppText, Button, Card, Chip, Screen, Heading, ThemedSwitch } from '@/components/ui';
 import { checkNickname, NICKNAME_MAX } from '@/features/nickname';
 import { usePermissions } from '@/features/permissions';
@@ -136,6 +137,7 @@ export default function SettingsScreen() {
           ))}
         </View>
       </Card>
+      <AdminPanel />
     </Screen>
   );
 }
