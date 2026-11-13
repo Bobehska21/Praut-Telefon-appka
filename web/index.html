@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="cs" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOCUS MODE // PELYOS — Testovací verze pro Android</title>
+    <meta name="description" content="Informační portál a podrobný návod pro aplikaci Focus Mode (PELYOS). Omez rušivé aplikace při práci a učení, plň denní cíle a zapoj se do lokálního multiplayeru Ulov wastemana.">
+
+    <!-- Google Fonts: Chakra Petch (Cybercore nadpisy), Inter (čitelné texty), JetBrains Mono (HUD & terminál) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            black: '#070709',
+                            panel: '#111116',
+                            elevated: '#181820',
+                            red: '#FF1E38',
+                            darkred: '#E60023',
+                            crimson: '#7A0A18',
+                            border: '#272732',
+                            text: '#F3F4F6',
+                            muted: '#9CA3AF'
+                        }
+                    },
+                    fontFamily: {
+                        display: ['"Chakra Petch"', 'sans-serif'],
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Základní Cybercore styly a mřížka */
+        :root {
+            --neon-red: #FF1E38;
+            --deep-red: #E60023;
+            --bg-black: #070709;
+            --bg-panel: #111116;
+        }
+
+        body {
+            background-color: var(--bg-black);
+            color: #F3F4F6;
+            background-image:
+                linear-gradient(to right, rgba(255, 30, 56, 0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 30, 56, 0.04) 1px, transparent 1px);
+            background-size: 36px 36px;
+            overflow-x: hidden;
+        }
+
+        /* Jemný scanline overlay */
+        .scanlines::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.14),
+                rgba(0, 0, 0, 0.14) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+            pointer-events: none;
+            z-index: 40;
+        }
+
+        /* Cybercore zkosené rohy (Cut corners) */
+        .cut-corner {
+            clip-path: polygon(
+                0 12px, 12px 0,
+                100% 0, 100% calc(100% - 12px),
+                calc(100% - 12px) 100%, 0 100%
+            );
+        }
+        .cut-corner-sm {
+            clip-path: polygon(
+                0 8px, 8px 0,
+                100% 0, 100% calc(100% - 8px),
+                calc(100% - 8px) 100%, 0 100%
+            );
+        }
+
+        /* Neonové záření a ohraničení */
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(255, 30, 56, 0.22), inset 0 0 12px rgba(255, 30, 56, 0.08);
+        }
+        .neon-text {
+            text-shadow: 0 0 14px rgba(255, 30, 56, 0.55);
+        }
+
+        /* Subtilní Glitch efekt pro hlavní nadpis / logo */
+        .glitch-wrap {
+            position: relative;
+            display: inline-block;
+        }
+        .glitch-wrap:hover::before,
+        .glitch-wrap:hover::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #070709;
+        }
+        .glitch-wrap:hover::before {
+            left: 2px;
+            text-shadow: -2px 0 #FF1E38;
+            clip-path: inset(15% 0 55% 0);
+            animation: glitch-anim 0.35s infinite linear alternate-reverse;
+        }
+        .glitch-wrap:hover::after {
+            left: -2px;
+            text-shadow: 2px 0 #00F0FF;
+            clip-path: inset(60% 0 12% 0);
+            animation: glitch-anim 0.3s infinite linear alternate;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip-path: inset(10% 0 70% 0); }
+            25% { clip-path: inset(45% 0 25% 0); }
+            50% { clip-path: inset(75% 0 5% 0); }
+            75% { clip-path: inset(20% 0 60% 0); }
+            100% { clip-path: inset(55% 0 15% 0); }
+        }
+
+        /* Vlastní scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #070709;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #272732;
+            border: 1px solid #FF1E38;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FF1E38;
+        }
+
+        /* Range slider pro kalkulačku */
+        input[type=range] {
+            accent-color: #FF1E38;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-cyber-red selection:text-white scanlines">
+
+    <!-- ==================== STICKY HUD NAVIGACE ==================== -->
+    <header class="sticky top-0 z-50 bg-cyber-black/95 backdrop-blur-md border-b border-cyber-red/30">
+        <!-- Horní mikro-lišta se stavem -->
+        <div class="bg-cyber-panel border-b border-cyber-border px-4 py-1 text-[11px] font-mono text-cyber-muted flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <span class="inline-block w-2 h-2 bg-cyber-red animate-pulse"></span>
+                <span>SYS.STATUS: <strong class="text-cyber-text">ANDROID TEST BUILD</strong></span>
+                <span class="hidden sm:inline text-cyber-border">|</span>
+                <span class="hidden sm:inline">MOTIV: <strong class="text-cyber-red">PELYOS</strong></span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span>COMMIT: <code class="text-cyber-text">main@9fffd8f</code></span>
+                <span class="hidden md:inline text-cyber-border">|</span>
+                <span class="hidden md:inline">13. 11. 2026</span>
+            </div>
+        </div>
+
+        <!-- Hlavní navigační lišta -->
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="#uvod" class="flex items-center gap-3 group">
+                <div class="w-9 h-9 bg-cyber-red/15 border border-cyber-red flex items-center justify-center cut-corner-sm group-hover:bg-cyber-red transition-colors">
+                    <!-- Custom SVG Ikona: PELYOS / Focus Crosshair -->
+                    <svg class="w-5 h-5 text-cyber-red group-hover:text-black transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <polygon points="12 2 21 7 21 17 12 22 3 17 3 7 12 2"></polygon>
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <line x1="12" y1="2" x2="12" y2="6"></line>
+                        <line x1="12" y1="18" x2="12" y2="22"></line>
+                    </svg>
+                </div>
+                <div>
+                    <span class="font-display font-bold text-xl tracking-wider text-white glitch-wrap" data-text="FOCUS MODE">FOCUS MODE</span>
+                    <span class="block text-[10px] font-mono tracking-widest text-cyber-red -mt-1">// PELYOS CORE</span>
+                </div>
+            </a>
+
+            <!-- Desktop odkazy -->
+            <div class="hidden lg:flex items-center gap-6 text-sm font-medium">
+                <a href="#uvod" class="text-cyber-muted hover:text-cyber-red transition-colors">Úvod</a>
+                <a href="#jak-to-funguje" class="text-cyber-muted hover:text-cyber-red transition-colors">Jak to funguje</a>
+                <a href="#instalace" class="text-cyber-muted hover:text-cyber-red transition-colors">Instalace</a>
+                <a href="#herni-funkce" class="text-cyber-muted hover:text-cyber-red transition-colors">Herní funkce</a>
+                <a href="#navod-faq" class="text-cyber-muted hover:text-cyber-red transition-colors">Návod &amp; FAQ</a>
+                <a href="#soukromi-podpora" class="text-cyber-muted hover:text-cyber-red transition-colors">Soukromí &amp; Podpora</a>
+            </div>
+
+            <!-- Pravé CTA a mobilní tlačítko -->
+            <div class="flex items-center gap-3">
+                <a href="#instalace" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-cyber-red hover:bg-cyber-darkred text-white font-mono text-xs font-bold uppercase tracking-wider cut-corner-sm transition-all neon-glow">
+                    <span class="w-1.5 h-1.5 bg-white"></span>
+                    Testování APK
+                </a>
+                <button id="mobile-menu-btn" aria-label="Otevřít menu" class="lg:hidden p-2.5 border border-cyber-border bg-cyber-panel text-cyber-text hover:border-cyber-red">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Mobilní navigace -->
+        <div id="mobile-menu" class="hidden lg:hidden bg-cyber-panel border-b border-cyber-red/40 px-4 pt-2 pb-5 space-y-2">
+            <a href="#uvod" class="mobile-link block py-2 px-3 border-l-2 border-transparent hover:border-cyber-red hover:bg-cyber-elevated text-sm font-mono">01 // ÚVOD</a>
+            <a href="#jak-to-funguje" class="mobile-link block py-2 px-3 border-l-2 border-transparent hover:border-cyber-red hover:bg-cyber-elevated text-sm font-mono">02 // JAK TO FUNGUJE</a>
+            <a href="#instalace" class="mobile-link block py-2 px-3 border-l-2 border-transparent hover:border-cyber-red hover:bg-cyber-elevated text-sm font-mono">03 // INSTALACE &amp; OPRÁVNĚNÍ</a>
+            <a href="#herni-funkce" class="mobile-link block py-2 px-3 border-l-2 border-transparent hover:border-cyber-red hover:bg-cyber-elevated text-sm font-mono">04 // HERNÍ FUNKCE &amp; WASTEMAN</a>
+            <a href="#navod-faq" class="mobile-link block py-2 px-3 border-l-2 border-transparent hover:border-cyber-red hover:bg-cyber-elevated text-sm font-mono">05 // NÁVOD, POTÍŽE &amp; FAQ</a>
+            <a href="#soukromi-podpora" class="mobile-link block py-2 px-3 border-l-2 border-transparent hover:border-cyber-red hover:bg-cyber-elevated text-sm font-mono">06 // SOUKROMÍ &amp; PODPORA</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- ==================== 1. HERO SEKCE (ÚVOD) ==================== -->
+        <section id="uvod" class="relative pt-10 pb-16 lg:pt-16 lg:pb-24 border-b border-cyber-border">
+            <!-- Dekorativní červený HUD paprsek -->
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-cyber-red/10 blur-[120px] pointer-events-none"></div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+
+                    <!-- Levý sloupec: Texty a CTA -->
+                    <div class="lg:col-span-7 space-y-6">
+                        <!-- Status badge -->
+                        <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 bg-cyber-panel border border-cyber-red/60 text-xs font-mono text-cyber-red cut-corner-sm">
+                            <span class="w-2 h-2 bg-cyber-red animate-ping"></span>
+                            <span>TESTOVACÍ VERZE ANDROID // BUILD MAIN-9FFFD8F (13. 11. 2026)</span>
+                        </div>
+
+                        <!-- Hlavní nadpis -->
+                        <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.1]">
+                            Vyber si, co v telefonu potřebuješ, a <span class="text-cyber-red neon-text">soustřeď se.</span>
+                        </h1>
+
+                        <!-- Úvodní odstavec z podkladů -->
+                        <p class="text-base sm:text-lg text-cyber-muted leading-relaxed max-w-2xl">
+                            <strong class="text-white">Focus Mode</strong> je aplikace pro Android, která během soustředění ponechá dostupné vybrané aplikace a ostatní blokuje. Připrav si profil pro práci nebo učení, nastav délku relace a sleduj svůj pokrok. Když chceš, přidej i herní výzvy s lidmi v dosahu Bluetooth.
+                        </p>
+
+                        <!-- Box dostupnosti -->
+                        <div class="p-4 bg-cyber-panel/90 border-l-4 border-cyber-red text-sm text-cyber-text space-y-1">
+                            <div class="font-mono text-xs uppercase tracking-wider text-cyber-red font-bold">
+                                [!] Stav dostupnosti vydání
+                            </div>
+                            <p class="text-cyber-muted">
+                                <strong class="text-white">Testovací verze pro Android (arm64-v8a).</strong> Pro první přihlášení a nastavení potřebuješ účet a adresu dostupného herního serveru od provozovatele. Verze pro iPhone (iOS) zatím nemá ověřené vydání pro běžné uživatele.
+                            </p>
+                        </div>
+
+                        <!-- CTA Tlačítka -->
+                        <div class="flex flex-wrap items-center gap-4 pt-2">
+                            <a href="#instalace" onclick="highlightServerNotice()" class="px-6 py-3.5 bg-cyber-red hover:bg-cyber-darkred text-white font-mono text-sm font-bold uppercase tracking-wider cut-corner-sm transition-all neon-glow flex items-center gap-2.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Informace o testování
+                            </a>
+                            <a href="#instalace-kroky" class="px-5 py-3.5 bg-cyber-panel hover:bg-cyber-elevated border border-cyber-border hover:border-cyber-red text-white font-mono text-sm uppercase tracking-wider cut-corner-sm transition-all">
+                                Jak aplikaci nainstalovat
+                            </a>
+                            <a href="#navod-faq" class="px-5 py-3.5 text-cyber-muted hover:text-cyber-red font-mono text-sm uppercase tracking-wider underline underline-offset-4 transition-colors">
+                                Prohlédnout návod &rarr;
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Pravý sloupec: Interaktivní HUD Terminál / Simulátor stavu -->
+                    <div class="lg:col-span-5">
+                        <div class="bg-cyber-panel border border-cyber-red/50 p-5 sm:p-6 cut-corner neon-glow relative">
+                            <!-- Rohové HUD značky -->
+                            <div class="flex items-center justify-between border-b border-cyber-border pb-3 mb-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 bg-cyber-red"></span>
+                                    <span class="font-mono text-xs font-bold tracking-widest text-white">HUD SIMULÁTOR // FOCUS SHIELD</span>
+                                </div>
+                                <span id="sim-status-tag" class="px-2 py-0.5 bg-cyber-red/20 border border-cyber-red text-cyber-red font-mono text-[11px] font-bold">
+                                    AKTIVNÍ REŽIM
+                                </span>
+                            </div>
+
+                            <!-- Přepínač profilů -->
+                            <div class="mb-4">
+                                <label class="block font-mono text-[11px] text-cyber-muted uppercase tracking-wider mb-2">
+                                    1. Vyber profil soustředění:
+                                </label>
+                                <div class="grid grid-cols-3 gap-2" id="sim-profile-buttons">
+                                    <button type="button" data-profile="uceni" class="sim-prof-btn py-2 px-3 font-mono text-xs font-bold border border-cyber-red bg-cyber-red text-white cut-corner-sm transition-all">
+                                        UČENÍ
+                                    </button>
+                                    <button type="button" data-profile="prace" class="sim-prof-btn py-2 px-3 font-mono text-xs font-bold border border-cyber-border bg-cyber-black text-cyber-muted hover:border-cyber-red cut-corner-sm transition-all">
+                                        PRÁCE
+                                    </button>
+                                    <button type="button" data-profile="spanek" class="sim-prof-btn py-2 px-3 font-mono text-xs font-bold border border-cyber-border bg-cyber-black text-cyber-muted hover:border-cyber-red cut-corner-sm transition-all">
+                                        SPÁNEK
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Simulovaný displej telefonu -->
+                            <div class="bg-cyber-black border border-cyber-border p-4 space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <span class="text-[11px] font-mono text-cyber-muted block">PROFIL: <strong id="sim-profile-name" class="text-white">UČENÍ</strong></span>
+                                        <span class="text-[11px] font-mono text-cyber-red">NÁSOBIČ: 1× (BEZ SÁZKY)</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span id="sim-timer" class="font-mono text-2xl font-bold text-white tracking-wider">25:00</span>
+                                        <span class="block text-[10px] font-mono text-cyber-muted">DENNÍ CÍL: 45 / 90 MIN</span>
+                                    </div>
+                                </div>
+
+                                <!-- Mřížka aplikací k otestování kliknutím -->
+                                <div>
+                                    <span class="block font-mono text-[11px] text-cyber-muted mb-2">
+                                        2. Klikni na aplikaci a otestuj chování telefonu:
+                                    </span>
+                                    <div id="sim-apps-grid" class="grid grid-cols-2 gap-2.5">
+                                        <!-- Dynamicky generováno JS -->
+                                    </div>
+                                </div>
+
+                                <!-- Výstupní obrazovka / feedback -->
+                                <div id="sim-feedback" class="p-3 bg-cyber-panel border border-cyber-border text-xs font-mono leading-relaxed min-h-[76px] flex items-center">
+                                    <span class="text-cyber-muted">&gt; Systém připraven. Vyber aplikaci výše pro ověření Služby usnadnění...</span>
+                                </div>
+                            </div>
+
+                            <!-- Spodní lišta simulátoru -->
+                            <div class="mt-3 flex items-center justify-between text-[11px] font-mono text-cyber-muted">
+                                <span>OCHRANA: <span class="text-white">ODPOČÍTÁVÁNÍ 30 S</span></span>
+                                <span>BLUETOOTH: <span class="text-emerald-400">ZAPNUTO</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 2. TŘI KROKY & HLAVNÍ PŘÍNOSY ==================== -->
+        <section class="py-16 lg:py-20 border-b border-cyber-border bg-cyber-panel/30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+
+                <!-- Tři kroky používání -->
+                <div>
+                    <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+                        <div>
+                            <span class="font-mono text-xs text-cyber-red tracking-widest uppercase">// WORKFLOW_01</span>
+                            <h2 class="font-display text-3xl sm:text-4xl font-bold text-white mt-1">Tři kroky používání</h2>
+                        </div>
+                        <p class="text-sm text-cyber-muted max-w-md">
+                            Focus Mode vytváří vědomou překážku mezi automatickým sáhnutím po telefonu a otevřením rušivé aplikace.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Krok 1 -->
+                        <div class="bg-cyber-panel border border-cyber-border hover:border-cyber-red/70 p-6 cut-corner transition-colors relative">
+                            <span class="font-mono text-4xl font-bold text-cyber-red/25 absolute top-4 right-5">01</span>
+                            <div class="w-10 h-10 bg-cyber-red/15 border border-cyber-red flex items-center justify-center mb-4">
+                                <svg class="w-5 h-5 text-cyber-red" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="font-display text-xl font-bold text-white mb-2">Povol potřebné aplikace</h3>
+                            <p class="text-sm text-cyber-muted leading-relaxed">
+                                V profilu si vyber například poznámky, kalendář, kalkulačku nebo slovník. Ostatní aplikace zůstanou během relace nedostupné.
+                            </p>
+                        </div>
+
+                        <!-- Krok 2 -->
+                        <div class="bg-cyber-panel border border-cyber-border hover:border-cyber-red/70 p-6 cut-corner transition-colors relative">
+                            <span class="font-mono text-4xl font-bold text-cyber-red/25 absolute top-4 right-5">02</span>
+                            <div class="w-10 h-10 bg-cyber-red/15 border border-cyber-red flex items-center justify-center mb-4">
+                                <svg class="w-5 h-5 text-cyber-red" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="font-display text-xl font-bold text-white mb-2">Spusť relaci</h3>
+                            <p class="text-sm text-cyber-muted leading-relaxed">
+                                Nastav čas (25, 50, 90 minut, vlastní čas nebo dokud nevypnu) a nech rušivé aplikace i jejich oznámení mimo dosah.
+                            </p>
+                        </div>
+
+                        <!-- Krok 3 -->
+                        <div class="bg-cyber-panel border border-cyber-border hover:border-cyber-red/70 p-6 cut-corner transition-colors relative">
+                            <span class="font-mono text-4xl font-bold text-cyber-red/25 absolute top-4 right-5">03</span>
+                            <div class="w-10 h-10 bg-cyber-red/15 border border-cyber-red flex items-center justify-center mb-4">
+                                <svg class="w-5 h-5 text-cyber-red" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                            </div>
+                            <h3 class="font-display text-xl font-bold text-white mb-2">Zkontroluj pokrok</h3>
+                            <p class="text-sm text-cyber-muted leading-relaxed">
+                                Po skončení převezmi splněné mise, sleduj svůj denní cíl 90 minut, sérii aktivních dnů i herní body.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4 Hlavní přínosy -->
+                <div>
+                    <span class="font-mono text-xs text-cyber-red tracking-widest uppercase">// CORE_FEATURES</span>
+                    <h2 class="font-display text-3xl font-bold text-white mt-1 mb-8">Co Focus Mode umí</h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        <div class="p-5 bg-cyber-black border border-cyber-border">
+                            <div class="text-cyber-red font-mono text-xs font-bold mb-2">01 / PROFILY</div>
+                            <h3 class="font-display text-lg font-bold text-white mb-2">Profily podle situace</h3>
+                            <p class="text-sm text-cyber-muted leading-relaxed">
+                                Při práci potřebuješ jiné aplikace než při učení. Vytvoř si vlastní profily (Práce, Učení, Spánek, Zkouškové) a v každém povol jen to, co chceš mít dostupné.
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-cyber-black border border-cyber-border">
+                            <div class="text-cyber-red font-mono text-xs font-bold mb-2">02 / ČASOVAČ &amp; PLÁN</div>
+                            <h3 class="font-display text-lg font-bold text-white mb-2">Čas na soustředění</h3>
+                            <p class="text-sm text-cyber-muted leading-relaxed">
+                                Vyber 25, 50 nebo 90 minut, nastav vlastní délku nebo režim ukonči ručně. Pro pravidelné používání si připrav automatický týdenní plán.
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-cyber-black border border-cyber-border">
+                            <div class="text-cyber-red font-mono text-xs font-bold mb-2">03 / PROGRES</div>
+                            <h3 class="font-display text-lg font-bold text-white mb-2">Pokrok, který vidíš</h3>
+                            <p class="text-sm text-cyber-muted leading-relaxed">
+                                Sleduj čas soustředění, denní cíl 90 minut a sérii aktivních dnů. Za denní mise, týdenní výzvy a úspěchy získávej XP, úrovně a hodnosti.
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-cyber-black border border-cyber-border">
+                            <div class="text-cyber-red font-mono text-xs font-bold mb-2">04 / MULTIPLAYER</div>
+                            <h3 class="font-display text-lg font-bold text-white mb-2">Dobrovolná hra v okolí</h3>
+                            <p class="text-sm text-cyber-muted leading-relaxed">
+                                Zapni herní funkci, Bluetooth a připojení k serveru. Potkávej další uživatele v dosahu a vyzkoušej bodové sázky, štíty nebo herní lov wastemanů.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pro koho je + Realistické upozornění -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="p-6 bg-cyber-panel border border-cyber-border cut-corner-sm">
+                        <h3 class="font-display text-xl font-bold text-white mb-3 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-cyber-red"></span>
+                            K čemu a pro koho se aplikace hodí
+                        </h3>
+                        <p class="text-sm text-cyber-muted leading-relaxed mb-3">
+                            Pro studující při přípravě do školy a na zkoušky, pro lidi pracující na soustředěných projektech, při psaní i pro každého, kdo chce večer omezit automatické otevírání sociálních sítí.
+                        </p>
+                        <p class="text-sm text-cyber-muted leading-relaxed">
+                            Úspěch závisí také na tom, co si povolíš: pokud v profilu necháš sociální síť nebo prohlížeč, můžeš je dál používat. Aplikace neposuzuje, zda se uvnitř povolené aplikace skutečně věnuješ práci.
+                        </p>
+                    </div>
+
+                    <div class="p-6 bg-cyber-panel border border-amber-500/40 cut-corner-sm">
+                        <h3 class="font-display text-xl font-bold text-amber-400 mb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                            Dobrovolná pomůcka, nikoli zámek telefonu
+                        </h3>
+                        <p class="text-sm text-cyber-muted leading-relaxed">
+                            Blokování ve Focus Mode je dobrovolná pomůcka. Uživatel může v systému odebrat oprávnění, změnit nastavení systému nebo aplikaci odinstalovat. Nejde o rodičovský zámek ani MDM nástroj, který by odolal majiteli telefonu.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ==================== 3. JAK TO FUNGUJE ==================== -->
+        <section id="jak-to-funguje" class="py-16 lg:py-24 border-b border-cyber-border">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
+
+                <div>
+                    <span class="font-mono text-xs text-cyber-red tracking-widest uppercase">// SYSTEM_ARCHITECTURE</span>
+                    <h2 class="font-display text-3xl sm:text-4xl font-bold text-white mt-1">Jak to funguje v praxi</h2>
+                    <p class="text-cyber-muted mt-2 max-w-3xl">
+                        Přehled obrazovek, správy profilů, ochrany proti impulzivnímu vypnutí i automatických plánů.
+                    </p>
+                </div>
+
+                <!-- Přehled obrazovek aplikace -->
+                <div class="bg-cyber-panel border border-cyber-border overflow-hidden cut-corner">
+                    <div class="px-6 py-4 bg-cyber-elevated border-b border-cyber-border flex flex-wrap items-center justify-between gap-2">
+                        <h3 class="font-display text-lg font-bold text-white">Přehled obrazovek v aplikaci</h3>
+                        <span class="font-mono text-xs text-cyber-muted">SPODNÍ LIŠTA + VNOŘENÉ OBRAZOVKY</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-cyber-border font-mono text-xs text-cyber-red uppercase bg-cyber-black/50">
+                                    <th class="py-3.5 px-6">Obrazovka</th>
+                                    <th class="py-3.5 px-6">Co v ní najdeš</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-cyber-border text-sm">
+                                <tr class="hover:bg-cyber-elevated/50">
+                                    <td class="py-3.5 px-6 font-mono font-bold text-white whitespace-nowrap">Hlavní obrazovka soustředění</td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Spuštění a ukončení režimu, výběr profilu, délku relace, denní cíl, přehled serverových minut a ikony štítů při zapnuté herní funkci.</td>
+                                </tr>
+                                <tr class="hover:bg-cyber-elevated/50">
+                                    <td class="py-3.5 px-6 font-mono font-bold text-white whitespace-nowrap">Pokrok</td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Úroveň, hodnost, XP, místní body, denní mise, týdenní výzvy, úspěchy a vstup do obrazovky <strong>Statistiky</strong>.</td>
+                                </tr>
+                                <tr class="hover:bg-cyber-elevated/50">
+                                    <td class="py-3.5 px-6 font-mono font-bold text-white whitespace-nowrap">Hráči</td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Podzáložky <strong>V okolí</strong>, <strong>Žebříček</strong> a <strong>Já</strong> (profilová fotka, štíty, zablokovaní hráči, správa účtu).</td>
+                                </tr>
+                                <tr class="hover:bg-cyber-elevated/50">
+                                    <td class="py-3.5 px-6 font-mono font-bold text-white whitespace-nowrap">Profily</td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Seznamy povolených aplikací (Práce, Učení, Spánek + vlastní) a tlačítko pro obrazovku <strong>Plán</strong>.</td>
+                                </tr>
+                                <tr class="hover:bg-cyber-elevated/50">
+                                    <td class="py-3.5 px-6 font-mono font-bold text-white whitespace-nowrap">Nastavení</td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Ochranu proti vypnutí, jazyk, veřejnou přezdívku a přepínač pro vyhledávání uživatelů v okolí.</td>
+                                </tr>
+                                <tr class="hover:bg-cyber-elevated/50">
+                                    <td class="py-3.5 px-6 font-mono font-bold text-cyber-red whitespace-nowrap">Admin</td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Správa hráčů; zobrazí se pouze účtům, kterým oprávnění přiznal server.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-3 bg-cyber-black/60 border-t border-cyber-border text-xs font-mono text-cyber-muted">
+                        POZNÁMKA: <span class="text-white">Plán</span> a <span class="text-white">Statistiky</span> mají vlastní obrazovky, ale nemají samostatná tlačítka ve spodní liště — otevírají se přes Profily a Pokrok.
+                    </div>
+                </div>
+
+                <!-- 4 Detailní bloky mechanik -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- Profily a výjimky -->
+                    <div class="p-6 bg-cyber-panel border border-cyber-border space-y-3">
+                        <div class="font-mono text-xs text-cyber-red uppercase">// PROFILY_A_VYJIMKY</div>
+                        <h3 class="font-display text-xl font-bold text-white">Profily a povolené aplikace</h3>
+                        <p class="text-sm text-cyber-muted leading-relaxed">
+                            Předpřipravené jsou profily <strong class="text-white">Práce</strong>, <strong class="text-white">Učení</strong> a <strong class="text-white">Spánek</strong>. V záložce <em>Profily</em> můžeš zaškrtávat aplikace (změny se ukládají průběžně bez tlačítka Uložit) nebo založit vlastní profil (např. „Psaní“, „Čtení“, „Zkouškové“).
+                        </p>
+                        <p class="text-sm text-cyber-muted leading-relaxed">
+                            Profil lze smazat, pokud není jediný a právě podle něj neběží relace. <strong class="text-white">Telefonní a SMS aplikace a vybrané systémové součásti</strong> patří mezi výjimky blokování (dostupnost si před delší relací ověř na svém modelu).
+                        </p>
+                    </div>
+
+                    <!-- Délka relace -->
+                    <div class="p-6 bg-cyber-panel border border-cyber-border space-y-3">
+                        <div class="font-mono text-xs text-cyber-red uppercase">// CASOVAC_RELACE</div>
+                        <h3 class="font-display text-xl font-bold text-white">Délka relace a vypnutí režimu</h3>
+                        <p class="text-sm text-cyber-muted leading-relaxed">
+                            Vybrat můžeš předvolby <strong class="text-white">25, 50 nebo 90 minut</strong>, vlastní počet minut nebo režim <strong class="text-white">dokud nevypnu</strong>. Časovaná relace skončí automaticky, režim bez konce ukončuješ ručně.
+                        </p>
+                        <p class="text-sm text-cyber-muted leading-relaxed">
+                            Během relace je dostupná obrazovka s povolenými aplikacemi. Po stisknutí tlačítka Domů může na některých telefonech krátce probliknout běžný launcher.
+                        </p>
+                    </div>
+
+                    <!-- Ochrana proti rychlému vypnutí -->
+                    <div class="p-6 bg-cyber-panel border border-cyber-border space-y-3">
+                        <div class="font-mono text-xs text-cyber-red uppercase">// ANTI_IMPULSE_SHIELD</div>
+                        <h3 class="font-display text-xl font-bold text-white">Ochrana proti rychlému vypnutí</h3>
+                        <p class="text-sm text-cyber-muted leading-relaxed">
+                            V <em>Nastavení &rarr; Ochrana proti vypnutí</em> si nastavíš třecí plochu pro předčasné ukončení:
+                        </p>
+                        <ul class="space-y-1.5 text-sm text-cyber-muted font-mono">
+                            <li><span class="text-cyber-red">&gt;</span> <strong class="text-white">Žádná:</strong> zastavení proběhne okamžitě.</li>
+                            <li><span class="text-cyber-red">&gt;</span> <strong class="text-white">Odpočítávání 30 s:</strong> před potvrzením ukončení musíš vyčkat 30 sekund.</li>
+                            <li><span class="text-cyber-red">&gt;</span> <strong class="text-white">Opsání věty:</strong> aplikace zobrazí větu, kterou musíš přesně přepsat.</li>
+                        </ul>
+                        <p class="text-xs text-amber-400/90 pt-1">
+                            Pozor: Ruční vypnutí běžícího režimu při zapnutém multiplayeru z tebe udělá wastemana (platí i pro režim bez časového limitu).
+                        </p>
+                    </div>
+
+                    <!-- Automatické plány & Denní cíl -->
+                    <div class="p-6 bg-cyber-panel border border-cyber-border space-y-3">
+                        <div class="font-mono text-xs text-cyber-red uppercase">// SCHEDULER_&_DAILY_GOAL</div>
+                        <h3 class="font-display text-xl font-bold text-white">Automatické plány a denní cíl 90 min</h3>
+                        <p class="text-sm text-cyber-muted leading-relaxed">
+                            V <em>Profily &rarr; Plán &rarr; Přidat plán</em> vytvoříš automatický rozvrh (převezme aktuálně vybraný profil na hlavní obrazovce). Výchozí nastavení je Po–Pá 9:00–17:00 a hned zapnuté — po přidání jej uprav po 30minutových krocích (rozmezí může přecházet přes půlnoc).
+                        </p>
+                        <p class="text-sm text-cyber-muted leading-relaxed">
+                            <strong class="text-white">Denní cíl je 90 minut soustředění</strong> (lze nasbírat ve více relacích, resetuje se o místní půlnoci). Pro udržení <strong class="text-white">série aktivních dnů</strong> stačí alespoň 5 minut denně; prázdný dnešek ještě sám o sobě sérii navazující na včerejšek nerozbije.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 4. INSTALACE & PRVNÍ SPUŠTĚNÍ ==================== -->
+        <section id="instalace" class="py-16 lg:py-24 border-b border-cyber-border bg-cyber-panel/20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
+
+                <div>
+                    <span class="font-mono text-xs text-cyber-red tracking-widest uppercase">// DEPLOYMENT_GUIDE</span>
+                    <h2 class="font-display text-3xl sm:text-4xl font-bold text-white mt-1">Instalace testovací verze pro Android</h2>
+                    <p class="text-cyber-muted mt-2 max-w-3xl">
+                        Postup od stažení souboru APK z GitHub Releases přes nastavení 4 povinných oprávnění až po registraci účtu bez e-mailu a první zkušební relaci.
+                    </p>
+                </div>
+
+                <!-- Box: Stav testovacího vydání & Technické parametry -->
+                <div id="server-notice-box" class="bg-cyber-panel border-2 border-cyber-red p-6 sm:p-8 cut-corner neon-glow transition-all">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-cyber-border">
+                        <div>
+                            <div class="inline-flex items-center gap-2 px-2.5 py-1 bg-cyber-red/20 text-cyber-red font-mono text-xs font-bold mb-2">
+                                <span>RELEASE ARTIFACT // ANDROID TEST</span>
+                            </div>
+                            <h3 class="font-display text-2xl font-bold text-white">Stav testovacího vydání &amp; Požadavky před instalací</h3>
+                            <p class="text-sm text-cyber-muted mt-1">
+                                Samotný web ani stažení APK nezprovozní herní server. Pro dokončení prvního nastavení po průvodci oprávněními potřebuješ <strong class="text-white">dostupnou adresu serveru od provozovatele</strong>.
+                            </p>
+                        </div>
+
+                        <!-- Odkazy na GitHub Releases -->
+                        <div class="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
+                            <a href="https://github.com/Bobehska21/Praut-Telefon-appka/releases/tag/android-latest" target="_blank" rel="noopener noreferrer" class="px-5 py-3 bg-cyber-red hover:bg-cyber-darkred text-white font-mono text-xs font-bold uppercase tracking-wider text-center cut-corner-sm transition-colors flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                                GitHub Release (android-latest)
+                            </a>
+                            <a href="https://github.com/Bobehska21/Praut-Telefon-appka/releases/download/android-latest/focus-mode.apk" target="_blank" rel="noopener noreferrer" class="px-5 py-2.5 bg-cyber-black hover:bg-cyber-elevated border border-cyber-border hover:border-cyber-red text-cyber-text font-mono text-xs text-center cut-corner-sm transition-colors">
+                                Přímý odkaz: focus-mode.apk
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Mřížka parametrů -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-6 font-mono text-xs">
+                        <div class="p-3.5 bg-cyber-black border border-cyber-border">
+                            <span class="text-cyber-muted block mb-1">ARCHITEKTURA &amp; SOUBOR</span>
+                            <strong class="text-white text-sm">arm64-v8a (64-bit ARM)</strong>
+                            <span class="block text-cyber-muted mt-1">Balíček: <code class="text-cyber-red">focus-mode.apk</code></span>
+                        </div>
+                        <div class="p-3.5 bg-cyber-black border border-cyber-border">
+                            <span class="text-cyber-muted block mb-1">OVĚŘENÁ ZAŘÍZENÍ</span>
+                            <strong class="text-white text-sm">Xiaomi (Android 14 &amp; 16)</strong>
+                            <span class="block text-cyber-muted mt-1">Chování na pozadí se může lišit</span>
+                        </div>
+                        <div class="p-3.5 bg-cyber-black border border-cyber-border">
+                            <span class="text-cyber-muted block mb-1">VERZE &amp; PODPIS</span>
+                            <strong class="text-white text-sm">1.0.0 / main@9fffd8f</strong>
+                            <span class="block text-cyber-muted mt-1">Testovací ladicí podpis (13. 11. 2026)</span>
+                        </div>
+                        <div class="p-3.5 bg-cyber-black border border-cyber-border">
+                            <span class="text-cyber-muted block mb-1">ADRESA SERVERU</span>
+                            <strong class="text-amber-400 text-sm">Vyžádat u provozovatele</strong>
+                            <span class="block text-cyber-muted mt-1">Veřejný HTTPS nebo lokální Wi-Fi</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-cyber-red/10 border border-cyber-red/40 text-xs text-cyber-text flex items-start gap-2.5">
+                        <span class="font-mono font-bold text-cyber-red shrink-0">[VAROVÁNÍ]</span>
+                        <span>
+                            Na GitHub Releases <strong>nestahuj soubor Source code (zip / tar.gz)</strong> — obsahuje pouze zdrojový kód a do telefonu se neinstaluje. Stahuj výhradně soubor <code>focus-mode.apk</code> z části <em>Assets</em> (pokud je repozitář soukromý nebo soubor chybí, vyžádej si přímý odkaz od provozovatele).
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Krok-za-krokem instalace -->
+                <div id="instalace-kroky" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="p-6 bg-cyber-panel border border-cyber-border space-y-4">
+                        <h3 class="font-display text-xl font-bold text-white flex items-center gap-2">
+                            <span class="px-2 py-0.5 bg-cyber-red text-white font-mono text-xs">KROK 1</span>
+                            Stažení a povolení instalace APK
+                        </h3>
+                        <ol class="space-y-2.5 text-sm text-cyber-muted list-decimal list-inside leading-relaxed">
+                            <li>Na telefonu otevři odkaz ke stažení poskytnutý provozovatelem (nebo GitHub Releases &rarr; část <strong class="text-white">Assets</strong>).</li>
+                            <li>Stáhni soubor <code class="text-white">focus-mode.apk</code>. Běžný uživatel nepotřebuje USB kabel ani počítač.</li>
+                            <li>Otevři stažený soubor z oznámení nebo ze správce souborů.</li>
+                            <li>Pokud Android instalaci z tohoto zdroje nepovoluje, otevři nabídnuté nastavení a <strong class="text-white">povol instalaci pro konkrétní aplikaci</strong> (prohlížeč nebo správce souborů), přes kterou soubor otevíráš. Vrať se a potvrď <strong class="text-white">Instalovat</strong>.</li>
+                        </ol>
+                        <div class="pt-2 text-xs text-cyber-muted border-t border-cyber-border space-y-1">
+                            <p>Tento návod nevyžaduje vypnutí Play Protect. Oficiální dokumentace Google:</p>
+                            <div class="flex flex-wrap gap-3 font-mono">
+                                <a href="https://support.google.com/android/answer/9457058?hl=cs" target="_blank" rel="noopener noreferrer" class="text-cyber-red hover:underline">&rarr; Nápověda k instalaci mimo obchod</a>
+                                <a href="https://support.google.com/android/answer/2812853?hl=cs" target="_blank" rel="noopener noreferrer" class="text-cyber-red hover:underline">&rarr; Nápověda k Play Protect</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6 bg-cyber-panel border border-cyber-border space-y-4">
+                        <h3 class="font-display text-xl font-bold text-white flex items-center gap-2">
+                            <span class="px-2 py-0.5 bg-cyber-red text-white font-mono text-xs">KROK 2</span>
+                            Když nejde zapnout Služba usnadnění
+                        </h3>
+                        <p class="text-sm text-cyber-muted leading-relaxed">
+                            Po prvním otevření Focus Mode se spustí úvodní průvodce oprávněními. Samotné otevření systémové obrazovky ještě neznamená udělení oprávnění — po povolení se vrať zpět do aplikace.
+                        </p>
+                        <div class="p-4 bg-cyber-black border border-cyber-border space-y-2">
+                            <div class="font-mono text-xs text-amber-400 font-bold">OMEZENÁ NASTAVENÍ ANDROIDU (SIDELOAD APK):</div>
+                            <p class="text-xs text-cyber-muted leading-relaxed">
+                                U aplikací instalovaných mimo Google Play může Android omezit citlivá nastavení (usnadnění a přístup k oznámením). Pokud důvěřuješ původu APK:
+                            </p>
+                            <p class="font-mono text-xs text-white bg-cyber-panel p-2.5 border-l-2 border-cyber-red">
+                                Nastavení &rarr; Aplikace &rarr; Focus Mode &rarr; nabídka dalších možností (⋮) &rarr; Povolit omezená nastavení
+                            </p>
+                            <p class="text-xs text-cyber-muted">
+                                Poté se vrať do nastavení usnadnění a službu Focus Mode zapni. <a href="https://support.google.com/android/answer/12623953?hl=cs" target="_blank" rel="noopener noreferrer" class="text-cyber-red hover:underline font-mono">Postup vysvětluje Google &rarr;</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabulka 7 oprávnění -->
+                <div class="bg-cyber-panel border border-cyber-border overflow-hidden cut-corner">
+                    <div class="px-6 py-4 bg-cyber-elevated border-b border-cyber-border flex flex-wrap items-center justify-between gap-2">
+                        <h3 class="font-display text-lg font-bold text-white">Oprávnění a jejich význam (4 povinná + 3 volitelná)</h3>
+                        <span class="font-mono text-xs text-cyber-red">VYŽADOVÁNO PRO SPUŠTĚNÍ SOUSTŘEDĚNÍ</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-cyber-border font-mono text-xs text-cyber-muted uppercase bg-cyber-black/60">
+                                    <th class="py-3.5 px-6">Oprávnění v průvodci</th>
+                                    <th class="py-3.5 px-6">Potřeba pro spuštění</th>
+                                    <th class="py-3.5 px-6">K čemu slouží</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-cyber-border text-sm">
+                                <tr class="hover:bg-cyber-elevated/40">
+                                    <td class="py-3.5 px-6 font-bold text-white">Služba usnadnění</td>
+                                    <td class="py-3.5 px-6"><span class="px-2 py-0.5 bg-cyber-red/20 border border-cyber-red text-cyber-red font-mono text-xs font-bold">ANO (Povinné)</span></td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Zjišťuje aplikaci v popředí a vrací tě z nepovolené aplikace na obrazovku soustředění. Používá název balíčku, nikoli text obrazovky.</td>
+                                </tr>
+                                <tr class="hover:bg-cyber-elevated/40">
+                                    <td class="py-3.5 px-6 font-bold text-white">Přístup k oznámením</td>
+                                    <td class="py-3.5 px-6"><span class="px-2 py-0.5 bg-cyber-red/20 border border-cyber-red text-cyber-red font-mono text-xs font-bold">ANO (Povinné)</span></td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Během soustředění odstraňuje oznámení nepovolených aplikací. Jejich text aplikace ke svému rozhodování nepoužívá.</td>
+                                </tr>
+                                <tr class="hover:bg-cyber-elevated/40">
+                                    <td class="py-3.5 px-6 font-bold text-white">Oznámení</td>
+                                    <td class="py-3.5 px-6"><span class="px-2 py-0.5 bg-cyber-red/20 border border-cyber-red text-cyber-red font-mono text-xs font-bold">ANO (Povinné)</span></td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Umožňuje zobrazovat průběžné oznámení běžící služby a zprávy související s herními událostmi.</td>
+                                </tr>
+                                <tr class="hover:bg-cyber-elevated/40">
+                                    <td class="py-3.5 px-6 font-bold text-white">Výjimka z úspory baterie</td>
+                                    <td class="py-3.5 px-6"><span class="px-2 py-0.5 bg-cyber-red/20 border border-cyber-red text-cyber-red font-mono text-xs font-bold">ANO (Povinné)</span></td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Pomáhá udržet aktivní režim a komunikaci se serverem i při zamčeném telefonu.</td>
+                                </tr>
+                                <tr class="hover:bg-cyber-elevated/40">
+                                    <td class="py-3.5 px-6 font-bold text-white">Bluetooth</td>
+                                    <td class="py-3.5 px-6"><span class="px-2 py-0.5 bg-cyber-elevated border border-cyber-border text-cyber-muted font-mono text-xs">NE (Volitelné)</span></td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Umožňuje hledání a spojení s lidmi v okolí (na starších Androidech může systém vyžadovat polohu).</td>
+                                </tr>
+                                <tr class="hover:bg-cyber-elevated/40">
+                                    <td class="py-3.5 px-6 font-bold text-white">Výchozí domovská obrazovka</td>
+                                    <td class="py-3.5 px-6"><span class="px-2 py-0.5 bg-cyber-elevated border border-cyber-border text-cyber-muted font-mono text-xs">NE (Volitelné)</span></td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Umožňuje vést tlačítko Domů přímo přes prostředí aplikace.</td>
+                                </tr>
+                                <tr class="hover:bg-cyber-elevated/40">
+                                    <td class="py-3.5 px-6 font-bold text-white">Přesné časovače</td>
+                                    <td class="py-3.5 px-6"><span class="px-2 py-0.5 bg-cyber-elevated border border-cyber-border text-cyber-muted font-mono text-xs">NE (Volitelné)</span></td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Pomáhají automatickému spuštění nastavených plánů v přesně požadovaný čas.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-3.5 bg-cyber-black/60 border-t border-cyber-border text-xs text-cyber-muted space-y-1">
+                        <p><strong class="text-white">Důležité:</strong> <em>Přístup k oznámením</em> a povolení zobrazovat <em>Oznámení</em> jsou dvě různá oprávnění. Oznámení nepovolených aplikací se během režimu <strong>odstraňují, nikoli odkládají do fronty</strong> — po skončení soustředění se automaticky nevrátí (samotný obsah zprávy zůstává uvnitř cílové aplikace).</p>
+                    </div>
+                </div>
+
+                <!-- Založení účtu + Rychlý začátek 7 kroků -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Účet a server -->
+                    <div class="p-6 bg-cyber-panel border border-cyber-border space-y-4">
+                        <div class="font-mono text-xs text-cyber-red uppercase">// KROK_3 // ACCOUNT_&_SERVER</div>
+                        <h3 class="font-display text-xl font-bold text-white">Založení účtu a adresa serveru</h3>
+                        <ol class="space-y-2 text-sm text-cyber-muted list-decimal list-inside">
+                            <li>Na obrazovce Přihlášení klepni na <strong class="text-white">Nemáš účet? Vytvoř si ho</strong>.</li>
+                            <li>Vyplň <strong class="text-white">uživatelské jméno</strong> (3–20 znaků: písmena bez diakritiky, číslice, tečka, podtržítko, pomlčka; bez mezer).</li>
+                            <li>Zadej <strong class="text-white">heslo</strong> (8–128 znaků) a zopakuj ho. <strong class="text-amber-400">E-mail se nezadává</strong> — neexistuje obnova hesla e-mailem, údaj si ulož do správce hesel!</li>
+                            <li>Do pole <strong class="text-white">Adresa serveru</strong> vlož adresu od provozovatele včetně <code class="text-cyber-red">https://</code> (nebo jiného uvedeného protokolu) a potvrď <strong class="text-white">Vytvořit účet</strong>.</li>
+                        </ol>
+                        <div class="p-3.5 bg-cyber-black border border-cyber-border text-xs text-cyber-muted space-y-1.5">
+                            <p><strong class="text-white">Proč nepoužívat výchozí <code>http://localhost:3000</code>?</strong> Na běžném telefonu znamená <code>localhost</code> samotný telefon, nikoli počítač vývojáře. Pro test na místní Wi-Fi použij lokální IP adresu serveru od provozovatele (telefon a server musí být ve stejné síti).</p>
+                            <p><strong class="text-white">Přihlášení na dalším telefonu:</strong> Nové přihlášení stejného účtu zneplatní dřívější relaci (jeden aktivní telefon na účet). Místní profily, historie a XP se mezi zařízeními nesynchronizují.</p>
+                        </div>
+                    </div>
+
+                    <!-- Rychlý začátek prvního soustředění -->
+                    <div class="p-6 bg-cyber-panel border border-cyber-border space-y-4">
+                        <div class="font-mono text-xs text-cyber-red uppercase">// KROK_4 // FIRST_SESSION_PROTOCOL</div>
+                        <h3 class="font-display text-xl font-bold text-white">Rychlý začátek prvního soustředění (7 kroků)</h3>
+                        <ol class="space-y-2.5 text-sm text-cyber-muted">
+                            <li class="flex gap-3"><span class="font-mono text-cyber-red font-bold">01.</span><span>V záložce <strong class="text-white">Profily</strong> otevři profil <strong class="text-white">Učení</strong>.</span></li>
+                            <li class="flex gap-3"><span class="font-mono text-cyber-red font-bold">02.</span><span>Zaškrtni například poznámky, slovník a kalkulačku. Povol jen aplikace, které skutečně potřebuješ.</span></li>
+                            <li class="flex gap-3"><span class="font-mono text-cyber-red font-bold">03.</span><span>Vrať se na hlavní obrazovku a vyber profil <strong class="text-white">Učení</strong>.</span></li>
+                            <li class="flex gap-3"><span class="font-mono text-cyber-red font-bold">04.</span><span>Nastav <strong class="text-white">25 minut</strong> a násobič <strong class="text-white">1×</strong> (běžná relace bez bodové sázky).</span></li>
+                            <li class="flex gap-3"><span class="font-mono text-cyber-red font-bold">05.</span><span>Klepni na tlačítko pro spuštění režimu.</span></li>
+                            <li class="flex gap-3"><span class="font-mono text-cyber-red font-bold">06.</span><span>Vyzkoušej otevřít povolenou aplikaci a potom nepovolenou (měla by být nahrazena obrazovkou soustředění).</span></li>
+                            <li class="flex gap-3"><span class="font-mono text-cyber-red font-bold">07.</span><span>Nech časovač doběhnout. Poté otevři <strong class="text-white">Pokrok</strong>, zkontroluj mise a převezmi odměnu.</span></li>
+                        </ol>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ==================== 5. HERNÍ FUNKCE & MULTIPLAYER ==================== -->
+        <section id="herni-funkce" class="py-16 lg:py-24 border-b border-cyber-border">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
+
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <span class="font-mono text-xs text-cyber-red tracking-widest uppercase">// GAMIFICATION_&_BLUETOOTH_PVP</span>
+                        <h2 class="font-display text-3xl sm:text-4xl font-bold text-white mt-1">Herní funkce &amp; Multiplayer „Ulov wastemana“</h2>
+                    </div>
+                    <p class="text-xs font-mono text-cyber-muted max-w-md border-l-2 border-cyber-red pl-3">
+                        Herní body jsou čistě virtuální (žádný nákup bodů ani výplata peněz). Výrazy „zabít“ nebo „útok“ označují pouze změnu virtuálních bodů a statistik.
+                    </p>
+                </div>
+
+                <!-- XP, Úrovně a Hodnosti + Místní vs Serverové body -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- Tabulka hodností -->
+                    <div class="lg:col-span-5 bg-cyber-panel border border-cyber-border p-6 cut-corner">
+                        <h3 class="font-display text-xl font-bold text-white mb-2">XP, úrovně a hodnosti</h3>
+                        <p class="text-sm text-cyber-muted mb-4">
+                            XP získáváš za převzaté odměny z <strong class="text-white">denních misí</strong> (3 denně, např. 20/45/90 min nebo ranní soustředění), <strong class="text-white">týdenních výzev</strong> (300 min a 5 aktivních dnů = 150 XP za každou) a <strong class="text-white">úspěchů</strong> (např. Ranní ptáče před 7:00 min. 15 min).
+                        </p>
+                        <table class="w-full text-left font-mono text-sm border border-cyber-border">
+                            <thead>
+                                <tr class="bg-cyber-black text-cyber-red text-xs border-b border-cyber-border">
+                                    <th class="py-2.5 px-4">Úroveň</th>
+                                    <th class="py-2.5 px-4">Hodnost</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-cyber-border">
+                                <tr><td class="py-2 px-4 text-cyber-muted">1–2</td><td class="py-2 px-4 text-white font-bold">Nováček</td></tr>
+                                <tr><td class="py-2 px-4 text-cyber-muted">3–4</td><td class="py-2 px-4 text-white font-bold">Učedník</td></tr>
+                                <tr><td class="py-2 px-4 text-cyber-muted">5–6</td><td class="py-2 px-4 text-white font-bold">Adept</td></tr>
+                                <tr><td class="py-2 px-4 text-cyber-muted">7–9</td><td class="py-2 px-4 text-white font-bold">Strážce</td></tr>
+                                <tr><td class="py-2 px-4 text-cyber-muted">10–14</td><td class="py-2 px-4 text-white font-bold">Mistr</td></tr>
+                                <tr class="bg-cyber-red/10"><td class="py-2 px-4 text-cyber-red font-bold">15 a více</td><td class="py-2 px-4 text-cyber-red font-bold">Velmistr</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Interaktivní kalkulačka bodů a sázek -->
+                    <div class="lg:col-span-7 bg-cyber-panel border border-cyber-red/50 p-6 cut-corner neon-glow flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="font-display text-xl font-bold text-white">Interaktivní kalkulačka bodů a sázek</h3>
+                                <span class="font-mono text-xs px-2 py-0.5 bg-cyber-red/20 text-cyber-red">SIMULÁTOR VÝPOČTU</span>
+                            </div>
+                            <p class="text-sm text-cyber-muted mb-5">
+                                <strong class="text-white">Místní body v Pokroku</strong> dávají 1 bod/min (limit 120 min/relace) + 1 bonusový bod/min nad 90 min. <strong class="text-white">Serverové body pro multiplayer</strong> dávají 1 bod/min do 90 min denně a <strong>2 body/min</strong> za další minuty téhož dne (bez 120min limitu relace).
+                            </p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+                                <!-- Délka relace -->
+                                <div class="bg-cyber-black p-3.5 border border-cyber-border">
+                                    <label for="calc-minutes" class="block font-mono text-xs text-cyber-muted mb-1">Délka relace (min):</label>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span id="calc-minutes-val" class="font-mono text-xl font-bold text-white">100 min</span>
+                                    </div>
+                                    <input id="calc-minutes" type="range" min="15" max="360" step="5" value="100" class="w-full cursor-pointer">
+                                </div>
+
+                                <!-- Násobič sázky -->
+                                <div class="bg-cyber-black p-3.5 border border-cyber-border">
+                                    <label for="calc-mult" class="block font-mono text-xs text-cyber-muted mb-1">Násobič sázky:</label>
+                                    <select id="calc-mult" class="w-full bg-cyber-panel border border-cyber-border text-white font-mono text-sm p-2 focus:border-cyber-red outline-none">
+                                        <option value="1">1× (Bez sázky)</option>
+                                        <option value="2">2× (Min. 30 min)</option>
+                                        <option value="5">5× (Min. 75 min)</option>
+                                        <option value="10">10× (Min. 150 min)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Vklad bodů -->
+                                <div class="bg-cyber-black p-3.5 border border-cyber-border">
+                                    <label for="calc-stake" class="block font-mono text-xs text-cyber-muted mb-1">Vklad bodů (min. 1):</label>
+                                    <input id="calc-stake" type="number" min="1" max="500" value="20" class="w-full bg-cyber-panel border border-cyber-border text-white font-mono text-sm p-2 focus:border-cyber-red outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Výsledky kalkulačky -->
+                        <div class="bg-cyber-black border border-cyber-border p-4 space-y-3">
+                            <div id="calc-warning" class="hidden p-2.5 bg-cyber-red/20 border border-cyber-red text-cyber-red font-mono text-xs">
+                                <!-- Varování při krátkém čase pro zvolený násobič -->
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono">
+                                <div>
+                                    <span class="text-[11px] text-cyber-muted block">MÍSTNÍ POKROK</span>
+                                    <strong id="res-local" class="text-lg text-white">110 b.</strong>
+                                </div>
+                                <div>
+                                    <span class="text-[11px] text-cyber-muted block">SERVER ZÁKLAD</span>
+                                    <strong id="res-server" class="text-lg text-white">110 b.</strong>
+                                </div>
+                                <div>
+                                    <span class="text-[11px] text-cyber-muted block">BONUS ZE SÁZKY</span>
+                                    <strong id="res-bet" class="text-lg text-cyber-red">+0 b.</strong>
+                                </div>
+                                <div>
+                                    <span class="text-[11px] text-cyber-muted block">ŠTÍT ZA RELACI</span>
+                                    <strong id="res-shield" class="text-lg text-emerald-400">0 štítů</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabulka bodových sázek -->
+                <div class="bg-cyber-panel border border-cyber-border overflow-hidden">
+                    <div class="px-6 py-4 bg-cyber-elevated border-b border-cyber-border">
+                        <h3 class="font-display text-lg font-bold text-white">Bodové sázky na relaci (Multiplayer)</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse font-mono text-sm">
+                            <thead>
+                                <tr class="border-b border-cyber-border text-xs text-cyber-red uppercase bg-cyber-black/60">
+                                    <th class="py-3 px-6">Násobič</th>
+                                    <th class="py-3 px-6">Nejkratší povolený časovač</th>
+                                    <th class="py-3 px-6">Odměna navíc při úspěchu (za vklad 10 bodů)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-cyber-border">
+                                <tr><td class="py-3 px-6 font-bold text-white">1×</td><td class="py-3 px-6 text-cyber-muted">Bez dodatečného omezení sázkou</td><td class="py-3 px-6 text-cyber-muted">Žádná sázková odměna</td></tr>
+                                <tr><td class="py-3 px-6 font-bold text-white">2×</td><td class="py-3 px-6 text-white">30 minut</td><td class="py-3 px-6 text-emerald-400">+10 bodů</td></tr>
+                                <tr><td class="py-3 px-6 font-bold text-white">5×</td><td class="py-3 px-6 text-white">75 minut</td><td class="py-3 px-6 text-emerald-400">+40 bodů</td></tr>
+                                <tr><td class="py-3 px-6 font-bold text-cyber-red">10×</td><td class="py-3 px-6 text-white">150 minut</td><td class="py-3 px-6 text-cyber-red font-bold">+90 bodů</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="p-4 bg-cyber-black/50 border-t border-cyber-border text-xs text-cyber-muted space-y-1">
+                        <p>Vzorec odměny navíc: <code class="text-white">vklad × (násobič − 1)</code>. Vsadit můžeš nejvýše svůj kladný čistý denní zisk (min. 1 bod). Režim <em>dokud nevypnu</em> nelze pro sázku použít. Úspěch posuzuje server podle připsaného času — při výpadku spojení může sázka propadnout, proto sázky používej až po ověření stabilní sítě.</p>
+                    </div>
+                </div>
+
+                <!-- Stavy hráče, Lov wastemana a Štíty -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- 4 Stavy hráče -->
+                    <div class="p-6 bg-cyber-panel border border-cyber-border space-y-4">
+                        <div class="font-mono text-xs text-cyber-red uppercase">// PLAYER_STATES</div>
+                        <h3 class="font-display text-xl font-bold text-white">Stavy hráče v okolí</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="p-3 bg-cyber-black border-l-2 border-emerald-500">
+                                <strong class="text-emerald-400 font-mono">V REŽIMU</strong>
+                                <p class="text-cyber-muted text-xs mt-0.5">Hráč má aktivní soustředění.</p>
+                            </div>
+                            <div class="p-3 bg-cyber-black border-l-2 border-cyber-muted">
+                                <strong class="text-white font-mono">MIMO REŽIM</strong>
+                                <p class="text-cyber-muted text-xs mt-0.5">Hráč právě nemá aktivní soustředění a není vedený jako wasteman.</p>
+                            </div>
+                            <div class="p-3 bg-cyber-black border-l-2 border-cyber-red">
+                                <strong class="text-cyber-red font-mono">WASTEMAN</strong>
+                                <p class="text-cyber-muted text-xs mt-0.5">Hráč ručně ukončil běžící režim a může být herním cílem. Zachrání se pouze novým spuštěním soustředění.</p>
+                            </div>
+                            <div class="p-3 bg-cyber-black border-l-2 border-sky-400">
+                                <strong class="text-sky-400 font-mono">IMUNNÍ</strong>
+                                <p class="text-cyber-muted text-xs mt-0.5">Hráče dočasně nelze úspěšně zasáhnout (1 hodinu po zásahu nebo 10 minut po pohlcení štítem).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lov wastemana -->
+                    <div class="p-6 bg-cyber-panel border border-cyber-border space-y-4">
+                        <div class="font-mono text-xs text-cyber-red uppercase">// HUNT_PROTOCOL</div>
+                        <h3 class="font-display text-xl font-bold text-white">Jak funguje „Ulov wastemana“</h3>
+                        <ul class="space-y-2.5 text-sm text-cyber-muted">
+                            <li><strong class="text-white">Podmínky útoku:</strong> Potřebuješ alespoň <strong class="text-cyber-red">90 minut soustředění potvrzených serverem</strong> v daném dni, dostupný server a Bluetooth spojení s cílem.</li>
+                            <li><strong class="text-white">Postup:</strong> Otevři <em>Hráči &rarr; V okolí</em>, vyber dostupného wastemana (nesmí být imunní ani blokovaný) a klepni na <strong class="text-white">Zabít</strong>.</li>
+                            <li><strong class="text-white">Body a imunita:</strong> Útočník získá <strong class="text-emerald-400">+50 bodů</strong>. Cíl ztratí <strong class="text-cyber-red">25 % dnešních kladných bodových příjmů</strong> (zaokrouhleno dolů, max. do výše čistého denního zůstatku) a získá 1 hodinu imunity.</li>
+                            <li><strong class="text-white">Denní žebříček:</strong> Řadí hráče podle počtu úspěšných zabití za daný den (řídí se časovou zónou serveru, výchozí je pražský čas).</li>
+                        </ul>
+                    </div>
+
+                    <!-- Štíty a Bluetooth okolí -->
+                    <div class="p-6 bg-cyber-panel border border-cyber-border space-y-4">
+                        <div class="font-mono text-xs text-cyber-red uppercase">// DEFENSE_&_RADAR</div>
+                        <h3 class="font-display text-xl font-bold text-white">Štíty a hráči v dosahu Bluetooth</h3>
+                        <p class="text-sm text-cyber-muted leading-relaxed">
+                            <strong class="text-white">Získání štítu:</strong> Jeden štít získáš za <strong class="text-white">5 hodin serverem připsaného soustředění v jedné nepřerušené relaci</strong> (max. 1 štít za relaci, uložené mohou být nejvýše 3 štíty).
+                        </p>
+                        <p class="text-sm text-cyber-muted leading-relaxed">
+                            <strong class="text-white">Obrana štítem:</strong> Při platném útoku se jeden štít automaticky spotřebuje — cíl neztratí body, útočník nezíská odměnu a cíl dostane <strong class="text-white">10 minut imunity</strong>.
+                        </p>
+                        <div class="p-3 bg-cyber-black border border-cyber-border text-xs text-cyber-muted">
+                            <strong class="text-white block mb-1">Bluetooth radar:</strong>
+                            Telefon vysílá dočasný identifikátor (mění se denně) a stav. Nejde o GPS mapu, ale o detekci v rádiovém dosahu. Vypnutím v Nastavení vypneš hledání okolí, účet se tím nemaže.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ==================== 6. PODROBNÝ NÁVOD, POTÍŽE & FAQ ==================== -->
+        <section id="navod-faq" class="py-16 lg:py-24 border-b border-cyber-border bg-cyber-panel/30">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+
+                <div>
+                    <span class="font-mono text-xs text-cyber-red tracking-widest uppercase">// KNOWLEDGE_BASE</span>
+                    <h2 class="font-display text-3xl sm:text-4xl font-bold text-white mt-1">Podrobný návod, řešení potíží &amp; FAQ</h2>
+                    <p class="text-cyber-muted mt-2">
+                        Vyhledej odpověď podle klíčového slova nebo filtruj podle kategorie (časté otázky, řešení potíží, správa účtu a offline režim).
+                    </p>
+                </div>
+
+                <!-- Vyhledávání a filtry -->
+                <div class="space-y-4">
+                    <div class="relative">
+                        <input id="faq-search" type="text" placeholder="Hledat v návodu (např. wasteman, heslo, xiaomi, usnadnění, offline, štít, smazat účet)..." class="w-full bg-cyber-black border border-cyber-border focus:border-cyber-red text-white font-mono text-sm px-4 py-3.5 pl-11 outline-none transition-colors">
+                        <svg class="w-5 h-5 text-cyber-red absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2" id="faq-filters">
+                        <button type="button" data-filter="all" class="faq-filter-btn px-3.5 py-1.5 font-mono text-xs font-bold bg-cyber-red text-white border border-cyber-red cut-corner-sm">
+                            VŠE (28)
+                        </button>
+                        <button type="button" data-filter="faq" class="faq-filter-btn px-3.5 py-1.5 font-mono text-xs bg-cyber-panel text-cyber-muted border border-cyber-border hover:border-cyber-red cut-corner-sm">
+                            ČASTÉ OTÁZKY (14)
+                        </button>
+                        <button type="button" data-filter="trouble" class="faq-filter-btn px-3.5 py-1.5 font-mono text-xs bg-cyber-panel text-cyber-muted border border-cyber-border hover:border-cyber-red cut-corner-sm">
+                            NEJČASTĚJŠÍ POTÍŽE (10)
+                        </button>
+                        <button type="button" data-filter="account" class="faq-filter-btn px-3.5 py-1.5 font-mono text-xs bg-cyber-panel text-cyber-muted border border-cyber-border hover:border-cyber-red cut-corner-sm">
+                            ÚČET, OFFLINE &amp; AKTUALIZACE (4)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Akordeon kontejner -->
+                <div id="faq-list" class="space-y-3">
+                    <!-- Dynamicky vykresleno přes JS se všemi 28 položkami z podkladů -->
+                </div>
+
+                <div id="faq-empty" class="hidden p-8 bg-cyber-panel border border-cyber-border text-center font-mono text-sm text-cyber-muted">
+                    Žádná položka neodpovídá zadanému dotazu. Zkus jiné klíčové slovo.
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ==================== 7. SOUKROMÍ V PRAXI, OMEZENÍ & PODPORA ==================== -->
+        <section id="soukromi-podpora" class="py-16 lg:py-24">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
+
+                <div>
+                    <span class="font-mono text-xs text-cyber-red tracking-widest uppercase">// PRIVACY_&_LIMITATIONS</span>
+                    <h2 class="font-display text-3xl sm:text-4xl font-bold text-white mt-1">Soukromí v praxi, omezení a hlášení chyb</h2>
+                </div>
+
+                <!-- Tabulka: Soukromí v praxi -->
+                <div class="bg-cyber-panel border border-cyber-border overflow-hidden cut-corner">
+                    <div class="px-6 py-4 bg-cyber-elevated border-b border-cyber-border flex flex-wrap items-center justify-between gap-2">
+                        <h3 class="font-display text-lg font-bold text-white">Kde se jaký údaj používá nebo uchovává</h3>
+                        <span class="font-mono text-xs text-emerald-400">APLIKACE NEČTE TEXTY ZPRÁV ANI HESLA</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="border-b border-cyber-border font-mono text-xs text-cyber-red uppercase bg-cyber-black/60">
+                                    <th class="py-3.5 px-6">Údaj</th>
+                                    <th class="py-3.5 px-6">Kde se používá nebo uchovává</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-cyber-border">
+                                <tr>
+                                    <td class="py-3.5 px-6 font-bold text-white">Profily, povolené aplikace, místní historie, mise a XP</td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Pouze v paměti telefonu; aplikace pro ně nemá vlastní cloudovou synchronizaci ani uživatelský export.</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3.5 px-6 font-bold text-white">Identifikátor Bluetooth a stav</td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Vysílají se do okolí. Identifikátor se denně mění, ale okolní zařízení stále mohou zjistit přítomnost vysílající aplikace (nejde o úplnou anonymitu).</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3.5 px-6 font-bold text-white">Přezdívka a základní herní profil</td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Sdílejí se podle zapnutých funkcí přes Bluetooth a multiplayerový server.</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3.5 px-6 font-bold text-white">Účet, hash hesla, bodové události, serverové minuty a statistiky</td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Uchovávají se na serveru provozovatele.</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3.5 px-6 font-bold text-white">Profilová fotka</td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Na serveru (zmenšena, překódována a zbavena obrazových metadat EXIF); při nahlášení může vzniknout kopie pro moderaci.</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3.5 px-6 font-bold text-white">Přihlašovací jméno, nahlášení a záznamy správy</td>
+                                    <td class="py-3.5 px-6 text-cyber-muted">Mohou být dostupné pověřeným správcům serveru.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-3.5 bg-cyber-black/60 border-t border-cyber-border text-xs text-cyber-muted">
+                        Aplikace pro blokování používá pouze názvy balíčků aplikací v popředí a původce oznámení — <strong>nečte texty zpráv ani hesla</strong>. Podrobnosti o době uchování serverových dat a kontaktu na správce poskytuje provozovatel konkrétního serveru.
+                    </div>
+                </div>
+
+                <!-- Současná omezení + Hlášení problému -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- 5 Omezení testovací verze -->
+                    <div class="p-6 bg-cyber-panel border border-cyber-border space-y-4">
+                        <div class="font-mono text-xs text-cyber-red uppercase">// KNOWN_LIMITATIONS</div>
+                        <h3 class="font-display text-xl font-bold text-white">Současná omezení testovací verze</h3>
+                        <ul class="space-y-3 text-sm text-cyber-muted">
+                            <li class="flex gap-2.5">
+                                <span class="text-cyber-red font-mono font-bold">01</span>
+                                <span>Ověřené používání je zaměřené na Android a omezený počet telefonů (Xiaomi s Androidem 14 a 16). <strong class="text-white">iOS vydání zatím není připravené</strong> k doporučení běžným uživatelům a nemá Bluetooth multiplayer.</span>
+                            </li>
+                            <li class="flex gap-2.5">
+                                <span class="text-cyber-red font-mono font-bold">02</span>
+                                <span>Kompletní herní zásah („Ulov wastemana“) mezi dvěma telefony dosud nemá potvrzené ověření celého postupu v reálném provozu.</span>
+                            </li>
+                            <li class="flex gap-2.5">
+                                <span class="text-cyber-red font-mono font-bold">03</span>
+                                <span>Připisování minut a štítů se zamčeným telefonem závisí na síti a správě baterie výrobce; poslední opravy čekají na ověření na telefonech.</span>
+                            </li>
+                            <li class="flex gap-2.5">
+                                <span class="text-cyber-red font-mono font-bold">04</span>
+                                <span>Aplikace neověřuje skutečnou lidskou pozornost. Bluetooth spojení a serverové kontroly nejsou úplnou ochranou proti upraveným klientům nebo spolupracujícím účtům.</span>
+                            </li>
+                            <li class="flex gap-2.5">
+                                <span class="text-cyber-red font-mono font-bold">05</span>
+                                <span>Veřejný server, distribuce v obchodě Play a automatické aktualizace nejsou zajištěné. Používej jen vydání a server určený provozovatelem.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Co uvést při hlášení problému -->
+                    <div class="p-6 bg-cyber-panel border border-cyber-red/40 space-y-4">
+                        <div class="font-mono text-xs text-cyber-red uppercase">// BUG_REPORT_CHECKLIST</div>
+                        <h3 class="font-display text-xl font-bold text-white">Co uvést při hlášení problému</h3>
+                        <p class="text-sm text-cyber-muted leading-relaxed">
+                            Pokud při testování narazíš na chybu, připrav pro provozovatele nebo do repozitáře projektu následující údaje:
+                        </p>
+                        <ul class="space-y-2 text-sm text-cyber-text font-mono">
+                            <li class="flex items-center gap-2"><span class="text-cyber-red">[✓]</span> Model telefonu a verzi systému Android</li>
+                            <li class="flex items-center gap-2"><span class="text-cyber-red">[✓]</span> Používané vydání / build aplikace (např. main@9fffd8f)</li>
+                            <li class="flex items-center gap-2"><span class="text-cyber-red">[✓]</span> Připojení (místní Wi-Fi vs. mobilní data) a stav oprávnění</li>
+                            <li class="flex items-center gap-2"><span class="text-cyber-red">[✓]</span> Přesný postup, po kterém chyba vznikla, a znění chyby</li>
+                            <li class="flex items-center gap-2"><span class="text-cyber-red">[✓]</span> U bodů: čas události a rozdíl místního vs. serverového času</li>
+                        </ul>
+
+                        <div class="p-3.5 bg-cyber-red/15 border border-cyber-red text-xs text-white font-mono">
+                            NIKDY neposílej své přihlašovací heslo ani přihlašovací token do hlášení chyby nebo veřejné diskuse!
+                        </div>
+
+                        <div class="pt-2 flex flex-wrap gap-3">
+                            <a href="https://github.com/Bobehska21/Praut-Telefon-appka/issues" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 bg-cyber-red hover:bg-cyber-darkred text-white font-mono text-xs font-bold uppercase cut-corner-sm transition-colors">
+                                Nahlásit chybu na GitHub Issues &rarr;
+                            </a>
+                            <button type="button" onclick="copyReportTemplate()" class="px-4 py-2.5 bg-cyber-black hover:bg-cyber-elevated border border-cyber-border hover:border-cyber-red text-cyber-text font-mono text-xs uppercase cut-corner-sm transition-colors">
+                                Zkopírovat šablonu hlášení
+                            </button>
+                        </div>
+                        <div id="copy-toast" class="hidden text-xs font-mono text-emerald-400">
+                            &gt; Šablona hlášení byla zkopírována do schránky.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="bg-cyber-black border-t border-cyber-red/40 py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 text-xs font-mono text-cyber-muted">
+            <div class="space-y-1.5">
+                <div class="flex items-center gap-2 text-white font-bold text-sm">
+                    <span class="w-2 h-2 bg-cyber-red"></span>
+                    <span>FOCUS MODE // PELYOS</span>
+                </div>
+                <p>Zdrojový stav: <span class="text-white">main @ 9fffd8f</span> (13. listopadu 2026) • Testovací Android build (arm64-v8a)</p>
+                <p>Statická dokumentační stránka připravená pro nasazení na <span class="text-white">GitHub Pages</span>.</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <a href="https://github.com/Bobehska21/Praut-Telefon-appka" target="_blank" rel="noopener noreferrer" class="text-cyber-text hover:text-cyber-red transition-colors underline underline-offset-4">
+                    Repozitář GitHub
+                </a>
+                <a href="https://github.com/Bobehska21/Praut-Telefon-appka/releases/tag/android-latest" target="_blank" rel="noopener noreferrer" class="text-cyber-text hover:text-cyber-red transition-colors underline underline-offset-4">
+                    Releases (android-latest)
+                </a>
+                <a href="#uvod" class="px-3 py-1.5 bg-cyber-panel border border-cyber-border hover:border-cyber-red text-white">
+                    &uarr; Nahoru
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==================== INTERAKTIVNÍ SKRIPTY ==================== -->
+    <script>
+        // 1. Mobilní menu toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+        document.querySelectorAll('.mobile-link').forEach(link => {
+            link.addEventListener('click', () => mobileMenu.classList.add('hidden'));
+        });
+
+        // 2. Zvýraznění boxu serveru po kliknutí na "Informace o testování"
+        function highlightServerNotice() {
+            const box = document.getElementById('server-notice-box');
+            if (!box) return;
+            box.classList.add('ring-4', 'ring-cyber-red/50');
+            setTimeout(() => box.classList.remove('ring-4', 'ring-cyber-red/50'), 1800);
+        }
+
+        // 3. Interaktivní HUD Simulátor v Hero sekci
+        const profilesData = {
+            uceni: {
+                name: 'UČENÍ',
+                timer: '25:00',
+                apps: [
+                    { name: 'Poznámky', allowed: true },
+                    { name: 'Slovník & PDF', allowed: true },
+                    { name: 'Instagram', allowed: false },
+                    { name: 'TikTok', allowed: false }
+                ]
+            },
+            prace: {
+                name: 'PRÁCE',
+                timer: '50:00',
+                apps: [
+                    { name: 'Kalendář', allowed: true },
+                    { name: 'Pracovní chat', allowed: true },
+                    { name: 'YouTube', allowed: false },
+                    { name: 'Hry', allowed: false }
+                ]
+            },
+            spanek: {
+                name: 'SPÁNEK',
+                timer: 'DOKUD NEVYPNU',
+                apps: [
+                    { name: 'Budík & Hodiny', allowed: true },
+                    { name: 'Telefon / SMS (výjimka)', allowed: true },
+                    { name: 'Prohlížeč', allowed: false },
+                    { name: 'Sociální sítě', allowed: false }
+                ]
+            }
+        };
+
+        let currentProfile = 'uceni';
+        const simAppsGrid = document.getElementById('sim-apps-grid');
+        const simFeedback = document.getElementById('sim-feedback');
+        const simProfileName = document.getElementById('sim-profile-name');
+        const simTimer = document.getElementById('sim-timer');
+
+        function renderSimulator(profileKey) {
+            currentProfile = profileKey;
+            const data = profilesData[profileKey];
+            simProfileName.textContent = data.name;
+            simTimer.textContent = data.timer;
+
+            // Aktualizace tlačítek profilů
+            document.querySelectorAll('.sim-prof-btn').forEach(btn => {
+                if (btn.dataset.profile === profileKey) {
+                    btn.className = 'sim-prof-btn py-2 px-3 font-mono text-xs font-bold border border-cyber-red bg-cyber-red text-white cut-corner-sm transition-all';
+                } else {
+                    btn.className = 'sim-prof-btn py-2 px-3 font-mono text-xs font-bold border border-cyber-border bg-cyber-black text-cyber-muted hover:border-cyber-red cut-corner-sm transition-all';
+                }
+            });
+
+            // Vykreslení aplikací
+            simAppsGrid.innerHTML = '';
+            data.apps.forEach(app => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = app.allowed
+                    ? 'p-2.5 bg-cyber-panel border border-emerald-500/40 hover:border-emerald-400 text-left font-mono text-xs flex items-center justify-between transition-colors'
+                    : 'p-2.5 bg-cyber-panel border border-cyber-red/40 hover:border-cyber-red text-left font-mono text-xs flex items-center justify-between transition-colors';
+
+                btn.innerHTML = `
+                    <span class="text-white truncate pr-2">${app.name}</span>
+                    <span class="${app.allowed ? 'text-emerald-400' : 'text-cyber-red'} text-[10px] shrink-0">
+                        ${app.allowed ? '[POVOLENO]' : '[BLOKOVÁNO]'}
+                    </span>
+                `;
+
+                btn.addEventListener('click', () => {
+                    if (app.allowed) {
+                        simFeedback.innerHTML = `<span class="text-emerald-400">&gt; [OK] Aplikace <strong>${app.name}</strong> je v profilu ${data.name}. Služba usnadnění ponechává přístup aktivní.</span>`;
+                    } else {
+                        simFeedback.innerHTML = `<span class="text-cyber-red">&gt; [ZÁSAH] <strong>${app.name}</strong> není v profilu ${data.name}! Nahrazeno obrazovkou soustředění. Oznámení odstraněna.</span>`;
+                    }
+                });
+
+                simAppsGrid.appendChild(btn);
+            });
+
+            simFeedback.innerHTML = `<span class="text-cyber-muted">&gt; Profil <strong>${data.name}</strong> načten. Klikni na libovolnou aplikaci výše...</span>`;
+        }
+
+        document.querySelectorAll('.sim-prof-btn').forEach(btn => {
+            btn.addEventListener('click', () => renderSimulator(btn.dataset.profile));
+        });
+        renderSimulator('uceni');
+
+        // 4. Interaktivní kalkulačka bodů, sázek a štítů
+        const calcMinutes = document.getElementById('calc-minutes');
+        const calcMinutesVal = document.getElementById('calc-minutes-val');
+        const calcMult = document.getElementById('calc-mult');
+        const calcStake = document.getElementById('calc-stake');
+        const calcWarning = document.getElementById('calc-warning');
+        const resLocal = document.getElementById('res-local');
+        const resServer = document.getElementById('res-server');
+        const resBet = document.getElementById('res-bet');
+        const resShield = document.getElementById('res-shield');
+
+        const minReqByMult = { 1: 0, 2: 30, 5: 75, 10: 150 };
+
+        function updateCalculator() {
+            const mins = parseInt(calcMinutes.value, 10) || 0;
+            const mult = parseInt(calcMult.value, 10) || 1;
+            const stake = Math.max(1, parseInt(calcStake.value, 10) || 1);
+
+            calcMinutesVal.textContent = `${mins} min`;
+
+            // Místní body: základ 1 b/min (limit 120 min/relace) + 1 bonus b/min nad 90 min
+            const localBase = Math.min(mins, 120);
+            const localBonus = mins > 90 ? (mins - 90) : 0;
+            const localTotal = localBase + localBonus;
+
+            // Serverové body: 1 b/min do 90 min + 2 b/min nad 90 min (bez 120min limitu)
+            const serverTotal = mins <= 90 ? mins : (90 + (mins - 90) * 2);
+
+            // Sázka
+            const minRequired = minReqByMult[mult];
+            let betBonus = 0;
+
+            if (mult > 1 && mins < minRequired) {
+                calcWarning.classList.remove('hidden');
+                calcWarning.textContent = `[!] Pro násobič ${mult}× je vyžadován časovač alespoň ${minRequired} minut.`;
+                betBonus = 0;
+            } else {
+                calcWarning.classList.add('hidden');
+                betBonus = mult > 1 ? stake * (mult - 1) : 0;
+            }
+
+            // Štít: 5 hodin (300 min) v jedné nepřerušené relaci -> max 1 štít
+            const shieldsEarned = mins >= 300 ? '1 štít (max 3)' : '0 (min. 300m)';
+
+            resLocal.textContent = `${localTotal} b.`;
+            resServer.textContent = `${serverTotal} b.`;
+            resBet.textContent = mult > 1 ? `+${betBonus} b.` : '0 b.';
+            resShield.textContent = shieldsEarned;
+        }
+
+        calcMinutes.addEventListener('input', updateCalculator);
+        calcMult.addEventListener('change', updateCalculator);
+        calcStake.addEventListener('input', updateCalculator);
+        updateCalculator();
+
+        // 5. Kompletní databáze FAQ, Řešení potíží a Pokročilých pravidel (28 položek)
+        const knowledgeItems = [
+            // --- 14 Častých otázek (FAQ) ---
+            {
+                cat: 'faq',
+                tag: 'FAQ // KOMPATIBILITA',
+                q: 'Funguje aplikace na iPhonu?',
+                a: 'Ověřené testovací používání je aktuálně zaměřené na Android. iOS část je rozpracovaná a nemá potvrzené vydání pro běžné uživatele. Bluetooth multiplayer pro iOS není implementovaný.'
+            },
+            {
+                cat: 'faq',
+                tag: 'FAQ // ÚČET',
+                q: 'Potřebuji účet?',
+                a: 'Ano. Současná Android verze po úvodním nastavení vyžaduje přihlášení uživatelským jménem a heslem. E-mail se nezadává. Vyhledávání okolních hráčů můžeš později vypnout v Nastavení.'
+            },
+            {
+                cat: 'faq',
+                tag: 'FAQ // PŘIPOJENÍ',
+                q: 'Potřebuji internet?',
+                a: 'Pro vytvoření účtu a multiplayer potřebuješ dostupný server. Již nastavený místní časovač a blokování mohou fungovat i bez spojení, ale herní minuty, body a odměny se nemusí započítat stejně jako místní odpočet.'
+            },
+            {
+                cat: 'faq',
+                tag: 'FAQ // OPRÁVNĚNÍ',
+                q: 'Proč aplikace potřebuje službu usnadnění a přístup k oznámením?',
+                a: 'Usnadnění umožňuje poznat nepovolenou aplikaci v popředí a vrátit tě na obrazovku soustředění. Přístup k oznámením slouží k odstranění oznámení nepovolených aplikací během režimu. Implementace k tomu používá název balíčku aplikace, nikoli texty zpráv nebo hesla.'
+            },
+            {
+                cat: 'faq',
+                tag: 'FAQ // OZNÁMENÍ',
+                q: 'Vrátí se oznámení po skončení režimu?',
+                a: 'Ne. Oznámení nepovolených aplikací se během režimu odstraňují (nikoli odkládají do fronty) a po skončení se neobnovují. Obsah samotných zpráv však může zůstat dostupný uvnitř příslušné aplikace.'
+            },
+            {
+                cat: 'faq',
+                tag: 'FAQ // HOVORY A SMS',
+                q: 'Zablokuje aplikace telefonování a SMS?',
+                a: 'Telefonní aplikace, SMS a vybrané systémové součásti patří mezi výjimky blokování. Dostupnost potřebných funkcí si ale před delší relací ověř na vlastním telefonu; nespoléhej na obecný seznam jako na záruku chování všech modelů.'
+            },
+            {
+                cat: 'faq',
+                tag: 'FAQ // BODOVÁNÍ',
+                q: 'Co jsou XP a co body?',
+                a: 'XP získáváš za převzaté mise a úspěchy a určují tvoji úroveň i hodnost (Nováček až Velmistr). Body vycházejí ze soustředění a herních událostí. Záložka Pokrok má vlastní místní výpočet bodů, zatímco multiplayerové body a podmínky potvrzuje server.'
+            },
+            {
+                cat: 'faq',
+                tag: 'FAQ // MULTIPLAYER',
+                q: 'Jak se stanu wastemanem?',
+                a: 'Když při zapnutém multiplayeru ručně ukončíš běžící režim soustředění (platí i pro režim bez časového limitu). Automatické doběhnutí časovače wastemana nevytvoří. Ze stavu wastemana se zachráníš novým spuštěním soustředění (samotné otevření aplikace nestačí).'
+            },
+            {
+                cat: 'faq',
+                tag: 'FAQ // MULTIPLAYER',
+                q: 'Kdy mohu herně zasáhnout jiného hráče?',
+                a: 'Potřebuješ alespoň 90 dnešních minut soustředění uznaných serverem. Cíl musí být dostupný přes Bluetooth, být ve stavu wasteman, mít zapnutý multiplayer a nemít imunitu. Mezi účty také nesmí být blokování.'
+            },
+            {
+                cat: 'faq',
+                tag: 'FAQ // OBRANA',
+                q: 'Jak získám štít?',
+                a: 'Za pět hodin (300 minut) serverem připsaného soustředění v jedné nepřerušené relaci. Jedna relace přidělí nejvýše jeden štít a uložené mohou být maximálně tři. Štít automaticky pohltí platný útok bez bodové ztráty a přidá deset minut imunity.'
+            },
+            {
+                cat: 'faq',
+                tag: 'FAQ // SÁZKY',
+                q: 'Jsou sázky za skutečné peníze?',
+                a: 'Ne. Současná aplikace používá výhradně virtuální herní body (žádný nákup bodů ani výplata peněz). Násobič 1× znamená relaci bez sázky. Při 2×, 5× nebo 10× si vybíráš bodový vklad a minimální délku časovače; o výsledku rozhoduje server.'
+            },
+            {
+                cat: 'faq',
+                tag: 'FAQ // HESLO',
+                q: 'Je obnova hesla přes e-mail?',
+                a: 'Ne. Účet nemá e-mail, takže běžná e-mailová obnova hesla není dostupná. Přihlašovací údaje si ihned po registraci ulož do správce hesel.'
+            },
+            {
+                cat: 'faq',
+                tag: 'FAQ // AKTUALIZACE',
+                q: 'Aktualizuje se aplikace sama?',
+                a: 'Aktuální testovací verze nemá automatické stahování nového APK přímo z aplikace. Nové ověřené vydání stáhneš ze stejného distribučního místa provozovatele a nainstaluješ ručně.'
+            },
+            {
+                cat: 'faq',
+                tag: 'FAQ // SPRÁVA ÚČTU',
+                q: 'Jak smažu účet?',
+                a: 'V aplikaci otevři Hráči, podzáložku Já a volbu Smazat účet a odejít (vyžaduje funkční spojení se serverem). Tím se odstraní účet a herní data ze serveru; místní profily a historie v telefonu se mažou samostatně.'
+            },
+
+            // --- 10 Nejčastějších potíží ---
+            {
+                cat: 'trouble',
+                tag: 'ŘEŠENÍ POTÍŽÍ // INSTALACE',
+                q: 'Aplikace není kompatibilní nebo ji nelze nainstalovat',
+                a: 'Ověř, že stahuješ soubor focus-mode.apk (nikoli Source code ZIP) a že se stáhl celý. Současné automatické APK je pouze pro 64bitové procesory arm64-v8a. Konflikt s existující instalací může znamenat jiný podpis (ladicí vs. distribuční); požádej provozovatele o správné vydání.'
+            },
+            {
+                cat: 'trouble',
+                tag: 'ŘEŠENÍ POTÍŽÍ // PŘIHLÁŠENÍ',
+                q: 'Registrace nebo přihlášení nefunguje',
+                a: 'Zkontroluj přesnou adresu serveru (včetně https:// nebo http://), síťové připojení a správné jméno s heslem. Obsazené jméno při registraci nahraď jiným. Při připojování k serveru na místní Wi-Fi musí server běžet a telefon musí být ve stejné síti. Po mnoha chybných pokusech chvíli počkej.'
+            },
+            {
+                cat: 'trouble',
+                tag: 'ŘEŠENÍ POTÍŽÍ // SPUŠTĚNÍ',
+                q: 'Soustředění nejde spustit',
+                a: 'Na hlavní obrazovce projdi chybějící povinná oprávnění (usnadnění, přístup k oznámením, oznámení, výjimka baterie). Zkontroluj také, zda nemáš zapnutou sázku (2×, 5×, 10×) s příliš krátkým časovačem nebo příliš vysokým vkladem. Pro běžný start vyber 1×.'
+            },
+            {
+                cat: 'trouble',
+                tag: 'ŘEŠENÍ POTÍŽÍ // BLOKOVÁNÍ',
+                q: 'Nepovolená aplikace zůstává dostupná',
+                a: 'Ověř, že soustředění skutečně běží a že aplikaci nemáš zaškrtnutou v používaném profilu. Zkontroluj systémovou službu usnadnění a případné omezení služby po přeinstalování (Omezená nastavení v detailu aplikace). Krátké probliknutí launcheru může být vlastností konkrétního zařízení.'
+            },
+            {
+                cat: 'trouble',
+                tag: 'ŘEŠENÍ POTÍŽÍ // BATERIE',
+                q: 'Režim se vypíná nebo serverové minuty nepřibývají při zamčení telefonu',
+                a: 'Zkontroluj výjimku z úspory baterie, případná další omezení běhu na pozadí od výrobce telefonu (např. MIUI / HyperOS spořič) a stabilitu spojení se serverem. Porovnej místní odpočet se serverovou kartou na hlavní obrazovce.'
+            },
+            {
+                cat: 'trouble',
+                tag: 'ŘEŠENÍ POTÍŽÍ // BLUETOOTH',
+                q: 'Nevidím hráče v okolí',
+                a: 'Oba telefony musí mít kompatibilní aplikaci, zapnuté Bluetooth v systému, udělená oprávnění (Blízká zařízení / Poloha) a zapnuté vyhledávání okolí v Nastavení. Pro multiplayerový seznam se oba připojují ke stejnému serveru. Přibliž zařízení a vyčkej na obnovení.'
+            },
+            {
+                cat: 'trouble',
+                tag: 'ŘEŠENÍ POTÍŽÍ // ÚTOK',
+                q: 'Mám 90 minut, ale nemohu útočit na wastemana',
+                a: 'Podmínka 90 minut se posuzuje podle dnešních minut uznaných serverem, nikoli podle místního cíle nebo celkové historie. Zkontroluj serverový přehled na hlavní obrazovce. Hráč může být také imunní, mít vypnutý multiplayer nebo už se znovu začal soustředit.'
+            },
+            {
+                cat: 'trouble',
+                tag: 'ŘEŠENÍ POTÍŽÍ // ÚTOK',
+                q: 'Útok nepřidal body',
+                a: 'Cíl mohl použít štít — v tom případě se zobrazí zpráva o pohlcení útoku a body se nepřesunují. Jinak ověř, zda byl zásah serverem skutečně potvrzen. Ztráta Bluetooth dosahu nebo souběžný útok jiného hráče může způsobit neúspěch akce.'
+            },
+            {
+                cat: 'trouble',
+                tag: 'ŘEŠENÍ POTÍŽÍ // SÁZKA A ŠTÍT',
+                q: 'Po dokončení časovače nemám sázkovou odměnu nebo štít',
+                a: 'Časovač v telefonu není jedinou podmínkou. Pro odměnu musí server uznat potřebný čas v konkrétní relaci. Zkontroluj spojení a serverové minuty. Více kratších relací se pro pětihodinový štít nesčítá a jedna dlouhá relace přidělí nejvýše jeden štít.'
+            },
+            {
+                cat: 'trouble',
+                tag: 'ŘEŠENÍ POTÍŽÍ // ODHLÁŠENÍ',
+                q: 'Přihlášení přestalo fungovat po použití jiného telefonu',
+                a: 'Nové přihlášení stejného účtu automaticky ruší starší přihlášení. Znovu se přihlas na telefonu, na kterém chceš účet používat. Nepočítej se souběžným hraním stejného účtu na dvou zařízeních.'
+            },
+
+            // --- 4 Pokročilé okruhy (Offline, Aktualizace, Veřejný profil, Zásahy správce) ---
+            {
+                cat: 'account',
+                tag: 'PROVOZ // OFFLINE REŽIM',
+                q: 'Používání bez internetu a synchronizace opožděných hlášení',
+                a: 'Již nastavené místní blokování a časovač mohou fungovat bez připojení, ale první přihlášení vyžaduje server. Server omezuje připsání za opožděná hlášení, takže ztracenou dobu při výpadku sítě nemusí doplnit celou — to není záruka plného zpětného započítání sázek nebo štítů.'
+            },
+            {
+                cat: 'account',
+                tag: 'PROVOZ // AKTUALIZACE APK',
+                q: 'Postup při instalaci nové aktualizace APK',
+                a: 'Android dovolí aktualizaci existující instalace přes stažené APK, pokud balíček a podpis odpovídají. Změna podpisu mezi testovací a budoucí verzí může vyžadovat odinstalování (což smaže místní profily a historii), proto odinstalování nepoužívej jako první pokus. Po aktualizaci vždy znovu zkontroluj oprávnění.'
+            },
+            {
+                cat: 'account',
+                tag: 'ÚČET // VEŘEJNÝ PROFIL',
+                q: 'Přezdívka, profilová fotka, blokování a nahlášení hráčů',
+                a: 'V Nastavení → Přezdívka zvol veřejné jméno do 20 znaků (prázdné se zobrazí jako Anonym). V Hráči → Já můžeš nahrát fotku z galerie/foťáku (server ji zmenší a odstraní EXIF metadata). U jiného hráče lze zvolit Blokovat (správa v Zablokovaní hráči) nebo Nahlásit pro kontrolu správci.'
+            },
+            {
+                cat: 'account',
+                tag: 'ÚČET // MODERACE',
+                q: 'Zásahy správce serveru a odhlášení',
+                a: 'Správce s oprávněním Admin může upravit body, přejmenovat nevhodný profil nebo odstranit fotku (aplikace o tom pošle dotčenému hráči oznámení). Volba Hráči → Já → Odhlásit se ukončí přihlášení v telefonu, ale účet na serveru ponechá.'
+            }
+        ];
+
+        const faqListEl = document.getElementById('faq-list');
+        const faqSearchEl = document.getElementById('faq-search');
+        const faqEmptyEl = document.getElementById('faq-empty');
+        let activeFaqFilter = 'all';
+
+        function renderFaq() {
+            const query = faqSearchEl.value.trim().toLowerCase();
+            faqListEl.innerHTML = '';
+
+            const filtered = knowledgeItems.filter(item => {
+                const matchesCat = activeFaqFilter === 'all' || item.cat === activeFaqFilter;
+                const matchesQuery = !query || item.q.toLowerCase().includes(query) || item.a.toLowerCase().includes(query) || item.tag.toLowerCase().includes(query);
+                return matchesCat && matchesQuery;
+            });
+
+            if (filtered.length === 0) {
+                faqEmptyEl.classList.remove('hidden');
+                return;
+            }
+            faqEmptyEl.classList.add('hidden');
+
+            filtered.forEach((item, idx) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'bg-cyber-panel border border-cyber-border hover:border-cyber-red/60 transition-colors';
+
+                wrapper.innerHTML = `
+                    <button type="button" class="w-full text-left px-5 py-4 flex items-center justify-between gap-4 focus:outline-none" aria-expanded="false">
+                        <div>
+                            <span class="block font-mono text-[10px] text-cyber-red tracking-wider mb-1">${item.tag}</span>
+                            <span class="font-display font-bold text-base sm:text-lg text-white">${item.q}</span>
+                        </div>
+                        <span class="faq-icon font-mono text-xl text-cyber-red shrink-0 transition-transform">+</span>
+                    </button>
+                    <div class="faq-body hidden px-5 pb-4 pt-1 text-sm text-cyber-muted leading-relaxed border-t border-cyber-border/60">
+                        ${item.a}
+                    </div>
+                `;
+
+                const btn = wrapper.querySelector('button');
+                const body = wrapper.querySelector('.faq-body');
+                const icon = wrapper.querySelector('.faq-icon');
+
+                btn.addEventListener('click', () => {
+                    const isOpen = !body.classList.contains('hidden');
+                    body.classList.toggle('hidden');
+                    btn.setAttribute('aria-expanded', String(!isOpen));
+                    icon.textContent = isOpen ? '+' : '−';
+                });
+
+                faqListEl.appendChild(wrapper);
+            });
+        }
+
+        document.querySelectorAll('.faq-filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                activeFaqFilter = btn.dataset.filter;
+                document.querySelectorAll('.faq-filter-btn').forEach(b => {
+                    if (b === btn) {
+                        b.className = 'faq-filter-btn px-3.5 py-1.5 font-mono text-xs font-bold bg-cyber-red text-white border border-cyber-red cut-corner-sm';
+                    } else {
+                        b.className = 'faq-filter-btn px-3.5 py-1.5 font-mono text-xs bg-cyber-panel text-cyber-muted border border-cyber-border hover:border-cyber-red cut-corner-sm';
+                    }
+                });
+                renderFaq();
+            });
+        });
+
+        faqSearchEl.addEventListener('input', renderFaq);
+        renderFaq();
+
+        // 6. Kopírování šablony hlášení chyby do schránky (bezpečně přes execCommand)
+        function copyReportTemplate() {
+            const template = [
+                '=== FOCUS MODE (PELYOS) — HLÁŠENÍ PROBLÉMU ===',
+                'Model telefonu:',
+                'Verze Androidu:',
+                'Vydání aplikace / Build: main@9fffd8f (test APK)',
+                'Připojení (Wi-Fi / Mobilní data):',
+                'Stav oprávnění (Usnadnění / Oznámení / Baterie):',
+                'Postup vzniku chyby:',
+                'Přesné znění chyby:',
+                'U bodů (čas události a rozdíl místního vs. serverového času):'
+            ].join('\n');
+
+            const textarea = document.createElement('textarea');
+            textarea.value = template;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                const toast = document.getElementById('copy-toast');
+                toast.classList.remove('hidden');
+                setTimeout(() => toast.classList.add('hidden'), 4000);
+            } catch (err) {
+                console.error('Kopírování selhalo:', err);
+            }
+            document.body.removeChild(textarea);
+        }
+    </script>
+</body>
+</html>

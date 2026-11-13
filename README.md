@@ -9,6 +9,25 @@ Nad tím jsou **štíty**, **sázky na relaci** a **admin režim** pro testován
 Stav projektu: **rozpracováno, nevydáno.** Android aplikace běží na skutečných telefonech; iOS je napsané,
 ale nikdy nebylo přeloženo. Viz [Stav](#stav).
 
+Podrobný český [návod pro uživatele](docs/uzivatelsky-navod-cs.md) popisuje instalaci, první nastavení,
+ovládání, herní pravidla a řešení potíží. [Podklady pro informační web](docs/podklady-pro-informacni-web-cs.md)
+obsahují hotové texty, návrh stránek a údaje potřebné před zveřejněním instalace.
+
+## Informační web
+
+Web je uložený v [`web/index.html`](web/index.html). Odkazy ke stažení APK vedou do
+[GitHub Releases](https://github.com/Bobehska21/Praut-Telefon-appka/releases/tag/android-latest).
+GitHub slouží k distribuci APK; adresa multiplayerového serveru se nastavuje samostatně v aplikaci.
+
+Workflow [`pages.yml`](.github/workflows/pages.yml) zveřejňuje pouze složku `web/` po její změně v `main`.
+V nastavení repozitáře **Settings → Pages → Build and deployment → Source** vyber **GitHub Actions**.
+Workflow lze spustit také ručně v záložce Actions.
+
+Očekávaná adresa po úspěšném nasazení je
+[bobehska21.github.io/Praut-Telefon-appka](https://bobehska21.github.io/Praut-Telefon-appka/).
+Výslednou adresu a stav nasazení ověř v běhu workflow GitHub Pages. Web používá původní externí
+Tailwind CSS a Google Fonts, takže pro plné zobrazení potřebuje připojení k internetu.
+
 ## Co je v repozitáři
 
 | Cesta | Co |
