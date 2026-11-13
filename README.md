@@ -1,148 +1,175 @@
 # Focus Mode
 
-A mobile app that helps you concentrate. While **focus mode** is on, only the apps you allowed
-in advance (a whitelist) work; everything else is blocked until you stop the mode. On top of that it has
-a progress system (XP, levels, quests, achievements, a daily 90-minute goal), detection of other users
-nearby over Bluetooth, and an optional multiplayer game, **"Ulov wastemana"** (catch the wasteman), where
-players who give up their focus can be "killed" by nearby players.
+Mobilní aplikace, která pomáhá soustředit se. Při zapnutém **focus módu** fungují jen aplikace, které sis
+předem povolil (whitelist); vše ostatní je zablokované, dokud mód nevypneš. K tomu má systém pokroku (XP, levely,
+úkoly, úspěchy, denní cíl 90 minut), detekci dalších uživatelů v okolí přes Bluetooth a volitelnou
+multiplayerovou hru **„Ulov wastemana“**, ve které mohou hráči, kteří se vzdají soustředění, „zabít“ hráči poblíž.
+Nad tím jsou **štíty**, **sázky na relaci** a **admin režim** pro testování a správu.
 
-Project state: **work in progress, not released.** The Android app runs on real phones; iOS is written
-but has never been compiled. See [Status](#status).
+Stav projektu: **rozpracováno, nevydáno.** Android aplikace běží na skutečných telefonech; iOS je napsané,
+ale nikdy nebylo přeloženo. Viz [Stav](#stav).
 
-## What is in this repository
+## Co je v repozitáři
 
-| Path | What |
+| Cesta | Co |
 |---|---|
-| [`mobile/`](mobile) | The app: React Native (Expo SDK 58) + TypeScript, with a native `Focus` module in Kotlin (Android) and Swift (iOS) |
-| [`server/`](server) | Multiplayer backend: Node + Fastify + PostgreSQL (accounts, points, kills, leaderboard, photos, reports, moderation) |
-| [`docs/multiplayer-api.md`](docs/multiplayer-api.md) | Server API, rules, state machine, proximity proof and the limits of server-side verification |
-| [`mobile/docs/what-the-app-does.md`](mobile/docs/what-the-app-does.md) | Precise description of everything the app does, with what is tested and what is not |
-| [`mobile/README.md`](mobile/README.md) | Build, permissions, platform details and known limitations of the app |
-| [`server/README.md`](server/README.md) | Running the server, environment variables, accounts and passwords, operations |
-| `.claude/`, `CLAUDE.md`, `deploy/`, `.github/`, `docs/workflow.md` | The Claude Code workflow template this repository started from (agents, hooks, Helm chart, CI). Not specific to the app |
+| [`mobile/`](mobile) | Aplikace: React Native (Expo SDK 58) + TypeScript, s nativním modulem `Focus` v Kotlinu (Android) a Swiftu (iOS) |
+| [`server/`](server) | Multiplayerový backend: Node + Fastify + PostgreSQL (účty, body, zabití, štíty, sázky, žebříček, fotky, nahlášení, moderace, admin) |
+| [`docs/multiplayer-api.md`](docs/multiplayer-api.md) | API serveru, pravidla, stavový automat, důkaz blízkosti a limity ověřování na serveru (anglicky) |
+| [`mobile/docs/what-the-app-does.md`](mobile/docs/what-the-app-does.md) | Přesný popis všeho, co aplikace dělá, včetně toho, co je otestované a co ne (anglicky) |
+| [`mobile/README.md`](mobile/README.md) | Build, oprávnění, detaily platforem a známá omezení aplikace (anglicky) |
+| [`server/README.md`](server/README.md) | Spuštění serveru, proměnné prostředí, účty a hesla, provoz (anglicky) |
+| `.claude/`, `CLAUDE.md`, `deploy/`, `.github/`, `docs/workflow.md` | Šablona pracovního postupu Claude Code, ze které repozitář vznikl (agenti, hooky, Helm chart, CI). Netýká se aplikace |
 
-## Features
+## Funkce
 
-**Focus mode**
-- Profiles (Work, Study, Sleep, your own), each with its own list of allowed apps.
-- Start with a timer or "until I stop it"; schedules start it automatically on chosen days and times.
-- Android: an accessibility service notices which app comes to the front and brings back the focus screen
-  (a grid of allowed apps) when it is not allowed. The notification shade, phone calls, SMS and emergency
-  calls keep working. It survives killing the app and rebooting.
-- An optional unlock guard for the Stop button (30 s countdown or typing a sentence).
-- iOS (not verified): Apple Screen Time APIs with three extensions.
+**Focus mód**
+- Profily (Práce, Učení, Spánek, vlastní), každý s vlastním seznamem povolených aplikací.
+- Start s časovačem nebo „dokud nevypnu“; rozvrhy mód spouštějí automaticky ve zvolené dny a časy.
+- Android: služba usnadnění (Accessibility) zjistí, která aplikace je popředí, a když není povolená, vrátí
+  obrazovku focus módu (mřížku povolených aplikací). Stažení lišty oznámení, hovory, SMS a tísňová volání
+  fungují dál. Mód přežije zabití aplikace i restart telefonu.
+- Volitelná pojistka vypnutí (30 s odpočet nebo opsání věty).
+- iOS (neověřeno): API Apple Screen Time se třemi rozšířeními.
 
-**Progress**
-- XP only from quests and achievements; points from minutes in focus mode (+1 per minute beyond 90 a day) and from kills.
-- Levels and ranks, daily and weekly quests, achievements, streaks, statistics.
+**Pokrok**
+- XP jen z úkolů a úspěchů; body z minut ve focus módu (+1 za minutu nad 90 za den) a ze zabití.
+- Levely a hodnosti, denní a týdenní úkoly, úspěchy, série, statistiky.
 
-**Nearby players (Android, Bluetooth LE)**
-- The advertisement contains only a random-looking token that changes every midnight plus a status byte;
-  no name, no location. Details are read only after the other person accepts.
+**Hráči v okolí (Android, Bluetooth LE)**
+- Vysílání obsahuje jen náhodně vypadající token, který se mění každou půlnoc, a bajt stavu;
+  žádné jméno ani poloha. Podrobnosti se čtou až poté, co to druhý člověk potvrdí.
 
-**Multiplayer "Ulov wastemana" (Android)**
-- Account with username and password, **no e-mail**. The username is private; others see only a filtered
-  nickname, a rank and an optional photo.
-- A player who manually stops a running focus mode becomes a wasteman until they start focus again. Anyone
-  nearby with at least 90 focus minutes that day can kill a wasteman: +50 points, the victim loses 25% of
-  that day's points and is immune for one hour. Kills need a signed proof from the victim's phone over Bluetooth.
-- Daily leaderboard, personal statistics, blocking and reporting, multiplayer on/off switch, account deletion.
+**Multiplayer „Ulov wastemana“ (Android)**
+- Účet s uživatelským jménem a heslem, **bez e-mailu**. Uživatelské jméno je soukromé; ostatní vidí jen filtrovanou
+  přezdívku, hodnost a volitelnou fotku.
+- Hráč, který ručně vypne běžící focus mód, se stává wastemanem, dokud focus znovu nezapne. Kdokoli poblíž,
+  kdo má ten den aspoň 90 minut soustředění, může wastemana zabít: +50 bodů, oběť ztratí 25 % bodů toho dne
+  a hodinu je imunní. Zabití vyžaduje podepsaný důkaz z telefonu oběti přes Bluetooth.
+- Denní žebříček (řazený podle zabití), osobní statistiky, blokování a nahlašování, vypínač multiplayeru, smazání účtu.
 
-## Architecture
+**Štíty**
+- 5 hodin připsaného soustředění v JEDNÉ relaci = 1 štít (maximum 3). Štít pohltí jedno zabití (oběť body neztratí)
+  a dá 10 minut imunity. Hráč dostane oznámení o získání i o zablokování.
+
+**Sázky na relaci (Android, multiplayer)**
+- Před startem hráč vsadí část dnešních bodů (nejvýše dnešní čistý zisk), zvolí násobič (2×, 5×, 10×) a délku relace
+  (nejméně 15 min × násobič). Dokončená relace vyplatí vsazené body × (násobič − 1); předčasné ukončení stojí vsazené body.
+  Násobič nemá vliv na zabíjení.
+
+**Admin (jen s účtem, který má na serveru příznak admina)**
+- Přidání a odebrání bodů vybranému hráči (s poznámkou), hledání hráčů. Oprávnění se ověřuje na serveru při každém
+  požadavku a každá akce se zapisuje do auditního logu (kdo, komu, co, kdy).
+- Na vývojovém serveru zkratky pro test minut a štítů. Podrobnosti: [`docs/multiplayer-api.md`](docs/multiplayer-api.md).
+
+## Architektura
 
 ```
- Phone A (app)                                          Phone B (app, wasteman)
+ Telefon A (aplikace)                                   Telefon B (aplikace, wasteman)
  ┌──────────────────────────┐   Bluetooth LE            ┌──────────────────────────┐
- │ React Native UI + store  │◀────────────────────────▶ │ advertises token+status  │
- │ Kotlin module: focus     │   kill challenge/signature│ signs challenges with a  │
- │ service, accessibility,  │                           │ Keystore key             │
- │ BLE, server sync         │                           └─────────────┬────────────┘
+ │ React Native UI + store  │◀────────────────────────▶ │ vysílá token + stav      │
+ │ Kotlin modul: focus      │   výzva / podpis zabití   │ podepisuje výzvy klíčem  │
+ │ služba, usnadnění, BLE,  │                           │ z Keystore               │
+ │ synchronizace se serverem│                           └─────────────┬────────────┘
  └─────────────┬────────────┘                                         │
-               │ HTTPS (HTTP only in debug)                           │
+               │ HTTPS (testovací buildy povolují i prosté HTTP)      │
                ▼                                                      ▼
         ┌─────────────────────────────────────────────────────────────────┐
-        │ server: Fastify + PostgreSQL — verifies every rule, credits     │
-        │ points from heartbeats, checks the signature, applies the kill  │
+        │ server: Fastify + PostgreSQL – ověřuje každé pravidlo, připisuje │
+        │ body z heartbeatů, kontroluje podpis, provede zabití             │
         └─────────────────────────────────────────────────────────────────┘
 ```
 
-The native side is the source of truth for "is focus mode running". The server never trusts the phone:
-points are credited from heartbeats, and a kill is applied in one database transaction after the victim's
-signature (ECDSA P-256, key in the Android Keystore) has been verified.
+Nativní strana je zdrojem pravdy o tom, zda focus mód běží. Server telefonu nevěří:
+body se připisují z heartbeatů (jednou za minutu, nejvýše 90 s na heartbeat) a zabití se provede v jedné databázové
+transakci po ověření podpisu oběti (ECDSA P-256, klíč v Android Keystore).
 
-## Quick start (development)
+## Rychlý start (vývoj)
 
-Requirements: Node 22.13+, Docker, and for Android JDK 17, the Android SDK and a phone with USB debugging.
+Požadavky: Node 22.13+, Docker, a pro Android JDK 17, Android SDK a telefon se zapnutým laděním přes USB.
 
 ```sh
-# 1. Server and database (local only)
+# 1. Server a databáze (jen lokálně)
 cd server
 npm install
 docker compose up -d --wait
-export DATABASE_URL=postgresql://focus:<password>@localhost:5433/focus_dev   # see .env.example
-export ADMIN_TOKEN=<at least 32 random characters>
-npm run migrate && npm run dev          # http://localhost:3000/healthz
+export DATABASE_URL=postgresql://focus:focus_local_dev@localhost:5433/focus_dev   # výchozí heslo z docker-compose.yml
+export ADMIN_TOKEN=$(openssl rand -hex 24)
+export DEV_FAKE_MINUTES=true            # jen vývoj: zkratky pro test minut a štítů
+npm run migrate
+ADMIN_SEED_PASSWORD=<heslo> npm run seed:admin   # volitelně: vytvoří účet "admin" (jen mimo produkci)
+npm run dev                             # http://localhost:3000/healthz
 
-# 2. App
+# 2. Aplikace
 cd ../mobile
 npm install
-npm run android                         # builds a development client; needs Metro (npx expo start)
+npm run android                         # vytvoří vývojový klient; potřebuje Metro (npx expo start)
 adb reverse tcp:8081 tcp:8081           # Metro
-adb reverse tcp:3000 tcp:3000           # server (repeat both for every phone; USB drops them sometimes)
+adb reverse tcp:3000 tcp:3000           # server (opakuj pro každý telefon; USB je někdy zahodí)
 ```
 
-Checks: `npm run typecheck && npm run lint && npm test` in both `mobile/` and `server/`
-(the server tests need the Docker database).
+Kontroly: `npm run typecheck && npm run lint && npm test` v `mobile/` i `server/`
+(testy serveru potřebují databázi z Dockeru).
 
-## Status
+**Bez kabelu:** workflow [`android-apk.yml`](.github/workflows/android-apk.yml) na GitHubu sestaví APK a
+zveřejní ho jako pre-release `android-latest`. Telefon se pak připojí k serveru na Macu přes Wi-Fi
+(`http://<IP-Macu>:3000`, nastavuje se v aplikaci). Testovací buildy proto povolují prosté HTTP.
 
-| Part | State |
+## Stav
+
+| Část | Stav |
 |---|---|
-| App logic (store, scheduler, progress, nickname filter, unlock guard) | done, 198 unit tests |
-| Android focus mode | runs on two Xiaomi phones (HyperOS 1.0/Android 14 and HyperOS 3.0/Android 16) |
-| Bluetooth nearby detection | tested with two phones (found each other, accepted, stored) |
-| Server (accounts, focus, points, kills, nearby, blocks, reports, leaderboard, photos, admin) | 98 automated tests against a real PostgreSQL; typecheck and lint clean |
-| Multiplayer client | compiles and is aligned with the API; **the full kill between two phones is not yet tested end to end** |
-| iOS | written, **never compiled or run** (needs Xcode, a paid Apple Developer account and Apple's Family Controls approval) |
+| Logika aplikace (store, plánovač, pokrok, filtr přezdívek, pojistka vypnutí, sázky) | hotovo, 204 unit testů |
+| Android focus mód | běží na dvou telefonech Xiaomi (HyperOS 1.0/Android 14 a HyperOS 3.0/Android 16) |
+| Detekce okolí přes Bluetooth | otestováno se dvěma telefony (našly se, potvrdily, uložily) |
+| Server (účty, focus, body, zabití, štíty, sázky, okolí, blokování, nahlášení, žebříček, fotky, admin) | 142 automatických testů proti skutečnému PostgreSQL; typecheck a lint bez chyb |
+| Multiplayerový klient | překládá se a odpovídá API; **celé zabití mezi dvěma telefony zatím není otestované od začátku do konce** |
+| Připisování minut a štítů při zamčeném telefonu | opraveno (wake lock, viditelný stav serveru); **čeká na ověření na telefonu** |
+| iOS | napsáno, **nikdy nepřeloženo ani nespuštěno** (potřebuje Xcode, placený účet Apple Developer a schválení Family Controls od Applu) |
 
-## Privacy and security
+## Soukromí a bezpečnost
 
-- Focus history, quests, statistics and the list of allowed apps stay on the phone.
-- The accessibility service reads only the package name of the front window, never content, and sends nothing.
-- Bluetooth: a daily-rotating token, no identity; nobody can follow you for longer than a day.
-- Server: passwords are hashed with scrypt and never returned or logged; tokens are stored only as hashes and
-  can be revoked; failed logins are throttled durably; photos are re-encoded and stripped of metadata;
-  accounts can be deleted with all their data. There is **no password reset** because there is no e-mail.
-- Nickname filter (Czech and English, including obfuscation tricks) on the phone and the server; reports are
-  stored with evidence for manual review.
+- Historie soustředění, úkoly, statistiky a seznam povolených aplikací zůstávají v telefonu.
+- Služba usnadnění čte jen název balíčku okna v popředí, nikdy obsah, a nic neodesílá.
+- Bluetooth: token rotující každý den, žádná identita; nikdo vás nemůže sledovat déle než den.
+- Server: hesla se hashují scryptem a nikdy se nevracejí ani nelogují; tokeny se ukládají jen jako hashe a lze je
+  zrušit; neúspěšná přihlášení se trvale omezují; fotky se překódují a zbavují metadat; účty lze smazat se všemi daty.
+  **Není obnovení hesla**, protože není e-mail.
+- Admin oprávnění se ověřuje na serveru při každém požadavku (příznak `accounts.is_admin`); běžný uživatel dostane na
+  admin cesty 404. Každá admin akce se zapisuje do `admin_audit`.
+- Filtr přezdívek (česky a anglicky, včetně obcházení) v telefonu i na serveru; nahlášení se ukládají s důkazy
+  k ruční kontrole.
 
-## Known limitations
+## Známá omezení
 
-- The server cannot see the real world: **physical proximity and focus mode are not provable**. A relay
-  attack or a modified client can cheat. Two accounts of one person can farm kills. Mitigations are
-  listed in [`docs/multiplayer-api.md`](docs/multiplayer-api.md); Play Integrity / App Attest are planned, not built.
-- A player can avoid becoming a wasteman by never sending the manual stop (offline, app killed).
-- Pressing Home or Recents inside an allowed app can briefly show the stock launcher.
-- Xiaomi and other vendors may throttle background Bluetooth or kill services despite exemptions.
-- The server has no Dockerfile or Helm chart yet; photos are on local disk and rate limits are per replica,
-  so only one replica is safe. Before a rolling production deploy see the migration notes
-  (legacy `players.token_hash`).
-- iOS has no multiplayer or Bluetooth. Package ids are placeholders (`com.example.focusmode`).
-- Distribution through Google Play needs declarations for the accessibility service, the foreground service
-  (`specialUse`) and the Bluetooth permissions; see [`mobile/README.md`](mobile/README.md).
-- No license has been chosen yet.
+- Server nevidí reálný svět: **fyzická blízkost a focus mód se nedají dokázat**. Relay útok nebo upravený klient může
+  podvádět. Dva účty jedné osoby mohou „farmit“ zabití. Zmírnění jsou popsána v
+  [`docs/multiplayer-api.md`](docs/multiplayer-api.md); Play Integrity / App Attest jsou plánované, ne postavené.
+- Hráč se může vyhnout statusu wastemana tím, že nikdy neodešle ruční vypnutí (offline, zabitá aplikace).
+- Stisk Home nebo Recents uvnitř povolené aplikace může krátce ukázat původní launcher.
+- Xiaomi a další výrobci mohou omezovat Bluetooth na pozadí nebo zabíjet služby i přes výjimky.
+- Server zatím nemá Dockerfile ani Helm chart; fotky jsou na lokálním disku a limity požadavků jsou na repliku,
+  takže je bezpečná jen jedna replika. Před postupným nasazením na produkci viz poznámky k migracím
+  (zděděné `players.token_hash`).
+- Testovací APK povolují prosté HTTP (kvůli serveru na Macu v lokální síti) a jsou podepsané veřejným ladicím klíčem;
+  pro vydání je nutný vlastní klíč a HTTPS.
+- Denní žebříček řadí podle zabití; body (včetně ručních úprav adminem) se zobrazují ve statistikách.
+- iOS nemá multiplayer ani Bluetooth. ID balíčků jsou zástupná (`com.example.focusmode`).
+- Distribuce přes Google Play vyžaduje prohlášení pro službu usnadnění, službu na popředí (`specialUse`)
+  a oprávnění Bluetooth; viz [`mobile/README.md`](mobile/README.md).
+- Zatím nebyla zvolena licence.
 
-## Roadmap
+## Plán
 
-1. End-to-end test of the kill flow on two phones, then fixes.
-2. Dockerfile, Helm chart, object storage for photos, shared rate-limit store.
-3. Play Integrity attestation, anomaly detection on kill pairs.
-4. iOS build and, later, iOS Bluetooth and multiplayer.
-5. Admin tool for reviewing reports (today: API only).
+1. Test zabití mezi dvěma telefony od začátku do konce, potom opravy.
+2. Admin panel: seznam hráčů, přejmenování, smazání fotky a oznámení dotčenému hráči.
+3. Aktualizace aplikace bez kabelu (kontrola nové verze přímo v aplikaci).
+4. Dockerfile, Helm chart, objektové úložiště pro fotky, sdílené úložiště limitů.
+5. Play Integrity, detekce anomálií ve dvojicích zabití.
+6. Build pro iOS a později Bluetooth a multiplayer na iOS.
 
-## Working with Claude Code
+## Práce s Claude Code
 
-The repository includes a Claude Code setup (`CLAUDE.md`, `.claude/`): agents for backend, database,
-migrations and Kubernetes, guard hooks that keep production read-only, and slash commands such as
-`/preflight`. Details in [`docs/workflow.md`](docs/workflow.md). Database migrations are reviewed by the
-`migration-reviewer` agent before they are committed.
+Repozitář obsahuje nastavení Claude Code (`CLAUDE.md`, `.claude/`): agenty pro backend, databázi, migrace
+a Kubernetes, hlídací hooky, které drží produkci jen pro čtení, a slash příkazy jako `/preflight`. Podrobnosti
+v [`docs/workflow.md`](docs/workflow.md). Databázové migrace před commitem kontroluje agent `migration-reviewer`.

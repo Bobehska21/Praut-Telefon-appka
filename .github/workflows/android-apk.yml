@@ -31,7 +31,7 @@ jobs:
   apk:
     name: Build and publish APK
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     permissions:
       contents: write # only to create or update the release that carries the APK
     env:
@@ -56,6 +56,11 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches
+          key: gradle-${{ hashFiles('mobile/package-lock.json', 'mobile/app.json') }}
+          restore-keys: gradle-
       # The lock file is written by npm 11; npm 10 (bundled with Node 22) reports it as out of sync.
       - run: npm install -g npm@11
       - run: npm ci
@@ -84,9 +89,10 @@ jobs:
             echo "android.injected.signing.key.password=$KEY_PASSWORD"
           } >> ~/.gradle/gradle.properties
 
+      # arm64-v8a only: every modern phone uses it, and each extra ABI adds ~4 minutes of native compilation.
       - name: Build the release APK
         working-directory: mobile/android
-        run: ./gradlew assembleRelease --no-daemon
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
 
       - name: Publish the APK
         env:
