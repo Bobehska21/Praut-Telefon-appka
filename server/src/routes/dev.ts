@@ -33,4 +33,11 @@ export const devRoutes: FastifyPluginAsync<{ deps: Deps }> = async (app, { deps 
     });
     return { focusMinutesToday: minutesOf(out.total), shields: out.shields };
   });
+
+  // Sets the caller's shield count directly (0 to 3), to test shield blocking without 5 hours of focus.
+  app.post('/dev/shields', async (req) => {
+    const { count } = z.object({ count: z.number().int().min(0).max(3) }).parse(req.body);
+    await db.query('UPDATE players SET shields = $2 WHERE id = $1', [req.player.id, count]);
+    return { shields: count };
+  });
 };

@@ -124,6 +124,23 @@ All return `{state, focusMinutesToday}` (plus `lost: true` when the server found
 - `GET /admin/players?search=&banned=&limit&offset` (nickname or username substring, or exact player id); `POST /admin/players/:playerId/unban`.
 - Every admin action is written to `admin_audit`. Admin routes expose the internal ids players do not see, and the private login name in the player list (searchable) so moderators can find an account; password hashes are never selected.
 
+## Admin API (in-app)
+
+Separate from the token-protected `/admin/*` moderation API. These routes live under `/v1/admin/*`, use the normal
+player token and are allowed only for accounts with `accounts.is_admin = true`. The flag is read from the database on
+every request and nothing in the API can set it; the operator sets it (`npm run seed:admin` in development, which is
+refused when `NODE_ENV=production`, or SQL). Anyone else, signed in or not, gets 404 (anonymous: 401).
+
+| Route | What |
+|---|---|
+| `GET /v1/admin/whoami` | `{ admin: true }`; the app uses it to decide whether to show the admin screen |
+| `GET /v1/admin/players?q=&limit=&offset=` | all players: id, username, nickname, photoUrl, createdAt, pointsTotal, isAdmin; `q` searches username and nickname |
+| `POST /v1/admin/players/:id/points` | `{ points, note? }`, a non-zero integer up to 100000 in absolute value, positive or negative; writes a ledger row `admin_adjust` (so it counts in `/v1/me/stats`) |
+
+Every action writes an `admin_audit` row in the same transaction: action, actor (`actor_player_id`), target, note,
+details and time. Note: the daily leaderboard ranks by kills, so a points adjustment shows in the player's stats,
+not in the leaderboard.
+
 ## Focus state machine
 
 ```

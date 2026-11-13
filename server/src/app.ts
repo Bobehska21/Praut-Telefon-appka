@@ -23,6 +23,7 @@ import { leaderboardRoutes } from './routes/leaderboard';
 import { photoRoutes } from './routes/photos';
 import { reportRoutes } from './routes/reports';
 import { adminRoutes } from './routes/admin';
+import { adminPlayerRoutes } from './routes/admin-players';
 
 export interface Deps {
   config: Config;
@@ -123,6 +124,7 @@ export async function buildApp(deps: Deps): Promise<FastifyInstance> {
       await v1.register(leaderboardRoutes, { deps });
       await v1.register(photoRoutes, { deps });
       await v1.register(reportRoutes, { deps });
+      await v1.register(adminPlayerRoutes, { deps });
     },
     { prefix: '/v1' },
   );
