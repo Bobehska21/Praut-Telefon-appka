@@ -65,7 +65,7 @@ Accounts are a private username plus a password. There is no e-mail. The usernam
 #### Passwords and brute-force protection
 
 - Hash: scrypt from `node:crypto` (no native dependency; Node's built-in argon2 only exists from Node 24 and the service supports Node 22), random 16-byte salt per user, 32-byte key, default cost N=2^15, r=8, p=3 (about 32 MiB and ~100 ms, an OWASP-listed configuration). The stored string is `scrypt$<log2N>$<r>$<p>$<salt>$<hash>`, so the cost can be raised later (`PASSWORD_SCRYPT_LOG2N`); weaker hashes are upgraded transparently on the next successful login. Hashes live in their own `accounts` table and are never selected by player or admin queries.
-- Per-IP rate limits on `register` and `login` are **in memory, per replica** (`@fastify/rate-limit`), on top of the global limit.
+- Per-IP rate limits on `register` and `login` use the selected `RATE_LIMIT_STORE` (`@fastify/rate-limit`): PostgreSQL shared across replicas in production, memory per replica in development, on top of the global limit.
 - Failed logins are counted **durably in PostgreSQL** (shared by all replicas) under two keys, by the typed username whether or not the account exists, so the answer never reveals which names exist:
   - username + client IP: locks after 5 failures;
   - username from any source: locks after 20 failures (distributed guessing).
@@ -214,7 +214,7 @@ The server enforces rules over the data it receives; it cannot see the real worl
 - **Offline avoidance of wasteman.** A player can avoid becoming wasteman by never sending the manual stop (kill the app, stay offline): the server sees only a lost heartbeat and sets `idle`.
 - **Collusion and farming.** Two accounts of one person can kill each other to farm +50 (the penalty is only 25% of the victim's gross, immunity is 1 hour). Registration needs only a username and password (no e-mail, no phone), so sybil accounts cannot be prevented. A player can also change the profile timezone to move day boundaries (for example to get the 90-minute bonus twice).
 - **Nickname and photo** are filtered (nickname rules, re-encoded images) but the filter is not exhaustive; reports and moderation are the backstop.
-- **Rate limiting** is per replica in memory (reports and failed logins have durable DB counters); IP-based limits are weak behind shared NATs and mobile carrier NAT.
+- **Rate limiting** uses shared PostgreSQL counters in production (memory per replica in development; reports and failed logins also have durable domain counters); IP-based limits are weak behind shared NATs and mobile carrier NAT.
 - **Accounts:** with no e-mail there is no password recovery and no way to prove ownership of an account; a forgotten password means a new account. A stolen token or a phished password gives full control, and logging in on a new device revokes the old one by design.
 
-Mitigations in place: heartbeat cap, 20 s single-use challenges bound to killer, victim and nonce, per-route rate limits, immunity, symmetric blocking, ban, audit log. Planned: Play Integrity / App Attest attestation of the app and device on register and on kill, anomaly detection on kill pairs, a limit on timezone changes, a shared rate-limit store.
+Mitigations in place: heartbeat cap, 20 s single-use challenges bound to killer, victim and nonce, per-route rate limits, immunity, symmetric blocking, ban, audit log. Planned: Play Integrity / App Attest attestation of the app and device on register and on kill, anomaly detection on kill pairs, a limit on timezone changes, load testing of the shared PostgreSQL rate-limit store.

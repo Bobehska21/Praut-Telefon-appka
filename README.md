@@ -119,7 +119,7 @@ zveřejní ho jako pre-release `android-latest`. Telefon se pak připojí k serv
 
 | Část | Stav |
 |---|---|
-| Logika aplikace (store, plánovač, pokrok, filtr přezdívek, pojistka vypnutí, sázky) | hotovo, 204 unit testů |
+| Logika aplikace (store, plánovač, pokrok, filtr přezdívek, pojistka vypnutí, sázky) | hotovo, 214 unit testů |
 | Android focus mód | běží na dvou telefonech Xiaomi (HyperOS 1.0/Android 14 a HyperOS 3.0/Android 16) |
 | Detekce okolí přes Bluetooth | otestováno se dvěma telefony (našly se, potvrdily, uložily) |
 | Server (účty, focus, body, zabití, štíty, sázky, okolí, blokování, nahlášení, žebříček, fotky, admin) | 142 automatických testů proti skutečnému PostgreSQL; typecheck a lint bez chyb |
@@ -148,9 +148,9 @@ zveřejní ho jako pre-release `android-latest`. Telefon se pak připojí k serv
 - Hráč se může vyhnout statusu wastemana tím, že nikdy neodešle ruční vypnutí (offline, zabitá aplikace).
 - Stisk Home nebo Recents uvnitř povolené aplikace může krátce ukázat původní launcher.
 - Xiaomi a další výrobci mohou omezovat Bluetooth na pozadí nebo zabíjet služby i přes výjimky.
-- Server zatím nemá Dockerfile ani Helm chart; fotky jsou na lokálním disku a limity požadavků jsou na repliku,
-  takže je bezpečná jen jedna replika. Před postupným nasazením na produkci viz poznámky k migracím
-  (zděděné `players.token_hash`).
+- Server má Dockerfile a upravený Helm chart; produkce vyžaduje soukromé S3 úložiště fotek a sdílené limity v PostgreSQL.
+  Konfigurace a přenos existujících fotek: [`server/README.md`](server/README.md). Lokální vývoj používá disk a limity v paměti.
+  Sestavení kontejneru, integrační testy a zkouška konkrétního S3 poskytovatele musí projít před nasazením.
 - Testovací APK povolují prosté HTTP (kvůli serveru na Macu v lokální síti) a jsou podepsané veřejným ladicím klíčem;
   pro vydání je nutný vlastní klíč a HTTPS.
 - Denní žebříček řadí podle zabití; body (včetně ručních úprav adminem) se zobrazují ve statistikách.
@@ -163,8 +163,8 @@ zveřejní ho jako pre-release `android-latest`. Telefon se pak připojí k serv
 
 1. Test zabití mezi dvěma telefony od začátku do konce, potom opravy.
 2. Admin panel: seznam hráčů, přejmenování, smazání fotky a oznámení dotčenému hráči.
-3. Aktualizace aplikace bez kabelu (kontrola nové verze přímo v aplikaci).
-4. Dockerfile, Helm chart, objektové úložiště pro fotky, sdílené úložiště limitů.
+3. Aktualizace aplikace bez kabelu (kontrola nové verze přímo v aplikaci) — nyní přeskočeno.
+4. Dockerfile, Helm chart, objektové úložiště pro fotky, sdílené úložiště limitů — implementováno; zbývá ověření kontejneru, databázové integrace a zvoleného S3 poskytovatele.
 5. Play Integrity, detekce anomálií ve dvojicích zabití.
 6. Build pro iOS a později Bluetooth a multiplayer na iOS.
 

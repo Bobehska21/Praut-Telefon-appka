@@ -45,4 +45,9 @@ spec:
     {{- with .Values.networkPolicy.extraEgress }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+    {{- if .Values.networkPolicy.allowObjectStorageHttps }}
+    - ports:
+        - port: 443
+          protocol: TCP
+    {{- end }}
 {{- end }}
