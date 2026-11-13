@@ -1,0 +1,394 @@
+{
+  "common": {
+    "back": "Zpět",
+    "cancel": "Zrušit",
+    "save": "Uložit",
+    "delete": "Smazat",
+    "continue": "Pokračovat",
+    "search": "Hledat"
+  },
+  "home": {
+    "serverMinutes": "Server dnes započítal {{count}} min",
+    "serverOffline": "Server není dostupný, minuty a štíty se nepočítají. Zkontroluj adresu serveru a Wi-Fi.",
+    "title": "Soustředění",
+    "start": "Zapnout",
+    "stop": "Vypnout",
+    "active": "Režim soustředění běží",
+    "inactive": "Režim je vypnutý",
+    "until": "do {{time}}",
+    "duration": "Doba",
+    "untilStopped": "Dokud nevypnu",
+    "custom": "Vlastní",
+    "minutes": "{{count}} min",
+    "bet": "Sázka",
+    "betStake": "Kolik bodů vsadíš (nejvýš {{max}}, tvé dnešní body)",
+    "betHint": "Vydrž soustředěný celý časovač a vyhraješ {{win}} bodů ({{multiplier}}× tvých {{stake}}). Odejdeš dřív a přijdeš o {{stake}} vsazených bodů.",
+    "betProblem": {
+      "timer_required": "Sázka potřebuje časovač (ne „dokud nezastavím“).",
+      "timer_too_short": "Pro tento násobič je potřeba časovač alespoň {{minutes}} min.",
+      "stake_missing": "Zadej, kolik bodů vsadíš (alespoň 1).",
+      "stake_too_high": "Můžeš vsadit nejvýš {{max}} bodů, co jsi dnes vydělal."
+    },
+    "profile": "Profil",
+    "noAppsWarning": "Tento profil nemá žádné povolené aplikace. Telefon, SMS a nouzová volání zůstanou dostupné vždy.",
+    "missingTitle": "Před zapnutím je potřeba povolit",
+    "accessibilityLostTitle": "Služba usnadnění je vypnutá",
+    "accessibilityLostBody": "Bez ní nejde blokovat nepovolené aplikace. Zapni ji znovu, jinak režim soustředění nedrží.",
+    "goalTitle": "Denní cíl",
+    "goalProgress": "{{minutes}} / {{goal}} min",
+    "goalLeft": "Zbývá {{minutes}} min do cíle",
+    "goalReached": "Cíl splněn",
+    "bonus_one": "Bonus: {{count}} bod navíc",
+    "bonus_few": "Bonus: {{count}} body navíc",
+    "bonus_many": "Bonus: {{count}} bodu navíc",
+    "bonus_other": "Bonus: {{count}} bodů navíc",
+    "bonusHint": "Každá další minuta nad cíl = 1 bod. Počítadlo se vynuluje o půlnoci."
+  },
+  "unlock": {
+    "title": "Opravdu vypnout?",
+    "countdown": "Počkej {{seconds}} s a zvaž, jestli to opravdu potřebuješ.",
+    "sentence": "Pro vypnutí opiš větu:",
+    "sentenceText": "Chci teď přerušit soustředění.",
+    "confirm": "Vypnout režim",
+    "keepGoing": "Pokračovat v soustředění"
+  },
+  "blocked": {
+    "message": "Tato aplikace je v režimu soustředění vypnutá",
+    "back": "Zpět"
+  },
+  "profiles": {
+    "title": "Profily",
+    "new": "Nový profil",
+    "name": "Název",
+    "apps": "Povolené aplikace",
+    "appsCount": "{{count}} povolených",
+    "pickIos": "Vybrat aplikace v systému",
+    "iosHint": "iOS neposkytuje seznam aplikací. Výběr probíhá v systémovém okně a názvy aplikací zde nevidíme.",
+    "alwaysAllowed": "Telefon, SMS a nouzová volání jsou povolené vždy."
+  },
+  "schedule": {
+    "title": "Plán",
+    "add": "Přidat plán",
+    "empty": "Zatím žádný plán. Režim se bude zapínat sám ve zvolené dny a hodiny.",
+    "from": "Od",
+    "to": "Do",
+    "days": "Dny",
+    "enabled": "Zapnuto"
+  },
+  "stats": {
+    "title": "Statistiky",
+    "week": "Posledních 7 dní",
+    "today": "Dnes",
+    "focusTime": "Čas v režimu",
+    "blocked": "Zablokované pokusy",
+    "streakDays_one": "{{count}} den v řadě",
+    "streakDays_few": "{{count}} dny v řadě",
+    "streakDays_many": "{{count}} dne v řadě",
+    "streakDays_other": "{{count}} dní v řadě",
+    "streakEmpty": "Zapni režim a začni sérii",
+    "best": "Nejdelší série: {{count}}"
+  },
+  "settings": {
+    "adminTitle": "Test: minuty a štíty (jen vývojový server)",
+    "adminHint": "Zkratky pro test sázek a štítů. Fungují jen na vývojovém serveru. Minuty se počítají i do běžící relace.",
+    "adminDone": "Dnes {{minutes}} min, štítů {{shields}}",
+    "adminNoDev": "Server nemá zapnuté vývojové zkratky (DEV_FAKE_MINUTES)",
+    "adminFailed": "Nepovedlo se (spusť soustředění a zkontroluj server)",
+    "title": "Nastavení",
+    "guard": "Ochrana proti vypnutí",
+    "guardNone": "Žádná",
+    "guardCountdown": "Odpočítávání 30 s",
+    "guardSentence": "Opsání věty",
+    "accessibility": "Rozšířené blokování (Přístupnost)",
+    "accessibilityHint": "Volitelné. Spolehlivější blokování, ale vyžaduje oprávnění Přístupnost.",
+    "language": "Jazyk",
+    "languageSystem": "Podle systému",
+    "nearby": "Uživatelé v okolí",
+    "nearbySwitch": "Zjišťovat uživatele v okolí",
+    "nearbyHint": "Za běhu režimu soustředění tvůj telefon přes Bluetooth ohlásí, že používá Focus, a hledá další. Neposílá se jméno ani poloha. Když někoho najdeš, přijde oznámení a údaje o něm uvidíš až po přijetí.",
+    "nickname": "Přezdívka (nepovinná)",
+    "nicknameHint": "Uvidí ji uživatelé v okolí, kteří přijmou oznámení o tobě, spolu s hodností a sérií. Nic víc se nesdílí.",
+    "bluetoothMissing": "Bez oprávnění k Bluetooth funkce nefunguje.",
+    "nicknameBlocked": "Tato přezdívka není povolená. Zvol jinou.",
+    "nicknameChars": "Povolená jsou písmena latinky, číslice, mezera, tečka, podtržítko a pomlčka.",
+    "adminPoints": "Všechny účty",
+    "adminSearch": "Hledat jméno nebo přezdívku",
+    "adminSelected": "{{name}} (účet {{username}}), body celkem {{points}}",
+    "adminAmount": "Body (např. 50 nebo -20)",
+    "adminNote": "Důvod (nepovinné)",
+    "adminApply": "Změnit body",
+    "adminPointsDone": "{{name}}: dnes {{today}} b",
+    "adminOffline": "Server není dostupný",
+    "adminShieldsN": "{{count}} štítů",
+    "adminPlayerLine": "účet {{username}} · od {{date}}",
+    "adminNewName": "Nová přezdívka (nahradí nevhodnou)",
+    "adminRename": "Přejmenovat hráče",
+    "adminRemovePhoto": "Smazat fotku hráče",
+    "adminRenamed": "Přezdívka změněna na {{name}}",
+    "adminNameRejected": "Takovou přezdívku nelze nastavit",
+    "adminPhotoRemoved": "Fotka smazána, hráč má výchozí avatar",
+    "adminTab": "Admin"
+  },
+  "days": {
+    "0": "Ne",
+    "1": "Po",
+    "2": "Út",
+    "3": "St",
+    "4": "Čt",
+    "5": "Pá",
+    "6": "So"
+  },
+  "onboarding": {
+    "welcomeTitle": "Soustřeď se na to, co je důležité",
+    "welcomeBody": "Po zapnutí režimu zůstanou dostupné jen aplikace, které si předem povolíš. Vše ostatní je skryté nebo zablokované. Data zůstávají jen v tvém telefonu, bez účtu a bez reklam.",
+    "permissions": {
+      "usageAccess": {
+        "title": "Přístup k využití aplikací",
+        "why": "Potřebujeme vědět, která aplikace je právě v popředí, abychom nepovolenou mohli zablokovat."
+      },
+      "overlay": {
+        "title": "Zobrazení přes jiné aplikace",
+        "why": "Díky tomu můžeme přes nepovolenou aplikaci ukázat blokovací obrazovku."
+      },
+      "notifications": {
+        "title": "Oznámení",
+        "why": "Android vyžaduje trvalou notifikaci, dokud režim běží. Jiná oznámení neposíláme."
+      },
+      "batteryOptimization": {
+        "title": "Výjimka z úspory baterie",
+        "why": "Aby systém režim během soustředění neukončil."
+      },
+      "defaultLauncher": {
+        "title": "Výchozí domovská obrazovka (volitelné)",
+        "why": "Volitelné. Tlačítko Domů pak vede přímo na obrazovku soustředění. Funguje i bez toho, jen s kratším probliknutím."
+      },
+      "exactAlarm": {
+        "title": "Přesné časovače",
+        "why": "Aby se plánované režimy spustily přesně ve zvolený čas, i když je aplikace zavřená."
+      },
+      "accessibility": {
+        "title": "Služba usnadnění",
+        "why": "Používáme ji pouze ke zjištění názvu aplikace, která je právě v popředí, abychom nepovolenou aplikaci hned nahradili obrazovkou soustředění. Nečteme obsah obrazovky, texty ani hesla a nic neodesíláme, vše zůstává v telefonu. Bez ní režim soustředění nezapneš."
+      },
+      "screenTime": {
+        "title": "Čas u obrazovky",
+        "why": "Apple vyžaduje tvůj souhlas, abychom mohli omezit aplikace. Výběr zůstává v zařízení."
+      },
+      "notificationAccess": {
+        "title": "Přístup k oznámením",
+        "why": "Během režimu soustředění mažeme oznámení od aplikací, které nejsou povolené, aby telefon ukazoval jen to, co povolíš. Čteme pouze název aplikace, která oznámení poslala, nikdy jeho text, a nic neodesíláme."
+      },
+      "bluetooth": {
+        "title": "Bluetooth",
+        "why": "Za běhu režimu soustředění telefon vysílá a hledá další uživatele Focus. Nevysílá jméno ani polohu, jen náhodný kód, který se každou půlnoc mění. Když někoho najde, přijde oznámení, které můžeš přijmout, nebo odmítnout, a údaje o něm uvidíš až po přijetí. Pomocí Bluetooth se nezjišťuje tvoje poloha. Volitelné, jde vypnout v Nastavení."
+      }
+    },
+    "grant": "Povolit",
+    "granted": "Povoleno",
+    "skip": "Přeskočit",
+    "finish": "Hotovo"
+  },
+  "progress": {
+    "title": "Pokrok",
+    "level": "Úroveň {{level}}",
+    "xp": "{{into}} / {{needed}} XP",
+    "total": "Celkem {{xp}} XP",
+    "todayQuests": "Dnešní mise",
+    "weeklyQuests": "Týdenní výzvy",
+    "achievements": "Úspěchy",
+    "claim": "Převzít",
+    "claimed": "Převzato",
+    "summary": "Dnešní mise {{done}}/{{total}}",
+    "rank": {
+      "novice": "Nováček",
+      "apprentice": "Učedník",
+      "adept": "Adept",
+      "warden": "Strážce",
+      "master": "Mistr",
+      "grandmaster": "Velmistr"
+    },
+    "quests": {
+      "focus20": "Soustřeď se {{target}} minut",
+      "session1": "Dokonči 1 sezení",
+      "focus45": "Soustřeď se {{target}} minut",
+      "sessions2": "Dokonči 2 sezení",
+      "early": "Ranní soustředění: začni před 10:00",
+      "focus90": "Soustřeď se {{target}} minut",
+      "long50": "Vydrž {{target}} minut v jednom sezení",
+      "week300": "Soustřeď se 5 hodin tento týden",
+      "days5": "Soustřeď se {{target}} různých dnů tento týden"
+    },
+    "ach": {
+      "first": {
+        "title": "První krok",
+        "desc": "Soustřeď se aspoň 5 minut."
+      },
+      "sessions10": {
+        "title": "Zvyk",
+        "desc": "Dokonči 10 sezení."
+      },
+      "sessions50": {
+        "title": "Disciplína",
+        "desc": "Dokonči 50 sezení."
+      },
+      "streak3": {
+        "title": "Rozjezd",
+        "desc": "3 dny v řadě."
+      },
+      "streak7": {
+        "title": "Týden bez kompromisů",
+        "desc": "7 dní v řadě."
+      },
+      "streak30": {
+        "title": "Neochvějný",
+        "desc": "30 dní v řadě."
+      },
+      "hours10": {
+        "title": "Deset hodin",
+        "desc": "Soustřeď se celkem 10 hodin."
+      },
+      "hours50": {
+        "title": "Padesát hodin",
+        "desc": "Soustřeď se celkem 50 hodin."
+      },
+      "marathon": {
+        "title": "Maraton",
+        "desc": "Dokonči sezení na 90+ minut."
+      },
+      "earlybird": {
+        "title": "Ranní ptáče",
+        "desc": "Začni sezení před 7:00."
+      },
+      "nightowl": {
+        "title": "Noční směna",
+        "desc": "Dokonči sezení po 22:00."
+      },
+      "level5": {
+        "title": "Adept",
+        "desc": "Dosáhni úrovně 5."
+      }
+    },
+    "reward": {
+      "completed": "Sezení dokončeno",
+      "stopped": "Dobrá práce",
+      "minutes": "{{minutes}} min soustředění",
+      "quest": "Mise splněna",
+      "achievement": "Nový úspěch",
+      "level": "Nová úroveň",
+      "xp": "+{{xp}} XP",
+      "continue": "Pokračovat",
+      "points": "+{{points}} b."
+    },
+    "nearbyTitle": "Potkaní v okolí",
+    "nearbyEmpty": "Zatím nikdo. Když budete v dosahu oba se zapnutým režimem a Bluetooth, přijde oznámení.",
+    "nearbyLine": "{{name}} · {{rank}} ({{level}}) · série {{streak}}",
+    "anonymous": "Anonym",
+    "points": "Body: {{points}}"
+  },
+  "players": {
+    "title": "Hráči",
+    "androidOnly": "Multiplayer je zatím jen pro Android.",
+    "tabs": {
+      "nearby": "V okolí",
+      "leaderboard": "Žebříček",
+      "me": "Já"
+    },
+    "joinTitle": "Hraj proti ostatním",
+    "joinBody": "Multiplayer potřebuje server. Vytvoří se anonymní účet bez jména a e-mailu. Na serveru zůstane jen přezdívka, hodnost, fotka, body a zabití. Ostatní hráči uvidí přezdívku, hodnost a fotku. Kdykoli ho můžeš vypnout nebo smazat účet i se všemi daty.",
+    "join": "Připojit se",
+    "joining": "Připojuji…",
+    "anonymous": "Anonym",
+    "more": "Další možnosti",
+    "nobody": "Nikdo v okolí. Hráči se ukážou, když budou v dosahu Bluetooth.",
+    "needBluetooth": "Povol Bluetooth, jinak nikoho neuvidíš.",
+    "status": {
+      "focus": "V režimu",
+      "wasteman": "Wasteman",
+      "immune": "Imunní",
+      "idle": "Mimo režim"
+    },
+    "immuneLeft": "Imunní ještě {{time}}",
+    "kill": "Zabít",
+    "killing": "Hledám signál…",
+    "killMissing": "Chybí ti ještě {{minutes}} min v režimu",
+    "killed": "Zabil jsi hráče {{name}}",
+    "killedPoints": "+{{points}} bodů",
+    "killFailed": "Zabití se nepovedlo",
+    "errors": {
+      "needs_minutes": "Dnes máš v režimu méně než 90 minut.",
+      "immune": "Hráč je imunní, nebo ho už někdo zabil.",
+      "not_wasteman": "Hráč se mezitím zachránil.",
+      "already_killed": "Hráč už byl zabit.",
+      "expired": "Čas vypršel, zkus to znovu.",
+      "out_of_range": "Signál se ztratil, nebo je hráč mimo dosah.",
+      "blocked": "Tento hráč není dostupný.",
+      "multiplayer_off": "Multiplayer je vypnutý.",
+      "network": "Nelze se spojit se serverem.",
+      "unauthorized": "Nejsi přihlášený. Připoj se znovu.",
+      "rate_limited": "Příliš mnoho pokusů, chvíli počkej.",
+      "camera_denied": "Přístup k foťáku není povolen.",
+      "validation": "Neplatné údaje.",
+      "unknown": "Něco se nepovedlo.",
+      "username_taken": "Toto jméno je obsazené.",
+      "invalid_credentials": "Špatné jméno nebo heslo.",
+      "forbidden": "Tento účet nemůže hrát."
+    },
+    "block": "Blokovat",
+    "unblock": "Odblokovat",
+    "report": "Nahlásit",
+    "reportTitle": "Co chceš nahlásit?",
+    "reportNickname": "Přezdívku",
+    "reportPhoto": "Fotku",
+    "reportPlayer": "Hráče",
+    "reportThanks": "Děkujeme, nahlášení jsme uložili.",
+    "blockedPlayers": "Zablokovaní hráči",
+    "noBlocked": "Nikoho jsi nezablokoval.",
+    "leaderboardTitle": "Denní žebříček lovců",
+    "kills": "{{count}} zabití",
+    "you": "Ty",
+    "empty": "Dnes zatím nikdo nezabíjel.",
+    "me": {
+      "photo": "Profilová fotka",
+      "gallery": "Z galerie",
+      "camera": "Z foťáku",
+      "remove": "Odebrat",
+      "stats": "Statistiky",
+      "killsToday": "Zabití dnes",
+      "killsTotal": "Zabití celkem",
+      "deathsToday": "Smrti dnes",
+      "deathsTotal": "Smrti celkem",
+      "pointsToday": "Body dnes",
+      "pointsTotal": "Body celkem",
+      "leave": "Smazat účet a odejít",
+      "leaveConfirm": "Smaže se tvůj účet, fotka i statistiky na serveru. Pokračovat?",
+      "server": "Server",
+      "serverReset": "Obnovit výchozí adresu"
+    },
+    "shields": "Štíty: {{count}} ze 3",
+    "shieldsHint": "Jeden štít za 5 hodin soustředění v jedné relaci. Pohltí jedno zabití, když jsi wasteman.",
+    "shieldBlockedTitle": "{{name}} měl štít",
+    "shieldBlockedText": "Štít pohltil tvůj útok. Žádné body se nepřesunuly."
+  },
+  "auth": {
+    "title": "Přihlášení",
+    "registerTitle": "Vytvořit účet",
+    "intro": "Jeden účet pro multiplayerovou hru. Bez e-mailu, jen uživatelské jméno a heslo. Uživatelské jméno je soukromé: ostatní vidí jen tvou přezdívku.",
+    "username": "Uživatelské jméno",
+    "password": "Heslo",
+    "password2": "Heslo znovu",
+    "usernameHint": "3–20 znaků: písmena, číslice, . _ -",
+    "passwordHint": "Alespoň 8 znaků.",
+    "login": "Přihlásit se",
+    "register": "Vytvořit účet",
+    "working": "Moment…",
+    "toRegister": "Nemáš účet? Vytvoř si ho",
+    "toLogin": "Už máš účet? Přihlas se",
+    "mismatch": "Hesla se neshodují.",
+    "badUsername": "Jméno musí mít 3–20 znaků: písmena, číslice, . _ -",
+    "badPassword": "Heslo musí mít alespoň 8 znaků.",
+    "noReset": "Bez e-mailu nelze zapomenuté heslo obnovit.",
+    "logout": "Odhlásit se",
+    "server": "Adresa serveru",
+    "serverSave": "Uložit"
+  }
+}

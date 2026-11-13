@@ -1,6 +1,6 @@
 name: Deploy (backend)
 
-# Builds the backend image, deploys to staging automatically on main, and to
+# Deferred backend deployment template. Once step 4 is resumed, builds an image and deploys to
 # production only after approval on the "production" GitHub Environment
 # (Settings -> Environments -> production -> Required reviewers).
 #
@@ -9,10 +9,9 @@ name: Deploy (backend)
 #
 # Pin third-party actions to SHAs before first use:  pinact run
 
+# Step 4 is deferred. Keep this template manual so merging the mobile app does not
+# attempt to build a missing server/Dockerfile or deploy infrastructure.
 on:
-  push:
-    branches: [main]
-    paths: ["server/**", "deploy/helm/**", "package*.json", ".github/workflows/deploy.yml"]
   workflow_dispatch:
 
 permissions:
